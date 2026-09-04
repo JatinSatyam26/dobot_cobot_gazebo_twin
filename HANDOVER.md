@@ -129,8 +129,15 @@ Verified 2026-09-03 from `rm -rf build install log`:
 **Added 2026-09-04:** grasp (three DetachableJoint plugins), `cell_sequencer.py`
 (full yellow → belt A → B → C → blue cycle, IK from `cell_layout.py`),
 `record_frames.py`, the corrected belt nest mesh, M1 Pro yaw −90° (inferred).
-**What is NOT done:** the Digital Shadow (real → sim bridges), any measured
-yaw or pendant rest pose, the PLC sequence details (dwell, tag names).
+**Added 2026-09-04, later:** `src/wafer_cell_shadow/` — the Digital Shadow
+bridges (M1 Pro, Pro 600, PLC) with fake sources, the driver, and bag
+recording; `scripts/cell_plan.py` (one cycle table for sequencer and fakes);
+primitive collisions on every M1 Pro link. Real-mode client libraries are in
+`~/venvs/wafer_shadow` (🟢 regenerable: `python3 -m venv --system-site-packages
+~/venvs/wafer_shadow && pip install pymycobot pycomm3`).
+**What is NOT done:** the shadow against real hardware (no bench LAN, no tag
+names, no joint conventions yet), any measured yaw or pendant rest pose, the
+PLC sequence details (dwell).
 
 ## Git
 

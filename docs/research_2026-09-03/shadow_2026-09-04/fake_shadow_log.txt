@@ -1,0 +1,20 @@
+=== controllers
+4
+=== shadow (fake devices) start 06:25:03
+=== shadow topics
+/shadow/m1pro/joint_states /shadow/m1pro/raw /shadow/plc/belt_reverse /shadow/plc/belt_run /shadow/plc/raw /shadow/plc/state /shadow/plc/vacuum_on /shadow/pro600/joint_states /shadow/pro600/raw 
+=== rates
+average rate: 45.187
+average rate: 19.999
+=== states seen
+M1_APPROACH_YELLOW M1_INSERT_UNDER_WAFER FORK_ATTACH M1_LIFT M1_TO_BELT M1_LOWER_TO_NEST M1_INSERT_INTO_NEST FORK_DETACH M1_DROP_BLADE M1_RETREAT NEST_ATTACH M1_HOME BELT_A_TO_B BELT_B_TO_C NEST_DETACH P6_ABOVE_C P6_DESCEND CUP_ATTACH P6_LIFT P6_TO_BLUE P6_PLACE CUP_DETACH P6_UP P6_HOME BELT_RETURN_A M1_APPROACH_YELLOW M1_INSERT_UNDER_WAFER FORK_ATTACH M1_LIFT M1_TO_BELT M1_LOWER_TO_NEST M1_INSERT_INTO_NEST FORK_DETACH M1_DROP_BLADE M1_RETREAT NEST_ATTACH M1_HOME BELT_A_TO_B BELT_B_TO_C NEST_DETACH P6_ABOVE_C P6_DESCEND CUP_ATTACH P6_LIFT P6_TO_BLUE P6_PLACE CUP_DETACH 
+=== wafer pose now
+x:0.43226121806898476 y:-0.15553804064970475 z:0.096983942256142236 
+=== bag
+shadow_bag
+saved /tmp/claude-1000/-home-jatin-satyam-dobot-cobot-gazebo-twin/01fd2013-c3f3-4000-b6c6-964b16cc8d87/scratchpad/shadow2/final_plan.png  (1280x800, rgb8)
+/tmp/claude-1000/-home-jatin-satyam-dobot-cobot-gazebo-twin/01fd2013-c3f3-4000-b6c6-964b16cc8d87/scratchpad/shadow_test.sh: line 25: 17381 Killed                  ros2 run wafer_cell_bringup record_frames.py "$OUT/frames" /cell_cam 2.0 > "$OUT/rec_log.txt" 2>&1
+leftovers: 0
+=== shadow log warnings/errors
+[ros2-5] [WARN] [ros2bag]: Positional "topics" argument deprecated. Please use optional "--topics" argument instead.
+DONE

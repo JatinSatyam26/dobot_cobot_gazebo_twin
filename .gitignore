@@ -6,3 +6,6 @@ log/
 # python
 __pycache__/
 *.pyc
+
+# rosbag output of shadow.launch.py record:=true (large, regenerable)
+shadow_bag*/

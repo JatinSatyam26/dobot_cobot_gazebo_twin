@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>wafer_cell_shadow</name>
+  <version>0.1.0</version>
+  <description>
+    Digital Shadow (real -> sim, one way) for the wafer cell: one bridge per
+    real device (Dobot M1 Pro, myCobot Pro 600, Micro850 PLC), each with a
+    fake source, a recorder, and a driver that makes the Gazebo cell follow
+    what the bridges publish.
+  </description>
+  <maintainer email="satyamjatin732@gmail.com">Jatin Satyam</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>wafer_cell_bringup</exec_depend>
+  <exec_depend>ros2bag</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

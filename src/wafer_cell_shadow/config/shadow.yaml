@@ -1,0 +1,35 @@
+# Digital Shadow configuration. Every UNKNOWN below is a metrology item; the
+# fake sources ignore the network fields.
+m1pro_bridge:
+  ros__parameters:
+    source: fake            # fake | real
+    ip: 192.168.1.6         # Dobot controller (vendor default)      UNKNOWN on this bench
+    feedback_port: 30004    # real-time feedback, 1440-byte RealTimeData (verified in Dobot-Arm/M1Pro-ROS)
+    rate_hz: 50.0           # publish rate (the controller streams faster)
+    # real -> sim mapping. Dobot label order J1 J2 J3 J4 = shoulder, elbow, Z(mm), wrist.
+    sign: [1.0, 1.0, 1.0, 1.0]        # UNKNOWN until one single-joint jog per axis
+    offset: [0.0, 0.0, 0.0, 0.0]      # rad, rad, m, rad                UNKNOWN (z zero!)
+pro600_bridge:
+  ros__parameters:
+    source: fake
+    ip: 192.168.1.159       # Elephant default                       UNKNOWN on this bench
+    port: 5001              # ElephantRobot socket server            UNVERIFIED (Elephant docs)
+    rate_hz: 20.0
+    sign: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]   # UNKNOWN (metrology pro600_joint_zero_convention)
+    offset: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # rad
+plc_bridge:
+  ros__parameters:
+    source: fake
+    ip: 192.168.1.20        # Micro850                               UNKNOWN
+    rate_hz: 20.0
+    # Tag names in the CCW project. UNKNOWN - placeholders. The bridge reads
+    # them with pycomm3 and maps them onto the cell state names below.
+    tag_belt_run: BeltRun
+    tag_vacuum_on: VacuumOn
+    tag_step: CycleStep     # integer step index if the program has one, else ""
+    tag_belt_dir: ""        # stepper DIR output if exposed; "" = the belt never reverses   UNKNOWN (metrology belt_travel_direction)
+    belt_speed: 0.07        # m/s used to dead-reckon belt position    ESTIMATED (video)
+shadow_driver:
+  ros__parameters:
+    rate_hz: 10.0           # trajectory horizon = 1/rate
+    belt_speed: 0.07

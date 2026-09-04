@@ -182,6 +182,19 @@ cannot withdraw along −X out of the belt nest (the video shows it doing so);
 with the carriage facing the bench front every waypoint is reachable, matching
 the render and the parallax-corrected link positions. Still ⛔ metrology.
 
+## Digital Shadow package (added 2026-09-04)
+
+`src/wafer_cell_shadow/`: `m1pro_bridge.py` (Dobot port 30004, 1440-byte
+`RealTimeData`), `pro600_bridge.py` (pymycobot `ElephantRobot`),
+`plc_bridge.py` (pycomm3 `LogixDriver`), `shadow_driver.py` (drives the JTCs
+and the grasp topics from `/shadow/*`), `launch/shadow.launch.py`
+(`source:=fake|real`, `record:=true`, `bridges:=false` for bag replay). Real-mode
+client libraries live in `~/venvs/wafer_shadow` (system-site-packages venv);
+the bridges add it to `sys.path` only in real mode. Everything network-side is
+⛔ until the bench LAN, tag names and joint conventions are known; see the
+package README. The cycle table both the sequencer and the fake devices use is
+`scripts/cell_plan.py` in the bringup package.
+
 ## Working style the owner has asked for
 
 - **Verify before showing.** Standing instruction. Capture and check, then report.

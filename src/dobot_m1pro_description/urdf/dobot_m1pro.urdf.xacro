@@ -80,11 +80,17 @@
         <color rgba="0.79216 0.81961 0.93333 1"/>
       </material>
     </visual>
+    <!-- PRIMITIVE COLLISIONS (2026-09-04): the 25k-triangle base mesh and
+         the 5-10k arm meshes were the physics bottleneck (RTF 0.75 headless,
+         0.5 with GUI). Boxes sized from the STL extents; visuals unchanged.
+         base: casting z 0..0.06 (175 x 230), column z 0.06..0.688 (147 x 150) -->
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="${mesh_dir}/base_link.STL"/>
-      </geometry>
+      <origin xyz="0.0075 0 0.030" rpy="0 0 0"/>
+      <geometry><box size="0.175 0.230 0.060"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.0015 0 0.374" rpy="0 0 0"/>
+      <geometry><box size="0.147 0.150 0.628"/></geometry>
     </collision>
   </link>
   <link name="${prefix}z_carriage_link">
@@ -103,10 +109,8 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="${mesh_dir}/Link1.STL"/>
-      </geometry>
+      <origin xyz="0.108 0 0.1025" rpy="0 0 0"/>
+      <geometry><box size="0.130 0.100 0.205"/></geometry>
     </collision>
   </link>
   <link name="${prefix}upper_arm_link">
@@ -124,11 +128,14 @@
         <color rgba="0.79216 0.81961 0.93333 1"/>
       </material>
     </visual>
+    <!-- root plate x -0.04..0.06 z 0..0.032; housing x 0.06..0.24 z 0..0.142 -->
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="${mesh_dir}/Link2.STL"/>
-      </geometry>
+      <origin xyz="0.010 0 0.016" rpy="0 0 0"/>
+      <geometry><box size="0.100 0.080 0.032"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.150 0 0.071" rpy="0 0 0"/>
+      <geometry><box size="0.180 0.080 0.142"/></geometry>
     </collision>
   </link>
   <link name="${prefix}forearm_link">
@@ -146,11 +153,14 @@
         <color rgba="0.79216 0.81961 0.93333 1"/>
       </material>
     </visual>
+    <!-- elbow plate x -0.031..0.06 z -0.05..0.003; housing x 0.06..0.231 z -0.05..0.12 -->
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="${mesh_dir}/Link3.STL"/>
-      </geometry>
+      <origin xyz="0.0145 0 -0.0235" rpy="0 0 0"/>
+      <geometry><box size="0.091 0.062 0.053"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.1455 0 0.035" rpy="0 0 0"/>
+      <geometry><box size="0.171 0.064 0.170"/></geometry>
     </collision>
   </link>
   <link name="${prefix}wrist_link">
@@ -172,10 +182,9 @@
          carries "0 0 0.08081", so the wrist's collision shape sat 81 mm below
          where it renders. -->
     <collision>
-      <origin xyz="0 0 0.08081" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="${mesh_dir}/Link4.STL"/>
-      </geometry>
+      <!-- the wrist shaft: mesh z -0.081..0.007 plus the 0.08081 offset -->
+      <origin xyz="0 0 0.044" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.009" length="0.088"/></geometry>
     </collision>
   </link>
   <joint name="${prefix}z_lift" type="prismatic">

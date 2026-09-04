@@ -1,0 +1,12 @@
+Real-time factor, headless, RTX 4060, no stale servers (2026-09-04)
+
+--- mesh collisions on every M1 Pro link (before)
+RTF at rest (20 s): 0.937 over 198 samples
+RTF during cycle (40 s): 0.971 over 397 samples
+
+--- primitive collisions on the M1 Pro (after)
+RTF at rest (20 s): 0.971 over 198 samples
+RTF during cycle (40 s): 0.984 over 397 samples
+wafer pose at end: x:0.42291221937293977 y:-0.16361660592631677 z:0.10041098643066269 
+
+Earlier figures of 0.5 (GUI) / 0.75 (headless) were taken on the Intel iGPU and with a second Gazebo alive.

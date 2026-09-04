@@ -32,15 +32,8 @@ from ament_index_python.packages import get_package_share_directory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cell_fk import Chain
-from cell_layout import (HOME, M1PRO_JOINTS, PRO600_JOINTS, NEST_YELLOW, NEST_BLUE, SHELF_Z,
-                         BELT_XYZ, BELT_A, BELT_B, BELT_C, NEST_SEAT_Z, WAFER_THICKNESS, WAFER_GAP,
-                         GRASP_LINKS)
-from solve_home_poses import solve
-
-FORK_AX = {0: (1, 0, 0), 2: (0, 0, 1)}      # blade flat, pointing +X (enters both nests along +X)
-CUP_AX = {2: (0, 0, -1)}                     # cup pointing straight down
-APPROACH = 0.09                              # tine tips 20 mm outside a nest's open chord
-CLEAR = 0.045                                # lift above a nest rim before travelling
+from cell_layout import M1PRO_JOINTS, PRO600_JOINTS, GRASP_LINKS
+from cell_plan import STEPS, build_waypoints
 
 
 class Sequencer(Node):
@@ -67,51 +60,8 @@ class Sequencer(Node):
         self.plan()
 
     # ------------------------------------------------------------ IK plan
-    def ik(self, arm, target, axes, seed):
-        joints, link = ((M1PRO_JOINTS, 'm1pro_fork_seat') if arm == 'm1pro'
-                        else (PRO600_JOINTS, 'pro600_cup_tip'))
-        q, err, margin = solve(self.chain, joints, link, target, axes, seed=seed)
-        if err > 0.004:
-            self.get_logger().error(f'IK {arm} -> {tuple(round(v, 3) for v in target)}: '
-                                    f'{err * 1e3:.1f} mm off, limit margin {margin:.2f}')
-        return [q[j] for j in joints]
-
     def plan(self):
-        yx, yy = NEST_YELLOW[0], NEST_YELLOW[1]
-        bx, by = NEST_BLUE[0], NEST_BLUE[1]
-        belt_y = BELT_XYZ[1]
-        w_bot_yellow = SHELF_Z[2]                         # wafer underside on the top shelf
-        w_bot_nest = NEST_SEAT_Z                          # wafer underside on the belt nest ledge
-        z_pick = w_bot_yellow - WAFER_GAP                 # blade top 1 mm under the wafer
-        z_carry = w_bot_yellow + CLEAR
-        z_place = w_bot_nest - WAFER_GAP + 0.0005         # wafer 0.5 mm above the ledge when detached
-        z_free = w_bot_nest - 0.010                       # blade clear under the wafer after detach
-        w_top_nest = w_bot_nest + WAFER_THICKNESS
-        w_top_blue = SHELF_Z[2] + WAFER_THICKNESS
-
-        m = {}
-        s = [HOME[j] for j in M1PRO_JOINTS]
-        s = m['approach'] = self.ik('m1pro', (yx - APPROACH, yy, z_pick), FORK_AX, s)
-        s = m['insert'] = self.ik('m1pro', (yx, yy, z_pick), FORK_AX, s)
-        s = m['lift'] = self.ik('m1pro', (yx, yy, z_carry), FORK_AX, s)
-        s = m['to_belt'] = self.ik('m1pro', (BELT_A - APPROACH, belt_y, z_place + CLEAR), FORK_AX, s)
-        s = m['belt_approach'] = self.ik('m1pro', (BELT_A - APPROACH, belt_y, z_place), FORK_AX, s)
-        s = m['belt_insert'] = self.ik('m1pro', (BELT_A, belt_y, z_place), FORK_AX, s)
-        s = m['belt_lower'] = self.ik('m1pro', (BELT_A, belt_y, z_free), FORK_AX, s)
-        s = m['belt_retreat'] = self.ik('m1pro', (BELT_A - APPROACH, belt_y, z_free), FORK_AX, s)
-        m['home'] = [HOME[j] for j in M1PRO_JOINTS]
-        self.m1 = m
-
-        p = {}
-        s = [HOME[j] for j in PRO600_JOINTS]
-        s = p['above_c'] = self.ik('pro600', (BELT_C, belt_y, w_top_nest + 0.12), CUP_AX, s)
-        s = p['pick'] = self.ik('pro600', (BELT_C, belt_y, w_top_nest + WAFER_GAP), CUP_AX, s)
-        s = p['lift'] = self.ik('pro600', (BELT_C, belt_y, w_top_nest + 0.12), CUP_AX, s)
-        s = p['above_blue'] = self.ik('pro600', (bx, by, w_top_blue + 0.12), CUP_AX, s)
-        s = p['place'] = self.ik('pro600', (bx, by, w_top_blue + WAFER_GAP + 0.0005), CUP_AX, s)
-        s = p['up'] = self.ik('pro600', (bx, by, w_top_blue + 0.12), CUP_AX, s)
-        p['home'] = [HOME[j] for j in PRO600_JOINTS]
-        self.p6 = p
+        self.m1, self.p6 = build_waypoints(self.chain, log=self.get_logger().error)
         self.get_logger().info('IK plan ready')
 
     # ------------------------------------------------------------ primitives
@@ -171,36 +121,22 @@ class Sequencer(Node):
 
     # ------------------------------------------------------------ the cycle
     def cycle(self):
-        m, p = self.m1, self.p6
+        """Walk cell_plan.STEPS: one table for the sequencer, the fake devices
+        and the shadow comparison."""
         dwell = float(self.get_parameter('dwell_b').value)
-        self.say('M1_APPROACH_YELLOW');   self.move('m1pro', m['approach'], 3.0)
-        self.say('M1_INSERT_UNDER_WAFER');self.move('m1pro', m['insert'], 2.0)
-        self.say('FORK_ATTACH');          self.grab('fork', True)
-        self.say('M1_LIFT');              self.move('m1pro', m['lift'], 1.0)
-        self.say('M1_TO_BELT');           self.move('m1pro', m['to_belt'], 3.0)
-        self.say('M1_LOWER_TO_NEST');     self.move('m1pro', m['belt_approach'], 1.0)
-        self.say('M1_INSERT_INTO_NEST');  self.move('m1pro', m['belt_insert'], 2.0)
-        self.say('FORK_DETACH');          self.grab('fork', False)
-        self.say('M1_DROP_BLADE');        self.move('m1pro', m['belt_lower'], 0.8)
-        self.say('M1_RETREAT');           self.move('m1pro', m['belt_retreat'], 1.5)
-        self.say('NEST_ATTACH');          self.grab('nest', True)
-        self.say('M1_HOME');              self.move('m1pro', m['home'], 3.0)
-        self.say('BELT_A_TO_B');          self.belt(BELT_A, BELT_B)
-        if dwell > 0:
-            self.say('BELT_DWELL_B');     time.sleep(dwell)
-        self.say('BELT_B_TO_C');          self.belt(BELT_B, BELT_C)
-        self.say('NEST_DETACH');          self.grab('nest', False)
-        self.say('P6_ABOVE_C');           self.move('pro600', p['above_c'], 3.0)
-        self.say('P6_DESCEND');           self.move('pro600', p['pick'], 2.0)
-        self.say('CUP_ATTACH');           self.grab('cup', True)
-        self.say('P6_LIFT');              self.move('pro600', p['lift'], 1.5)
-        self.say('P6_TO_BLUE');           self.move('pro600', p['above_blue'], 3.0)
-        self.say('P6_PLACE');             self.move('pro600', p['place'], 2.0)
-        self.say('CUP_DETACH');           self.grab('cup', False)
-        self.say('P6_UP');                self.move('pro600', p['up'], 1.5)
-        self.say('P6_HOME');              self.move('pro600', p['home'], 3.0)
-        self.say('BELT_RETURN_A');        self.belt(BELT_C, BELT_A)
-        self.say('CYCLE_DONE')
+        for name, kind, payload, dur in STEPS:
+            self.say(name)
+            if kind == 'm1pro':
+                self.move('m1pro', self.m1[payload], dur)
+            elif kind == 'pro600':
+                self.move('pro600', self.p6[payload], dur)
+            elif kind == 'belt':
+                self.belt(*payload)
+            elif kind == 'dwell':
+                if dwell > 0:
+                    time.sleep(dwell)
+            elif kind == 'grasp':
+                self.grab(payload[0], payload[1], settle=dur)
 
 
 def main():

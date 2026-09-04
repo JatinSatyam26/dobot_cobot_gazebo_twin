@@ -19,9 +19,15 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0" />
+      <origin rpy="0 0 0" xyz="0.0075 0 0.030" />
       <geometry>
-        <mesh filename="package://dobot_m1pro_description/meshes/base_link.STL" />
+        <box size="0.175 0.230 0.060" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.0015 0 0.374" />
+      <geometry>
+        <box size="0.147 0.150 0.628" />
       </geometry>
     </collision>
   </link>
@@ -41,9 +47,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0" />
+      <origin rpy="0 0 0" xyz="0.108 0 0.1025" />
       <geometry>
-        <mesh filename="package://dobot_m1pro_description/meshes/Link1.STL" />
+        <box size="0.130 0.100 0.205" />
       </geometry>
     </collision>
   </link>
@@ -63,9 +69,15 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0" />
+      <origin rpy="0 0 0" xyz="0.010 0 0.016" />
       <geometry>
-        <mesh filename="package://dobot_m1pro_description/meshes/Link2.STL" />
+        <box size="0.100 0.080 0.032" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.150 0 0.071" />
+      <geometry>
+        <box size="0.180 0.080 0.142" />
       </geometry>
     </collision>
   </link>
@@ -85,9 +97,15 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0" />
+      <origin rpy="0 0 0" xyz="0.0145 0 -0.0235" />
       <geometry>
-        <mesh filename="package://dobot_m1pro_description/meshes/Link3.STL" />
+        <box size="0.091 0.062 0.053" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.1455 0 0.035" />
+      <geometry>
+        <box size="0.171 0.064 0.170" />
       </geometry>
     </collision>
   </link>
@@ -107,9 +125,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.08081" />
+      <origin rpy="0 0 0" xyz="0 0 0.044" />
       <geometry>
-        <mesh filename="package://dobot_m1pro_description/meshes/Link4.STL" />
+        <cylinder length="0.088" radius="0.009" />
       </geometry>
     </collision>
   </link>

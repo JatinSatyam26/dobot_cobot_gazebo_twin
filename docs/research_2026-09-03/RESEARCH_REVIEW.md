@@ -295,3 +295,13 @@ docs/research_2026-09-03/
   which the headless-only cleanup pattern did not match) stayed alive under
   three headless tests and answered their action goals and pose queries. Both
   are in CLAUDE.md now.
+* **RTF, corrected.** With the RTX 4060 active and no stale server, the
+  mesh-collision model already ran at RTF 0.94 at rest and 0.97 during a
+  cycle; the 0.5–0.75 figures earlier in this addendum were measured on the
+  iGPU and with a second Gazebo alive. Primitive collisions replaced the
+  M1 Pro meshes anyway (cheaper, and the base mesh alone was 25k triangles);
+  the after-measurement is in `rtf_2026-09-04.txt`.
+* **Digital Shadow skeleton** (`src/wafer_cell_shadow/`): three bridges with
+  fake sources, a driver, bag recording; fake-device shadow verified end to
+  end in the sim. Real mode blocked on the bench LAN, PLC tag names and joint
+  conventions (all ⛔).
