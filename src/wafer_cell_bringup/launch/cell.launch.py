@@ -39,7 +39,15 @@ import os, sys
 from ament_index_python.packages import get_package_prefix
 sys.path.insert(0, os.path.join(get_package_prefix('wafer_cell_bringup'),
                                 'lib', 'wafer_cell_bringup'))
-from cell_layout import WAFER_SPAWN
+from cell_layout import WAFER_SPAWN, GRASP_LINKS
+
+# Render on the RTX 4060 when its kernel module is loaded. Default GL on this
+# laptop is the Intel iGPU (PRIME on-demand); the offload variables only work
+# once /proc/driver/nvidia exists - with the module missing they break GL
+# context creation (see CLAUDE.md traps).
+if os.path.exists('/proc/driver/nvidia/version'):
+    os.environ.setdefault('__NV_PRIME_RENDER_OFFLOAD', '1')
+    os.environ.setdefault('__GLX_VENDOR_LIBRARY_NAME', 'nvidia')
 WAFER_POSE = tuple(f'{v:.5f}' for v in WAFER_SPAWN)
 
 CM = ['--controller-manager', '/controller_manager',
@@ -80,6 +88,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('gui', default_value='true'),
+        DeclareLaunchArgument('verbose', default_value='3',
+                              description='gz sim -v level; 4 shows plugin debug (DetachableJoint etc.)'),
         DeclareLaunchArgument('world', default_value=PathJoinSubstitution(
             [bringup, 'worlds', 'wafer_cell.sdf'])),
 
@@ -97,7 +107,8 @@ def generate_launch_description():
                 [FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]),
             launch_arguments={
                 'gz_args': [PythonExpression(
-                    ["'-r -v 3 ' if '", gui, "' == 'true' else '-r -s -v 3 '"]), world],
+                    ["'-r -v ' if '", gui, "' == 'true' else '-r -s -v '"]),
+                    LaunchConfiguration('verbose'), ' ', world],
                 'on_exit_shutdown': 'true'}.items()),
 
         Node(package='robot_state_publisher', executable='robot_state_publisher',
@@ -136,4 +147,14 @@ def generate_launch_description():
              name='cam_bridge', output='screen',
              arguments=['/cell_cam@sensor_msgs/msg/Image[gz.msgs.Image',
                         '/plan_cam@sensor_msgs/msg/Image[gz.msgs.Image']),
+
+        # grasp: ROS std_msgs/Empty -> gz attach/detach of the wafer
+        # (DetachableJoint plugins emitted by generate_cell_urdf.py), and the
+        # plugin's "attached"/"detached" state back to ROS as std_msgs/String.
+        Node(package='ros_gz_bridge', executable='parameter_bridge',
+             name='grasp_bridge', output='screen',
+             arguments=[f'/wafer/{c}/{op}@std_msgs/msg/Empty]gz.msgs.Empty'
+                        for c in GRASP_LINKS for op in ('attach', 'detach')]
+                       + [f'/wafer/{c}/state@std_msgs/msg/String[gz.msgs.StringMsg'
+                          for c in GRASP_LINKS]),
     ])

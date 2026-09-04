@@ -22,8 +22,8 @@ import numpy as np
 from scipy.optimize import least_squares
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cell_fk import Chain
-from cell_layout import (JOINT_LIMITS, NEST_YELLOW, SHELF_Z, WAFER_THICKNESS, BELT_XYZ, BELT_C,
-                         M1PRO_JOINTS, PRO600_JOINTS)
+from cell_layout import (JOINT_LIMITS, NEST_YELLOW, SHELF_Z, WAFER_THICKNESS, BELT_XYZ, BELT_A, BELT_C,
+                         NEST_SEAT_Z, M1PRO_JOINTS, PRO600_JOINTS)
 from ament_index_python.packages import get_package_share_directory
 
 MARGIN = 0.10          # rad inside every revolute limit
@@ -35,30 +35,39 @@ def lim_margin(j):
     return MARGIN_M if j in PRISMATIC else MARGIN
 
 
-def solve(chain, joints, link, target, axes, starts=12, seed=0):
-    """axes: dict {column index 0/1/2 of the link's rotation: world unit vector}."""
+def solve(chain, joints, link, target, axes, starts=12, seed=None):
+    """axes: dict {column index 0/1/2 of the link's rotation: world unit vector}.
+    seed: optional joint vector; the search starts there and, among solutions
+    that hit the target, prefers the one nearest the seed (keeps consecutive
+    waypoints on the same arm configuration instead of flipping elbows)."""
     lo = np.array([JOINT_LIMITS[j][0] + lim_margin(j) for j in joints])
     hi = np.array([JOINT_LIMITS[j][1] - lim_margin(j) for j in joints])
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(0)
+    seed = None if seed is None else np.clip(np.array(seed, float), lo, hi)
 
     def resid(q):
         M = chain.pose(link, dict(zip(joints, q)))
         r = [M[:3, 3] - np.array(target)]
         for col, vec in axes.items():
             r.append(0.3 * (M[:3, col] - np.array(vec)))
+        if seed is not None:
+            # weak pull toward the seed so a redundant axis (a cup's spin)
+            # stays put instead of wandering; 1 rad costs 5 mm-equivalent
+            r.append(0.005 * (q - seed))
         return np.concatenate(r)
 
     best = None
     for k in range(starts):
-        q0 = lo + rng.random(len(joints)) * (hi - lo) if k else (lo + hi) / 2
+        q0 = (seed if seed is not None else (lo + hi) / 2) if k == 0 else lo + rng.random(len(joints)) * (hi - lo)
         sol = least_squares(resid, q0, bounds=(lo, hi), xtol=1e-10, ftol=1e-10)
         err = np.linalg.norm(resid(sol.x)[:3])
         margin = min(min(q - JOINT_LIMITS[j][0], JOINT_LIMITS[j][1] - q)
                      for j, q in zip(joints, sol.x))
-        cand = (err > 2e-3, -margin, err, sol.x)          # hit target first, then margin
+        score = float(np.linalg.norm(sol.x - seed)) if seed is not None else -margin
+        cand = (err > 2e-3, score, err, sol.x, margin)    # hit target first, then nearest seed / best margin
         if best is None or cand[:3] < best[:3]:
             best = cand
-    miss, negm, err, q = best
+    miss, _, err, q, margin = best
     q = [float(v) for v in q]
     # a +/-2pi joint (the M1 Pro wrist) may come back at -4.25 rad; the same
     # pose at 2.03 rad reads better and starts nearer the middle of the range
@@ -66,7 +75,7 @@ def solve(chain, joints, link, target, axes, starts=12, seed=0):
         lo_j, hi_j = JOINT_LIMITS[j]
         if hi_j - lo_j >= 2 * math.pi - 1e-6 and j not in PRISMATIC:
             q[i] = math.atan2(math.sin(q[i]), math.cos(q[i]))
-    return dict(zip(joints, [round(v, 4) for v in q])), err, -negm
+    return dict(zip(joints, [round(v, 4) for v in q])), err, margin
 
 
 def main():
@@ -77,8 +86,17 @@ def main():
     # M1 Pro home: fork seat 25 mm above the wafer on the yellow nest's top
     # shelf, blade flat (tool z up) and pointing +X (tool x = world +X), so it
     # is exactly the retreat pose of a pick on this layout.
+    # Branch choice: at the belt nest the +/-85 deg shoulder limit leaves only
+    # ONE elbow branch, at the yellow nest both work. Solve the belt approach
+    # first and seed the home from it, so the cycle never has to straighten
+    # the arm to flip elbows between the two stations.
+    axes = {0: (1, 0, 0), 2: (0, 0, 1)}
+    belt = (BELT_A - 0.09, BELT_XYZ[1], NEST_SEAT_Z)
+    qb, eb, mb = solve(chain, M1PRO_JOINTS, 'm1pro_fork_seat', belt, axes)
     t = (NEST_YELLOW[0], NEST_YELLOW[1], SHELF_Z[2] + WAFER_THICKNESS + 0.025)
-    q, err, m = solve(chain, M1PRO_JOINTS, 'm1pro_fork_seat', t, {0: (1, 0, 0), 2: (0, 0, 1)})
+    q, err, m = solve(chain, M1PRO_JOINTS, 'm1pro_fork_seat', t, axes,
+                      seed=[qb[j] for j in M1PRO_JOINTS])
+    out['m1pro_belt_approach'] = dict(q=qb, target=belt, pos_err_mm=round(eb * 1e3, 2), min_margin=round(mb, 3))
     out['m1pro'] = dict(q=q, target=t, pos_err_mm=round(err * 1e3, 2), min_margin=round(m, 3))
 
     # Pro 600 home: cup tip 0.30 above the belt at point C, pointing straight

@@ -20,7 +20,9 @@ Total on disk: ~161 MB, of which ~111 MB is reference photography.
 |---|---|---|
 | `docs/reference_photos/` … `_5/` | 54 photos of the real cell, 111 MB | Photographs of the owner's physical bench. Sole source for the layout, the PLC label, the end effectors, the nest colours |
 | `src/wafer_cell_bringup/meshes/wafer_tower.stl` | 3D-printed nest, 107.5 × 135 × 100 mm | Customer print file. Shelf ledges measured from it at z = 0.055 / 0.077 / 0.099 |
-| `src/wafer_cell_bringup/meshes/belt_holder.stl` | Conveyor carriage, 180 × 70 × 45 mm | Customer print file |
+| `src/wafer_cell_bringup/meshes/Conveyor_Wafer_Holder.3MF` → `belt_nest.stl` | The magenta belt nest that actually rides the belt: ring base, four 53 mm walls, 74° fork gaps on the belt axis | Customer print source (3MF) and its STL export |
+| `src/wafer_cell_bringup/meshes/belt_holder.stl` | 180 × 70 × 45 mm flat bridge ("Wafer Holder Conveyer.stl") | Customer print file, but **not** the part on the belt (photos 2026-09-02); kept, unused |
+| `docs/cycle_video/`, `docs/reference_render_gemini_2026-09-03.png` | 28 s cycle video (phone + isolated), AI concept render | Copied from ~/Downloads on 2026-09-04 |
 | `src/wafer_cell_bringup/meshes/m1pro_fork.stl` | M1 Pro passive fork | Customer print file. Blade 3 mm thick, 58.2 wide, 189.5 long; 25 mm boss |
 | `PROJECT_CONTEXT.md` | Project brief, Revision B | Contains owner-supplied measurements and the §13 corrections log |
 | `docs/metrology_spec.html` | 61-parameter measurement spec | Defines every number still to be measured |
@@ -124,9 +126,11 @@ Verified 2026-09-03 from `rm -rf build install log`:
 * `check_extents.py` reports **0 parts resting off the bench**
 * `cell.urdf` regenerates byte-identically
 
-**What is NOT done:** fork and cup attach/detach (fake grasp), the sequencer
-node (yellow tower → belt A → B dwell → C → blue tower), and the Digital Shadow.
-And the layout is confirmed wrong — see `PROJECT_CONTEXT.md` §14.
+**Added 2026-09-04:** grasp (three DetachableJoint plugins), `cell_sequencer.py`
+(full yellow → belt A → B → C → blue cycle, IK from `cell_layout.py`),
+`record_frames.py`, the corrected belt nest mesh, M1 Pro yaw −90° (inferred).
+**What is NOT done:** the Digital Shadow (real → sim bridges), any measured
+yaw or pendant rest pose, the PLC sequence details (dwell, tag names).
 
 ## Git
 

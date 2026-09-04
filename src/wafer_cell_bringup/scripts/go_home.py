@@ -18,6 +18,7 @@ it differs run to run because the sag is not deterministic.
 
 Shortening the window reduces the droop; this command removes it.
 """
+import time
 import rclpy
 from builtin_interfaces.msg import Duration
 from rclpy.node import Node
@@ -26,7 +27,8 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from cell_layout import HOME as _H, M1PRO_JOINTS, PRO600_JOINTS, BELT_A
+from cell_layout import HOME as _H, M1PRO_JOINTS, PRO600_JOINTS, BELT_A, GRASP_LINKS
+from std_msgs.msg import Empty
 
 # One source of truth: scripts/cell_layout.py (same values the generator
 # writes into cell.urdf as initial_value, so "home" and "spawn" agree).
@@ -42,6 +44,12 @@ class GoHome(Node):
         super().__init__('go_home')
         self.pubs = {t: self.create_publisher(JointTrajectory, t, 10)
                      for t in HOME}
+        # gz-sim 8.11's DetachableJoint ATTACHES ON START (attachRequested
+        # defaults true): the moment the wafer spawns, fork, cup and belt nest
+        # all weld it where it lies and every later attach is "Already
+        # attached". Release all three so the cell starts with a free wafer.
+        self.release = [self.create_publisher(Empty, f'/wafer/{c}/detach', 10)
+                        for c in GRASP_LINKS]
         self.sent = False
         self.tries = 0
         self.create_timer(1.0, self.tick)
@@ -62,7 +70,11 @@ class GoHome(Node):
             pt.time_from_start = Duration(sec=3)
             traj.points.append(pt)
             self.pubs[topic].publish(traj)
-        self.get_logger().info('home pose commanded to all three controllers')
+        for _ in range(3):
+            for pub in self.release:
+                pub.publish(Empty())
+            time.sleep(0.3)
+        self.get_logger().info('home pose commanded to all three controllers; wafer released from all carriers')
         raise SystemExit(0)
 
 

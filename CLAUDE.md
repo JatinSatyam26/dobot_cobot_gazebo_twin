@@ -85,11 +85,11 @@ values plus the worst limit margin. Its `solve()` is importable for reach checks
 | Trap | Symptom | Fix |
 |---|---|---|
 | `pkill -f` self-kill | Bash exits 1, no output, even a trailing `true` never runs | The Bash tool passes the script as one argv, so the pattern matches your own shell. Put kills in a SEPARATE call from the relaunch |
-| `gz sim` runs as **ruby** and a headless run has NO `server` suffix | `pkill -x gz-sim-server` matches nothing, and `grep "gz sim (server\|gui)$"` misses `gz sim -r -s -v 3 <world>`, so a live headless sim reads as dead. Two stale servers were found this way on 2026-09-03; the next launch's spawners then reported `Controller already loaded` | `ps -eo pid,etimes,args \| grep -E "gz sim -r\|parameter_bridge\|robot_state_publisher" \| grep -v grep`, kill by PID. `ros2 launch` SIGINT left the server AND the bridges alive twice tonight |
+| `gz sim` runs as **ruby** and a headless run has NO `server` suffix | `pkill -x gz-sim-server` matches nothing, and `grep "gz sim (server\|gui)$"` misses `gz sim -r -s -v 3 <world>`, so a live headless sim reads as dead. Two stale servers were found this way on 2026-09-03; the next launch's spawners then reported `Controller already loaded` | `ps -eo pid,etimes,args \| grep -E "gz sim\|parameter_bridge\|robot_state_publisher" \| grep -v grep`, kill by PID. Headless children are `gz sim -r -s ...`, GUI-mode children are `gz sim server` and `gz sim gui`: a pattern that matches only one form misses the other (a GUI-mode server from 00:12 survived four cycle tests on 2026-09-04 and answered their action goals and pose queries). `ros2 launch` SIGINT left the server AND the bridges alive repeatedly |
 | Joint initialised **at** a limit | Joint silently ignores every command for the whole run | `initial_value` must sit strictly inside; this repo keeps ≥0.05 rad margin |
 | Massless links | `FrameAttachedToGraph unable to find unique frame [...]`, model silently fails to spawn | The generator auto-adds placeholder inertia |
 | Gravity collapse | Arms sag in the ~14 s spawn→controller window; JTC latches the sagged pose forever | `go_home.py` runs at spawn+7 s |
-| PRIME offload env vars | `Failed to create OpenGL context` | There is no NVIDIA GL to offload to: the 7.0 HWE kernel has no nvidia modules (`nvidia-smi` fails, Mesa Intel renders). Fix is `linux-modules-nvidia-595-open-<running kernel>` + reboot; until then do not set them |
+| PRIME offload env vars | `Failed to create OpenGL context` | Only when the NVIDIA kernel module is not loaded for the running kernel (happened 2026-09-03 after an HWE kernel update; `nvidia-smi` fails, Mesa Intel renders). Fixed 2026-09-04 by installing `linux-modules-nvidia-595-open-<running kernel>` and rebooting. With the module loaded, `__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia` gives the RTX 4060; without them the default GL is still the Intel iGPU (prime is on-demand). Check `nvidia-smi` first after every kernel update |
 | Orphan processes | "Controller already loaded"; stale `/clock` publishers | Kill leftover `parameter_bridge` PIDs from dead runs |
 | `robot_description` YAML-parsed | Launch mangles the URDF | `ParameterValue(Command([...]), value_type=str)` |
 | ros2 daemon staleness | `topic list` disagrees with `topic hz` | `ros2 daemon stop` |
@@ -135,6 +135,52 @@ The reference material the older notes call "lost" is on disk: overhead photos
 render and a 28 s cycle video in `~/Downloads` (paths in
 `docs/research_2026-09-03/RESEARCH_REVIEW.md`). Decode HEIC with GdkPixbuf;
 `heif-thumbnailer` silently caps at 512 px.
+
+## Grasp and sequencer (added 2026-09-04)
+
+The wafer is grasped by **gz DetachableJoint** fixed joints, three of them,
+emitted into `cell.urdf` by the generator: fork, cup and the belt nest (so the
+wafer rides the belt by a joint, not by friction). Attach/detach are
+`std_msgs/Empty` on `/wafer/<fork|cup|nest>/<attach|detach>`, bridged in
+`cell.launch.py`; the plugin's state comes back on `/wafer/<carrier>/state`.
+
+```bash
+source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 run wafer_cell_bringup cell_sequencer.py
+```
+
+Runs one full cycle (parameters `belt_speed`, `dwell_b`, `speed_scale`,
+`cycles`; `--dry-run` prints the IK of every waypoint without a sim). Every
+waypoint is solved at start-up from `cell_layout.py`. Step names are published
+on `/cell/state`; a PLC bridge publishing the same names is the shadow hook.
+`record_frames.py <dir> [/cell_cam] [interval]` saves timestamped frames and the
+state log for a contact sheet.
+
+**Trap: DetachableJoint parent links must survive URDF→SDF.** sdformat merges
+every link that hangs off a *fixed* joint into its parent, so `m1pro_fork` and
+`pro600_cup` do not exist in the spawned model (the plugin logs
+`Link with name m1pro_fork not found in model wafer_cell` and silently never
+attaches). `GRASP_LINKS` therefore names `m1pro_wrist_link`, `pro600_link6` and
+`belt_carriage`. The same merging is why `check_extents.py` sees the fork under
+its own link name only in the URDF, not in the SDF.
+
+**Trap: gz-sim 8.11's DetachableJoint ATTACHES ON START** (`attachRequested{true}`
+in its header, verified in source and in the log: three `Attaching entity`
+events the moment the wafer spawns). All three carriers weld the wafer where it
+lies and every later attach answers `Already attached`, so nothing ever moves
+and no error is printed. `go_home.py` and the sequencer's `release_all()`
+therefore detach all three at start. Run with `verbose:=4` to see the plugin's
+`[Dbg]` lines; `-v 3` hides them.
+
+**The belt carriage is the magenta C-NEST**, not the flat bridge.
+`meshes/belt_nest.stl` is exported from `meshes/Conveyor_Wafer_Holder.3MF`
+(the print source); photographs `reference_photos_4/20260902_121240` and the
+cycle video show it. The 127 mm wafer rests on its rim 53 mm above the belt.
+`belt_holder.stl` (180 × 70 × 45 bridge) is a different part and unused.
+
+**M1 Pro base yaw is −90° by inference, not measurement.** With yaw 0 the fork
+cannot withdraw along −X out of the belt nest (the video shows it doing so);
+with the carriage facing the bench front every waypoint is reachable, matching
+the render and the parallax-corrected link positions. Still ⛔ metrology.
 
 ## Working style the owner has asked for
 

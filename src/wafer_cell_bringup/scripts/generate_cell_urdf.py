@@ -30,7 +30,7 @@ from ament_index_python.packages import get_package_share_directory
 # Every pose and the home pose come from ONE place. Edit cell_layout.py,
 # never the numbers here. The layout is INTERIM (photo-derived, +/-20 mm) -
 # read the provenance block at the top of cell_layout.py.
-from cell_layout import ROBOTS, JOINT_LIMITS, HOME
+from cell_layout import ROBOTS, JOINT_LIMITS, HOME, GRASP_LINKS, WAFER_MODEL
 
 # joint -> (lower, upper, initial). Initial values sit strictly INSIDE the
 # range: a joint initialised at a limit latches and ignores every command.
@@ -120,6 +120,26 @@ def main():
     ET.SubElement(pl, 'parameters').text = str(
         Path(get_package_share_directory('wafer_cell_bringup')) /
         'config' / 'cell_controllers.yaml')
+
+    # Grasp = a fixed joint created/destroyed on demand (gz DetachableJoint).
+    # Starts DETACHED and keeps looking for the wafer model until it spawns
+    # (verified in gz-sim8 source). Attach accepts any message, detach wants
+    # gz.msgs.Empty; cell.launch.py bridges std_msgs/Empty to both. One per
+    # carrier: the fork (M1 Pro), the cup (Pro 600) and the belt nest, so the
+    # wafer rides the belt by a joint, not by friction (contact physics is the
+    # one layer this model does not try to reproduce - PROJECT_CONTEXT 9).
+    for carrier, link in GRASP_LINKS.items():
+        dj = ET.SubElement(gz, 'plugin',
+                           {'filename': 'gz-sim-detachable-joint-system',
+                            'name': 'gz::sim::systems::DetachableJoint'})
+        ET.SubElement(dj, 'parent_link').text = link
+        ET.SubElement(dj, 'child_model').text = WAFER_MODEL
+        ET.SubElement(dj, 'child_link').text = 'link'
+        ET.SubElement(dj, 'attach_topic').text = f'/wafer/{carrier}/attach'
+        ET.SubElement(dj, 'detach_topic').text = f'/wafer/{carrier}/detach'
+        ET.SubElement(dj, 'output_topic').text = f'/wafer/{carrier}/state'
+        # keep the warning: it is the only sign the plugin cannot find the wafer
+        ET.SubElement(dj, 'suppress_child_warning').text = 'false'
 
     ET.indent(cell, space='  ')
     src = Path(__file__).resolve().parents[1] / 'urdf' / 'cell.urdf'

@@ -454,6 +454,14 @@ pkill -9 -x gz-sim-server
 > live in `src/wafer_cell_bringup/scripts/cell_layout.py`. The two images
 > described below as "not saved" **are on disk** (see the review); the
 > reference render is a Gemini-generated concept image, not a measurement.
+>
+> **2026-09-04:** M1 Pro yaw set to **−90° by kinematic inference** (with yaw 0
+> the fork cannot withdraw from the belt nest along −X as the video shows; with
+> the carriage facing the bench front every cycle waypoint is reachable). The
+> belt carriage is the magenta **C-nest** (`Conveyor_Wafer_Holder.3MF`), not the
+> flat bridge; the wafer rests on its rim 53 mm above the belt. The fork's
+> wafer seat is 147 mm from the wrist (tips 30 mm past the wafer centre, inside
+> the nests' 57.5 mm free radius). All three remain 🟡 until measured.
 
 The owner reviewed the Gazebo build against a reference render and confirmed
 **all four** of the following are wrong. No changes were made: they are recorded

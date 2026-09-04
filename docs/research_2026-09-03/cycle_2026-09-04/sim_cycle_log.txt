@@ -1,0 +1,44 @@
+=== sequencer start 00:42:38
+=== sequencer exit 0 at 00:43:31
+IK plan ready
+>> RELEASE_ALL
+>> M1_APPROACH_YELLOW
+>> M1_INSERT_UNDER_WAFER
+>> FORK_ATTACH
+   fork attach: plugin reports "attached"
+>> M1_LIFT
+>> M1_TO_BELT
+>> M1_LOWER_TO_NEST
+>> M1_INSERT_INTO_NEST
+>> FORK_DETACH
+   fork detach: plugin reports "detached"
+>> M1_DROP_BLADE
+>> M1_RETREAT
+>> NEST_ATTACH
+   nest attach: plugin reports "attached"
+>> M1_HOME
+>> BELT_A_TO_B
+>> BELT_B_TO_C
+>> NEST_DETACH
+   nest detach: plugin reports "detached"
+>> P6_ABOVE_C
+>> P6_DESCEND
+>> CUP_ATTACH
+   cup attach: plugin reports "attached"
+>> P6_LIFT
+>> P6_TO_BLUE
+>> P6_PLACE
+>> CUP_DETACH
+   cup detach: plugin reports "detached"
+>> P6_UP
+>> P6_HOME
+>> BELT_RETURN_A
+>> CYCLE_DONE
+=== wafer pose at the end
+    x: 0.42584179137674605
+    y: -0.16622299191539411
+    z: 0.097003116857990915
+=== final captures
+saved /tmp/claude-1000/-home-jatin-satyam-dobot-cobot-gazebo-twin/01fd2013-c3f3-4000-b6c6-964b16cc8d87/scratchpad/cycle4/final_plan.png  (1280x800, rgb8)
+saved /tmp/claude-1000/-home-jatin-satyam-dobot-cobot-gazebo-twin/01fd2013-c3f3-4000-b6c6-964b16cc8d87/scratchpad/cycle4/final_front.png  (1280x800, rgb8)
+=== frames

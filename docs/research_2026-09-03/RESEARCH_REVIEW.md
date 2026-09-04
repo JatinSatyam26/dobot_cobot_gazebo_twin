@@ -254,3 +254,44 @@ docs/research_2026-09-03/
   sim_verify_plan_2026-09-03.png     /plan_cam capture
   sim_verify_log_2026-09-03.txt      controllers, joint list, check_extents
 ```
+
+---
+
+## 8. Addendum, 2026-09-04 (after the reboot)
+
+* **GPU restored.** Kernel 7.0.0-31 with `nvidia-driver-595-open` 595.84;
+  `nvidia-smi` OK. Default GL is still the Intel iGPU (PRIME on-demand);
+  `cell.launch.py` now exports the two PRIME offload variables whenever
+  `/proc/driver/nvidia/version` exists. Verified: `gz sim server` and
+  `gz sim gui` both on the RTX 4060, controllers active. RTF with GUI ≈ 0.5,
+  headless ≈ 0.75 (mesh collisions on every M1 Pro link are the suspect).
+* **The belt holder in the repo was the wrong part.** `belt_holder.stl` is a
+  180 × 70 × 45 flat bridge; the part on the belt in every photograph and in
+  the video is a 53 mm-tall C-nest, whose print source is
+  `Conveyor_Wafer_Holder.3MF` (ring base r 29–45, four wall segments, 73.6°
+  gaps on the belt axis → 65.6 mm chord for the 58.2 mm blade, a 3 mm ledge at
+  r 57.5–60.7 two mm below the rim). The 127 mm wafer rests on the rim.
+  Exported as `belt_nest.stl` and used for both visual and collision.
+* **M1 Pro yaw −90° inferred.** See `cell_layout.py`. With yaw 0 the withdrawal
+  from the belt nest needs the wrist 0.10 m from the shoulder; the elbow limit
+  allows 0.15 m.
+* **Fork wafer seat moved to 147 mm** from the wrist so the tine tips stop
+  30 mm past the wafer centre, inside the nests' free radius; at 115 mm the
+  tips sat under the 2 mm ledge ring and could never rise to lift the wafer.
+* **Grasp and sequencer implemented.** DetachableJoint × 3, bridged; sequencer
+  with IK from the layout, timing from the video; frame recorder. First cycle
+  ran end to end in 45 s sim time with correct motions but the plugins could
+  not find `m1pro_fork` / `pro600_cup`: sdformat merges fixed-joint children
+  into their parents. Fixed by naming the surviving links.
+* **Full cycle verified, 2026-09-04 00:43.** On a clean simulator the
+  sequencer ran yellow nest → belt nest at A → belt → C → blue nest in ≈45 s
+  of sim time; every carrier reported `attached`/`detached`; the wafer's final
+  pose was (0.426, −0.166, 0.097), inside the blue nest. Artefacts in
+  `cycle_2026-09-04/` (contact sheet, final plan/front, state timeline, log).
+* **Two silent traps cost three runs.** (1) gz-sim 8.11's DetachableJoint has
+  `attachRequested{true}`: all three carriers welded the wafer at spawn and
+  every later attach was "Already attached"; fixed with a release at start-up.
+  (2) A GUI-mode Gazebo from the 00:12 test (`gz sim server` / `gz sim gui`,
+  which the headless-only cleanup pattern did not match) stayed alive under
+  three headless tests and answered their action goals and pose queries. Both
+  are in CLAUDE.md now.

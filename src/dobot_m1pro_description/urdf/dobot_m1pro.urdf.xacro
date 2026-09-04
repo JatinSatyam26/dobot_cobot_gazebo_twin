@@ -253,11 +253,17 @@
     <origin xyz="0 0 0"/>
   </joint>
 
-  <!-- Wafer seat: on top of the blade, on the fork centreline. -->
+  <!-- Wafer seat: on top of the blade, on the fork centreline, 147 mm from
+       the wrist axis so the tine tips (177 mm) stop 30 mm past the wafer
+       centre. That keeps the tips inside the nests' free radius (57.5 mm, the
+       inner edge of the 2 mm ledges) so the blade can rise through the ledge
+       plane and lift the wafer; at 115 mm the tips sat 62 mm past centre,
+       under the ledge ring, and could not. ASSUMED - metrology
+       fork_support_geometry. -->
   <link name="${prefix}fork_seat"/>
   <joint name="${prefix}fork_seat_fixed" type="fixed">
     <parent link="${prefix}fork"/><child link="${prefix}fork_seat"/>
-    <origin xyz="0.1150 0 -0.0250"/>
+    <origin xyz="0.1470 0 -0.0250"/>
   </joint>
 
   <xacro:if value="$(arg use_gz_control)">
