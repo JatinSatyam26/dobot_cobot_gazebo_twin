@@ -23,7 +23,7 @@ urdf/cell.urdf is GENERATED. After editing a robot xacro or a cell pose:
 from launch import LaunchDescription
 from launch.conditions import IfCondition
 from launch.actions import (
-    AppendEnvironmentVariable, DeclareLaunchArgument,
+    AppendEnvironmentVariable, DeclareLaunchArgument, ExecuteProcess, OpaqueFunction, SetLaunchConfiguration, Shutdown,
     IncludeLaunchDescription, RegisterEventHandler, TimerAction,
 )
 from launch.event_handlers import OnProcessExit
@@ -39,6 +39,7 @@ from launch_ros.substitutions import FindPackageShare
 # numbers live in scripts/cell_layout.py (installed to lib/<pkg>), the same
 # file the generator and check_extents use.
 import os, sys
+from pathlib import Path
 from ament_index_python.packages import get_package_prefix
 sys.path.insert(0, os.path.join(get_package_prefix('wafer_cell_bringup'),
                                 'lib', 'wafer_cell_bringup'))
@@ -64,13 +65,31 @@ def spawner(name):
                 output='screen', arguments=[name] + CM)
 
 
+def world_with_step(context):
+    """step:=0.002 writes a temporary copy of the world with that physics step.
+    The committed world keeps the 1 ms step the owner approved the cycle at.
+    2 ms halves the physics cost (RTF 0.98 headless, 2026-09-04) but is NOT
+    equivalent: the final place ended 2.1 / 1.3 mm off centre. Demos only."""
+    import re, tempfile
+    from launch.substitutions import LaunchConfiguration as LC
+    step = LC('step').perform(context); world = LC('world').perform(context)
+    if abs(float(step) - 0.001) < 1e-9:
+        return [SetLaunchConfiguration('world_file', world)]
+    text = Path(world).read_text()
+    text, n = re.subn(r'<max_step_size>[^<]+</max_step_size>', f'<max_step_size>{float(step):g}</max_step_size>', text, count=1)
+    assert n == 1, 'max_step_size not found in the world'
+    tmp = Path(tempfile.gettempdir()) / f'wafer_cell_step{float(step):g}.sdf'
+    tmp.write_text(text)
+    return [SetLaunchConfiguration('world_file', str(tmp))]
+
+
 def generate_launch_description():
     bringup = FindPackageShare('wafer_cell_bringup')
     m1_pkg = FindPackageShare('dobot_m1pro_description')
     p6_pkg = FindPackageShare('mycobot_pro600_description')
 
     gui = LaunchConfiguration('gui')
-    world = LaunchConfiguration('world')
+    world = LaunchConfiguration('world_file')   # set by world_with_step()
 
     # cat, not xacro: cell.urdf is generated and already expanded.
     # ParameterValue(..., str) is mandatory or launch YAML-parses the URDF.
@@ -93,6 +112,9 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('gui', default_value='true'),
+        DeclareLaunchArgument('gui_nvidia', default_value='true',
+                              description='render the GUI window on the NVIDIA card too (false: GUI on the '
+                                          'Intel iGPU, server on NVIDIA; measured RTF 0.95 vs 0.86)'),
         DeclareLaunchArgument('cameras', default_value='true',
                               description='bridge the six camera sensors (they render only while bridged; '
                                           'false for a lighter GUI demo)'),
@@ -103,6 +125,10 @@ def generate_launch_description():
                               description='gz sim -v level; 4 shows plugin debug (DetachableJoint etc.)'),
         DeclareLaunchArgument('world', default_value=PathJoinSubstitution(
             [bringup, 'worlds', 'wafer_cell.sdf'])),
+        DeclareLaunchArgument('step', default_value='0.001',
+                              description='physics step in s; 0.002 runs a GUI demo at real time but is not '
+                                          'equivalent (final place 2 mm off); verification stays at 0.001'),
+        OpaqueFunction(function=world_with_step),
 
         # package:// mesh URIs resolve by scanning GZ_SIM_RESOURCE_PATH for a
         # directory named after the package — so these are the SHARE ROOTS.
@@ -113,14 +139,25 @@ def generate_launch_description():
         AppendEnvironmentVariable('GZ_SIM_RESOURCE_PATH',
                                   PathJoinSubstitution([p6_pkg, '..'])),
 
+        # The SERVER always runs headless (sensors render on the NVIDIA card via
+        # the PRIME variables set above). The GUI is a separate process so it can
+        # take a different GPU, and closing its window shuts the launch down
+        # (a single 'gz sim -r' used to leave the server and bridges alive).
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([PathJoinSubstitution(
                 [FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]),
             launch_arguments={
-                'gz_args': [PythonExpression(
-                    ["'-r -v ' if '", gui, "' == 'true' else '-r -s -v '"]),
-                    LaunchConfiguration('verbose'), ' ', world],
+                'gz_args': ['-r -s -v ', LaunchConfiguration('verbose'), ' ', world],
                 'on_exit_shutdown': 'true'}.items()),
+        ExecuteProcess(
+            cmd=['gz', 'sim', '-g'], output='screen', on_exit=[Shutdown()],
+            condition=IfCondition(PythonExpression(
+                ["'", gui, "' == 'true' and '", LaunchConfiguration('gui_nvidia'), "' == 'true'"]))),
+        ExecuteProcess(
+            cmd=['bash', '-c', 'unset __NV_PRIME_RENDER_OFFLOAD __GLX_VENDOR_LIBRARY_NAME; exec gz sim -g'],
+            output='screen', on_exit=[Shutdown()],
+            condition=IfCondition(PythonExpression(
+                ["'", gui, "' == 'true' and '", LaunchConfiguration('gui_nvidia'), "' != 'true'"]))),
 
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              output='screen',

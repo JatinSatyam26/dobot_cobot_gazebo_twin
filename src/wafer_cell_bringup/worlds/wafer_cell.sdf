@@ -64,11 +64,11 @@
     <physics name="1ms" type="ignored">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
-      <!-- Collision detector stays ODE (DART default). Bullet was tried on
-           2026-09-04: it treats the C-shaped nest meshes as convex hulls and
-           the fork can no longer enter them. ODE's thin-cylinder vs box
-           contacts proved exact to <1 mm once the fork's approach path
-           stopped sweeping through the wafer (cell_plan.py). -->
+      <!-- Collision detector: ODE (the DART default). Tried on 2026-09-04:
+           Bullet convex-hulls the C-shaped nests (fork cannot enter); FCL
+           is exact but the real-time factor fell to 0.1-0.2 whenever the
+           wafer rested on a mesh. ODE pays ~0.4 in those phases, 0.95
+           otherwise. -->
     </physics>
 
     <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
