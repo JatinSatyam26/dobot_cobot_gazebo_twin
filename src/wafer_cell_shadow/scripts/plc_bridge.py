@@ -32,7 +32,7 @@ from shadow_common import fake_cycle_state, declare_fake_params, use_venv
 
 BELT_STEPS = {'BELT_A_TO_B', 'BELT_B_TO_C', 'BELT_RETURN_A'}
 REVERSE_STEPS = {'BELT_RETURN_A'}          # whether the real belt ever reverses is metrology belt_travel_direction
-VACUUM_STEPS = {'CUP_ATTACH', 'P6_LIFT', 'P6_TO_BLUE', 'P6_PLACE'}
+VACUUM_STEPS = {'CUP_ATTACH', 'P6_LIFT_CLEAR', 'P6_LIFT', 'P6_TO_BLUE', 'P6_NEAR_BLUE', 'P6_PLACE'}
 
 
 class PlcBridge(Node):

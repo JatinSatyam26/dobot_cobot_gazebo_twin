@@ -20,8 +20,7 @@ Total on disk: ~161 MB, of which ~111 MB is reference photography.
 |---|---|---|
 | `docs/reference_photos/` … `_5/` | 54 photos of the real cell, 111 MB | Photographs of the owner's physical bench. Sole source for the layout, the PLC label, the end effectors, the nest colours |
 | `src/wafer_cell_bringup/meshes/wafer_tower.stl` | 3D-printed nest, 107.5 × 135 × 100 mm | Customer print file. Shelf ledges measured from it at z = 0.055 / 0.077 / 0.099 |
-| `src/wafer_cell_bringup/meshes/Conveyor_Wafer_Holder.3MF` → `belt_nest.stl` | The magenta belt nest that actually rides the belt: ring base, four 53 mm walls, 74° fork gaps on the belt axis | Customer print source (3MF) and its STL export |
-| `src/wafer_cell_bringup/meshes/belt_holder.stl` | 180 × 70 × 45 mm flat bridge ("Wafer Holder Conveyer.stl") | Customer print file, but **not** the part on the belt (photos 2026-09-02); kept, unused |
+| `src/wafer_cell_bringup/meshes/belt_holder.stl` | The belt holder ("Wafer Holder Conveyer.stl"): 180 × 70 plate with two 45 mm posts, arc cuts r 57.5, seat at 43 mm, lip r ≈ 64. Rides the belt plate-down | Customer print file |
 | `docs/cycle_video/`, `docs/reference_render_gemini_2026-09-03.png` | 28 s cycle video (phone + isolated), AI concept render | Copied from ~/Downloads on 2026-09-04 |
 | `src/wafer_cell_bringup/meshes/m1pro_fork.stl` | M1 Pro passive fork | Customer print file. Blade 3 mm thick, 58.2 wide, 189.5 long; 25 mm boss |
 | `PROJECT_CONTEXT.md` | Project brief, Revision B | Contains owner-supplied measurements and the §13 corrections log |
@@ -50,8 +49,8 @@ render were sent in chat and never saved. Both exist, plus a cycle video:
   want it under git)
 * 28 s cycle video: `~/Downloads/WhatsApp Video 2026-09-03 at 4.47.55 PM.mp4`
   and `setup_isolated_28s.mp4` (background removed)
-* print sources: `~/Downloads/Conveyor_Wafer_Holder.3MF`, conveyor SketchUp
-  `~/Downloads/Dobot+Conveyer.skp`
+* conveyor SketchUp `~/Downloads/Dobot+Conveyer.skp`. (`~/Downloads/Conveyor_Wafer_Holder.3MF`
+  is a Ø124 C-nest that is NOT the belt part; briefly used in error on 2026-09-04)
 
 Derived from them, and 🔴 worth keeping: `docs/research_2026-09-03/` (the
 rectified plan with the sim overlay, the corner fit, the cycle timeline and
@@ -135,9 +134,24 @@ recording; `scripts/cell_plan.py` (one cycle table for sequencer and fakes);
 primitive collisions on every M1 Pro link. Real-mode client libraries are in
 `~/venvs/wafer_shadow` (🟢 regenerable: `python3 -m venv --system-site-packages
 ~/venvs/wafer_shadow && pip install pymycobot pycomm3`).
+**Corrections 2026-09-04, evening (owner's five points):** belt carriage is
+`belt_holder.stl` plate-down with the posts up; Pro 600 recoloured; blue nest
+turned to open −X like the yellow one; wafer Ø127 checked against all three
+nests (0.5 mm radial clearance each); wafer seating fixed end to end. The
+seating needed five root causes, all in `CLAUDE.md` traps: the fork's
+approach point clipped the wafer's rim (now 115 mm back, descend, slide in,
+lift 1 mm), the cup's collision ran 9 mm past its tip, the Pro 600's
+joint-space descents bowed 5 mm (20 mm `near_*` waypoints), a third M1 Pro
+vendor defect (elbow rolled 1°), and the free drop into the belt holder
+kicked the disc (now placed by `set_pose`, `NEST_SEAT`, a declared
+stand-in). Cycle verified: the wafer rides seated to 0.2 mm and ends in
+the blue nest 0.3 / 0.5 mm off centre at ledge height. Four close-up cameras
+(`/detail_yellow_cam`, `/detail_belt_cam`, `/detail_beltc_cam`,
+`/detail_blue_cam`) exist for the next round.
 **What is NOT done:** the shadow against real hardware (no bench LAN, no tag
 names, no joint conventions yet), any measured yaw or pendant rest pose, the
-PLC sequence details (dwell).
+PLC sequence details (dwell), and the owner's answer on how the real fork
+lowers the wafer the last 5 mm into the belt holder.
 
 ## Git
 

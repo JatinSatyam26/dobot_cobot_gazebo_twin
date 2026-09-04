@@ -57,9 +57,10 @@ BELT_A = -0.14      # load: holder centre at rest in the photo
 BELT_B =  0.03      # mid-belt dwell point (no dwell seen in the 09-03 video)
 BELT_C =  0.20      # unload: ~75 % along the belt in the video
 
-# The belt carriage is the magenta C-nest (meshes/belt_nest.stl from
-# Conveyor_Wafer_Holder.3MF): 53 mm tall, the 127 mm wafer rests on its rim.
-NEST_SEAT_Z = BELT_XYZ[2] + 0.053          # wafer underside on the belt nest
+# The belt carriage is meshes/belt_holder.stl lying plate-down on the belt:
+# posts 45 mm tall at the belt-axis ends, ring seat at 43 mm, lip r ~64 mm.
+NEST_SEAT_Z     = BELT_XYZ[2] + 0.043      # wafer underside on the holder's seat ring
+HOLDER_POST_TOP = BELT_XYZ[2] + 0.045      # a fork blade must stay above this along the belt
 
 # ---------------------------------------------------------------- nests (model origin = wafer-seat arc centre)
 # The tower STL is Y-up: its +X is the OPEN chord side. rpy (pi/2, 0, yaw)
@@ -67,7 +68,8 @@ NEST_SEAT_Z = BELT_XYZ[2] + 0.053          # wafer underside on the belt nest
 NEST_YELLOW     = (-0.353, -0.162, 0.005)
 NEST_YELLOW_RPY = (1.5708, 0.0, 3.14159)   # opens toward -X, toward the M1 Pro
 NEST_BLUE       = (0.430, -0.153, 0.005)
-NEST_BLUE_RPY   = (1.5708, 0.0, 0.0)       # opens toward +X, toward the Pro 600
+NEST_BLUE_RPY   = (1.5708, 0.0, 3.14159)   # opens toward -X, same as the yellow one (owner, 2026-09-04;
+                                           # the 2026-09-02 photo showed it opening +X)
 SHELF_Z         = (0.0550, 0.0770, 0.0990) # measured off the mesh, settled
 
 # ---------------------------------------------------------------- wafer
@@ -98,9 +100,9 @@ JOINT_LIMITS = {
 # nest. Pro 600: cup pointing straight down above belt point C.
 HOME = {
     'm1pro_z_lift':   0.1181,
-    'm1pro_shoulder': -0.4830,
-    'm1pro_elbow':    -1.7604,
-    'm1pro_wrist':    0.2590,       # == -4.2502 rad, same pose
+    'm1pro_shoulder': -0.4821,
+    'm1pro_elbow':    -1.7612,
+    'm1pro_wrist':    0.2567,       # == -4.2502 rad, same pose
     'pro600_joint1':  -0.1115,
     'pro600_joint2':  0.1565,
     'pro600_joint3':  1.6460,
@@ -122,5 +124,7 @@ WAFER_MODEL = 'wafer'
 # the same rigid grasp. belt_carriage is on a prismatic joint and survives.
 GRASP_LINKS = {'fork': 'm1pro_wrist_link', 'cup': 'pro600_link6', 'nest': 'belt_carriage'}
 FORK_SEAT_X = 0.147     # wafer centre on the blade, from the wrist axis (tine tips 30 mm past it)
-WAFER_GAP   = 0.001     # blade top / cup lip to wafer face at attach time
+FORK_UNDER  = 0.004     # blade top this far under the wafer while sliding in (the ledge below leaves 19 mm)
+FORK_LIFT   = 0.001     # blade then rises to this far ABOVE the wafer's resting underside: it lifts the wafer, which then rests on the tines
+CUP_GAP     = 0.002     # cup lip stops this far above the wafer (a joint needs no contact)
 PRO600_JOINTS = [f'pro600_joint{i}' for i in range(1, 7)]

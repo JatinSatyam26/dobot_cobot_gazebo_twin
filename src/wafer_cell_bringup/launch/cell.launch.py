@@ -146,7 +146,11 @@ def generate_launch_description():
         Node(package='ros_gz_bridge', executable='parameter_bridge',
              name='cam_bridge', output='screen',
              arguments=['/cell_cam@sensor_msgs/msg/Image[gz.msgs.Image',
-                        '/plan_cam@sensor_msgs/msg/Image[gz.msgs.Image']),
+                        '/plan_cam@sensor_msgs/msg/Image[gz.msgs.Image',
+                        '/detail_blue_cam@sensor_msgs/msg/Image[gz.msgs.Image',
+                        '/detail_belt_cam@sensor_msgs/msg/Image[gz.msgs.Image',
+                        '/detail_yellow_cam@sensor_msgs/msg/Image[gz.msgs.Image',
+                        '/detail_beltc_cam@sensor_msgs/msg/Image[gz.msgs.Image']),
 
         # grasp: ROS std_msgs/Empty -> gz attach/detach of the wafer
         # (DetachableJoint plugins emitted by generate_cell_urdf.py), and the

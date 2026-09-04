@@ -27,11 +27,13 @@ m1pro_arm_controller:
     state_interfaces: [position, velocity]
     constraints:
       stopped_velocity_tolerance: 0.05
-      goal_time: 2.0
-      m1pro_z_lift:   { trajectory: 0.5, goal: 0.01 }
-      m1pro_shoulder: { trajectory: 0.5, goal: 0.05 }
-      m1pro_elbow:    { trajectory: 0.5, goal: 0.05 }
-      m1pro_wrist:    { trajectory: 0.5, goal: 0.05 }
+      goal_time: 3.0
+      # goal tolerances are TIGHT on purpose: a 0.05 rad goal band is 20 mm at
+      # the fork, and the nests' lips leave the wafer 0.5 mm of clearance
+      m1pro_z_lift:   { trajectory: 0.5, goal: 0.0003 }
+      m1pro_shoulder: { trajectory: 0.5, goal: 0.0005 }
+      m1pro_elbow:    { trajectory: 0.5, goal: 0.0005 }
+      m1pro_wrist:    { trajectory: 0.5, goal: 0.0005 }
 
 pro600_arm_controller:
   ros__parameters:
@@ -42,13 +44,13 @@ pro600_arm_controller:
     state_interfaces: [position, velocity]
     constraints:
       stopped_velocity_tolerance: 0.05
-      goal_time: 2.0
-      pro600_joint1: { trajectory: 0.5, goal: 0.05 }
-      pro600_joint2: { trajectory: 0.5, goal: 0.05 }
-      pro600_joint3: { trajectory: 0.5, goal: 0.05 }
-      pro600_joint4: { trajectory: 0.5, goal: 0.05 }
-      pro600_joint5: { trajectory: 0.5, goal: 0.05 }
-      pro600_joint6: { trajectory: 0.5, goal: 0.05 }
+      goal_time: 3.0
+      pro600_joint1: { trajectory: 0.5, goal: 0.0005 }
+      pro600_joint2: { trajectory: 0.5, goal: 0.0005 }
+      pro600_joint3: { trajectory: 0.5, goal: 0.0005 }
+      pro600_joint4: { trajectory: 0.5, goal: 0.0005 }
+      pro600_joint5: { trajectory: 0.5, goal: 0.0005 }
+      pro600_joint6: { trajectory: 0.5, goal: 0.0005 }
 
 belt_controller:
   ros__parameters:
@@ -59,4 +61,4 @@ belt_controller:
     constraints:
       stopped_velocity_tolerance: 0.02
       goal_time: 3.0
-      belt_travel: { trajectory: 0.05, goal: 0.005 }
+      belt_travel: { trajectory: 0.05, goal: 0.0003 }

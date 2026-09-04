@@ -32,7 +32,8 @@ from ament_index_python.packages import get_package_share_directory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cell_fk import Chain
-from cell_layout import M1PRO_JOINTS, PRO600_JOINTS, GRASP_LINKS
+from cell_layout import M1PRO_JOINTS, PRO600_JOINTS, GRASP_LINKS, BELT_A, BELT_XYZ, NEST_SEAT_Z, WAFER_THICKNESS
+from wafer_seat import seat_wafer
 from cell_plan import STEPS, build_waypoints
 
 
@@ -137,6 +138,10 @@ class Sequencer(Node):
                     time.sleep(dwell)
             elif kind == 'grasp':
                 self.grab(payload[0], payload[1], settle=dur)
+            elif kind == 'seat':
+                ok = seat_wafer(BELT_A, BELT_XYZ[1], NEST_SEAT_Z + WAFER_THICKNESS / 2 + 0.0003)  # 0.3 mm above the seat: placed touching, it sank 0.3 mm into the contact
+                self.get_logger().info(f'   wafer placed on the belt holder seat: {ok}')
+                time.sleep(dur)
 
 
 def main():

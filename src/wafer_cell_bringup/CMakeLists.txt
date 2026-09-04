@@ -13,6 +13,7 @@ install(
            scripts/check_extents.py scripts/cell_fk.py scripts/cell_layout.py
            scripts/solve_home_poses.py scripts/cell_sequencer.py scripts/record_frames.py
            scripts/cell_plan.py
+  scripts/wafer_seat.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -203,11 +203,19 @@
     <limit lower="-1.483530" upper="1.483530" effort="204.0" velocity="3.14"/>
     <dynamics damping="1.0" friction="0.5"/>
   </joint>
+  <!-- VENDOR DEFECT FIXED (3): upstream rolls the forearm frame by -1 deg
+       (rpy -0.017453) and tilts the axis back by +1 deg (0 0.017452 -0.99985),
+       so the elbow axis is vertical but every downstream frame - the wrist
+       axis and the fork blade - is rolled 1.000 deg (measured by FK). A SCARA
+       wrist is vertical; that roll tilted the carried wafer 2.2 mm edge to
+       edge. Roll removed, axis exactly vertical; the 1.96 deg yaw offset of
+       the elbow zero is kept (it belongs to the joint-angle mapping, see the
+       shadow's offset parameters). -->
   <joint name="${prefix}elbow" type="revolute">
-    <origin xyz="0.2 0 0" rpy="-0.017453 0 0.034228"/>
+    <origin xyz="0.2 0 0" rpy="0 0 0.034228"/>
     <parent link="${prefix}upper_arm_link"/>
     <child link="${prefix}forearm_link"/>
-    <axis xyz="0 0.017452 -0.99985"/>
+    <axis xyz="0 0 -1"/>
     <limit lower="-2.356194" upper="2.356194" effort="204.0" velocity="3.14"/>
     <dynamics damping="1.0" friction="0.5"/>
   </joint>

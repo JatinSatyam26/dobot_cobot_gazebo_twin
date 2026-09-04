@@ -313,3 +313,23 @@ docs/research_2026-09-03/
   killed with SIGKILL leaves no `metadata.yaml` (`ros2 bag reindex -s mcap`
   recovers it), and the fake devices must not loop, because the grasp plugin
   welds the wafer wherever it is, even across the bench.
+* **Correction from the owner, 2026-09-04:** the belt holder IS
+  `belt_holder.stl`, lying plate-down with its posts up (photo
+  `reference_photos_4/20260902_121240` shows exactly that); the 3MF C-nest was
+  wrong (rim Ø124 < wafer Ø127). Both nests open toward −X per the owner.
+  Wafer/nest fit measured off the STLs: tower step wall r 64 over a 6.5 mm
+  ledge, holder lip r ≈ 64 over a seat at 43 mm; the Ø127 wafer fits both
+  with ≈0.5 mm clearance. Consequences: the fork releases the wafer just
+  above the holder posts and the last 5.5 mm onto the seat is a declared
+  `set_pose` stand-in (`NEST_SEAT`; a free drop kicked the disc in 3 of 5
+  runs), controller goal tolerances tightened to 0.0005 rad / 0.3 mm, and
+  four close-up cameras added for seating checks. The seating itself needed
+  four more fixes, all logged as traps in `CLAUDE.md`: the fork's approach
+  point clipped the wafer rim, the cup's collision ran 9 mm past its tip, the
+  Pro 600's joint-space descents bowed 5 mm, and the M1 Pro rest pose sits
+  right above the pick nest.
+* **Third M1 Pro vendor defect (2026-09-04):** the elbow joint's frame is
+  rolled −1° and its axis tilted +1°, so the axis is vertical but the wrist
+  axis and the fork blade come out rolled 1.000° (FK-measured). It tilted a
+  carried wafer 2.2 mm edge to edge, enough to land one edge on a 2 mm lip.
+  Fixed in the xacro; documented in ATTRIBUTION.md.

@@ -29,10 +29,14 @@ from rclpy.qos import QoSProfile, DurabilityPolicy
 
 LATCHED = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 from shadow_common import M1PRO_JOINTS, PRO600_JOINTS, BELT_A
+from cell_layout import BELT_XYZ, NEST_SEAT_Z, WAFER_THICKNESS
+from wafer_seat import seat_wafer
 
 GRASP_EVENTS = {'FORK_ATTACH': ('fork', True), 'FORK_DETACH': ('fork', False),
+                'NEST_HOLD': ('nest', True), 'NEST_DROP': ('nest', False),
                 'NEST_ATTACH': ('nest', True), 'NEST_DETACH': ('nest', False),
                 'CUP_ATTACH': ('cup', True), 'CUP_DETACH': ('cup', False),
+                'NEST_SEAT': 'seat',   # stand-in: place the wafer on the seat (wafer_seat.py)
                 'RELEASE_ALL': None}
 
 
@@ -91,6 +95,8 @@ class ShadowDriver(Node):
                 if ev is None:
                     for c in ('fork', 'cup', 'nest'):
                         self.grasp[f'{c}/detach'].publish(Empty())
+                elif ev == 'seat':
+                    seat_wafer(BELT_A, BELT_XYZ[1], NEST_SEAT_Z + WAFER_THICKNESS / 2 + 0.0003)  # 0.3 mm above the seat: placed touching, it sank 0.3 mm into the contact
                 else:
                     carrier, attach = ev
                     self.grasp[f"{carrier}/{'attach' if attach else 'detach'}"].publish(Empty())

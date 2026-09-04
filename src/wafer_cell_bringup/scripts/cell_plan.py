@@ -6,6 +6,7 @@ The cell's cycle as ONE table, used by three consumers:
   * shadow tests           compare a recorded real cycle against it
 
 STEPS rows: (state name, kind, payload, nominal duration s)
+  kind 'seat'             : place the wafer on the belt holder's seat (stand-in, wafer_seat.py)
   kind 'm1pro' / 'pro600' : payload = waypoint key from build_waypoints()
   kind 'belt'             : payload = (x_from, x_to); duration = |dx| / belt_speed
   kind 'dwell'            : duration = dwell_b parameter
@@ -15,27 +16,36 @@ Durations are the 2026-09-03 video timings, rounded; the PLC program is the
 authority (metrology robot_cycle_times, point_positions).
 """
 from cell_layout import (HOME, M1PRO_JOINTS, PRO600_JOINTS, NEST_YELLOW, NEST_BLUE, SHELF_Z,
-                         BELT_XYZ, BELT_A, BELT_B, BELT_C, NEST_SEAT_Z, WAFER_THICKNESS, WAFER_GAP)
+                         BELT_XYZ, BELT_A, BELT_B, BELT_C, NEST_SEAT_Z, HOLDER_POST_TOP,
+                         WAFER_THICKNESS, FORK_UNDER, FORK_LIFT, CUP_GAP)
 from solve_home_poses import solve
 
 FORK_AX = {0: (1, 0, 0), 2: (0, 0, 1)}      # blade flat, pointing +X
 CUP_AX = {2: (0, 0, -1)}                     # cup pointing straight down
-APPROACH = 0.09                              # tine tips 20 mm outside a nest's open chord
+APPROACH = 0.115   # seat behind the nest centre: the blade tip overhangs the seat 30 mm and the wafer rim is 63.5 mm out, so >93.5 mm or the descent lands the tip on the rim (cycle 9)
 CLEAR = 0.045                                # lift above a nest rim before travelling
-GRASP_SETTLE = 0.4
+GRASP_SETTLE = 0.8          # let the JTC reach its (tight) goal band before welding/releasing
 
 STEPS = [
     ('RELEASE_ALL',           'event',  None,                 0.0),
-    ('M1_APPROACH_YELLOW',    'm1pro',  'approach',           3.0),
+    ('M1_BACK_HIGH',          'm1pro',  'back_high',          2.5),
+    ('M1_APPROACH_YELLOW',    'm1pro',  'approach',           1.5),
     ('M1_INSERT_UNDER_WAFER', 'm1pro',  'insert',             2.0),
+    ('M1_ENGAGE_WAFER',       'm1pro',  'engage',             0.8),
     ('FORK_ATTACH',           'grasp',  ('fork', True),       GRASP_SETTLE),
     ('M1_LIFT',               'm1pro',  'lift',               1.0),
     ('M1_TO_BELT',            'm1pro',  'to_belt',            3.0),
     ('M1_LOWER_TO_NEST',      'm1pro',  'belt_approach',      1.0),
     ('M1_INSERT_INTO_NEST',   'm1pro',  'belt_insert',        2.0),
+    # STAND-IN for the real release (owner to confirm the real mechanism):
+    # the holder's crescent posts block a blade under a seated wafer, so the
+    # sim hands the wafer from the fork to the holder joint 3.5 mm above the
+    # seat, withdraws the fork, then lets it drop into the lip and settle.
+    ('NEST_HOLD',             'grasp',  ('nest', True),       GRASP_SETTLE),
     ('FORK_DETACH',           'grasp',  ('fork', False),      GRASP_SETTLE),
-    ('M1_DROP_BLADE',         'm1pro',  'belt_lower',         0.8),
     ('M1_RETREAT',            'm1pro',  'belt_retreat',       1.5),
+    ('NEST_DROP',             'grasp',  ('nest', False),      0.3),
+    ('NEST_SEAT',             'seat',   None,                 0.5),   # stand-in: place on the seat (wafer_seat.py)
     ('NEST_ATTACH',           'grasp',  ('nest', True),       GRASP_SETTLE),
     ('M1_HOME',               'm1pro',  'home',               3.0),
     ('BELT_A_TO_B',           'belt',   (BELT_A, BELT_B),     None),
@@ -43,12 +53,16 @@ STEPS = [
     ('BELT_B_TO_C',           'belt',   (BELT_B, BELT_C),     None),
     ('NEST_DETACH',           'grasp',  ('nest', False),      GRASP_SETTLE),
     ('P6_ABOVE_C',            'pro600', 'above_c',            3.0),
-    ('P6_DESCEND',            'pro600', 'pick',               2.0),
+    ('P6_NEAR_C',             'pro600', 'near_c',             1.5),
+    ('P6_DESCEND',            'pro600', 'pick',               1.0),
     ('CUP_ATTACH',            'grasp',  ('cup', True),        GRASP_SETTLE),
+    ('P6_LIFT_CLEAR',         'pro600', 'near_c',             1.0),
     ('P6_LIFT',               'pro600', 'lift',               1.5),
     ('P6_TO_BLUE',            'pro600', 'above_blue',         3.0),
-    ('P6_PLACE',              'pro600', 'place',              2.0),
+    ('P6_NEAR_BLUE',          'pro600', 'near_blue',          1.5),
+    ('P6_PLACE',              'pro600', 'place',              1.0),
     ('CUP_DETACH',            'grasp',  ('cup', False),       GRASP_SETTLE),
+    ('P6_UP_CLEAR',           'pro600', 'near_blue',          1.0),
     ('P6_UP',                 'pro600', 'up',                 1.5),
     ('P6_HOME',               'pro600', 'home',               3.0),
     ('BELT_RETURN_A',         'belt',   (BELT_C, BELT_A),     None),
@@ -61,10 +75,14 @@ def build_waypoints(chain, log=None):
     yx, yy = NEST_YELLOW[0], NEST_YELLOW[1]
     bx, by = NEST_BLUE[0], NEST_BLUE[1]
     belt_y = BELT_XYZ[1]
-    z_pick = SHELF_Z[2] - WAFER_GAP
+    z_pick = SHELF_Z[2] - FORK_UNDER      # slide in well under the wafer
+    z_engage = SHELF_Z[2] + FORK_LIFT     # raise: the tines lift the wafer 1 mm off its shelf, then it is welded
     z_carry = SHELF_Z[2] + CLEAR
-    z_place = NEST_SEAT_Z - WAFER_GAP + 0.0005
-    z_free = NEST_SEAT_Z - 0.010
+    # The belt holder's posts sit at the belt-axis ends, so the blade cannot
+    # pass under the wafer past a post: it releases the wafer with the blade
+    # just above the post tops and the wafer drops ~7 mm into the lip.
+    z_place = HOLDER_POST_TOP + 0.003 + 0.0005    # blade top: 3 mm blade + 0.5 mm clearance above the posts; the wafer is then seated by NEST_SEAT
+    z_free = z_place                              # no lowering; retreat at the same height
     w_top_nest = NEST_SEAT_Z + WAFER_THICKNESS
     w_top_blue = SHELF_Z[2] + WAFER_THICKNESS
 
@@ -76,8 +94,12 @@ def build_waypoints(chain, log=None):
 
     m = {}
     s = [HOME[j] for j in M1PRO_JOINTS]
-    for key, tgt in [('approach', (yx - APPROACH, yy, z_pick)), ('insert', (yx, yy, z_pick)),
-                     ('lift', (yx, yy, z_carry)), ('to_belt', (BELT_A - APPROACH, belt_y, z_place + CLEAR)),
+    # 'back_high' first: the rest pose parks the fork 26 mm ABOVE this nest, and a straight
+    # joint-space move from there to the low approach point sweeps the blade down through
+    # the wafer's rim (streamed probe 2026-09-04: pitched it 20 deg, later flipped it).
+    for key, tgt in [('back_high', (yx - APPROACH, yy, z_carry)),
+                     ('approach', (yx - APPROACH, yy, z_pick)), ('insert', (yx, yy, z_pick)),
+                     ('engage', (yx, yy, z_engage)), ('lift', (yx, yy, z_carry)), ('to_belt', (BELT_A - APPROACH, belt_y, z_place + CLEAR)),
                      ('belt_approach', (BELT_A - APPROACH, belt_y, z_place)), ('belt_insert', (BELT_A, belt_y, z_place)),
                      ('belt_lower', (BELT_A, belt_y, z_free)), ('belt_retreat', (BELT_A - APPROACH, belt_y, z_free))]:
         s = m[key] = ik(M1PRO_JOINTS, 'm1pro_fork_seat', tgt, FORK_AX, s)
@@ -85,9 +107,15 @@ def build_waypoints(chain, log=None):
 
     p = {}
     s = [HOME[j] for j in PRO600_JOINTS]
-    for key, tgt in [('above_c', (BELT_C, belt_y, w_top_nest + 0.12)), ('pick', (BELT_C, belt_y, w_top_nest + WAFER_GAP)),
+    cup_gap = CUP_GAP
+    # 'near_*' waypoints 20 mm above the pick and the place: a joint-space move of a 6-axis arm
+    # bows sideways mid-path (5 mm over a 120 mm descent, cycle 10), and the nests leave the
+    # wafer 1 mm radial clearance, so the last stretch must be short enough to be straight.
+    for key, tgt in [('above_c', (BELT_C, belt_y, w_top_nest + 0.12)), ('near_c', (BELT_C, belt_y, w_top_nest + 0.02)),
+                     ('pick', (BELT_C, belt_y, w_top_nest + cup_gap)),
                      ('lift', (BELT_C, belt_y, w_top_nest + 0.12)), ('above_blue', (bx, by, w_top_blue + 0.12)),
-                     ('place', (bx, by, w_top_blue + WAFER_GAP + 0.0005)), ('up', (bx, by, w_top_blue + 0.12))]:
+                     ('near_blue', (bx, by, w_top_blue + 0.02)), ('place', (bx, by, w_top_blue + cup_gap + 0.0005)),
+                     ('up', (bx, by, w_top_blue + 0.12))]:
         s = p[key] = ik(PRO600_JOINTS, 'pro600_cup_tip', tgt, CUP_AX, s)
     p['home'] = [HOME[j] for j in PRO600_JOINTS]
     return m, p

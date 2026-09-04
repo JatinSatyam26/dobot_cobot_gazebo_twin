@@ -67,8 +67,10 @@ hung 30 mm off the rear edge.
 source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 run wafer_cell_bringup capture_view.py out.png /plan_cam
 ```
 
-Grabs a frame headlessly. Topics: `/cell_cam` (front) and `/plan_cam` (top
-down). The plan view exists because a C-shaped part's opening can hide behind
+Grabs a frame headlessly. Topics: `/cell_cam` (front), `/plan_cam` (top
+down), `/detail_yellow_cam`, `/detail_belt_cam` and `/detail_blue_cam` (close-ups
+of the pick nest, the belt holder and the place nest for millimetre seating
+checks). The plan view exists because a C-shaped part's opening can hide behind
 its own back wall in an oblique view.
 
 ```bash
@@ -175,14 +177,81 @@ nest welds it to the fork across the bench and the next move flings it. Only
 send attach when the carrier is at the wafer (the fake devices therefore run one
 cycle and hold).
 
-**The belt carriage is the magenta C-NEST**, not the flat bridge.
-`meshes/belt_nest.stl` is exported from `meshes/Conveyor_Wafer_Holder.3MF`
-(the print source); photographs `reference_photos_4/20260902_121240` and the
-cycle video show it. The 127 mm wafer rests on its rim 53 mm above the belt.
-`belt_holder.stl` (180 × 70 × 45 bridge) is a different part and unused.
+**The belt carriage is `meshes/belt_holder.stl` lying PLATE-DOWN** (owner,
+2026-09-04): a 180 × 70 plate on the belt with two 45 mm posts at the belt-axis
+ends, concave 57.5 mm arcs on their inner faces, a ring seat at 43 mm and a
+2 mm lip of radius ≈64 mm. The STL is modelled plate-up, so the xacro rolls it
+180° and lifts it 45 mm. A blade under the wafer cannot pass a post along the
+belt. Each post is a thin crescent (6.5–8 mm radially, full 70 mm across) and
+the fork's slot is only ≈19 mm wide, so with this STL a blade cannot be under a
+seated wafer at all, yet the cycle video shows exactly that. **Open question for
+the owner: how does the real fork get out from under the wafer at the belt
+holder?** Until answered, `cell_plan.py` uses a STAND-IN hand-off: the fork
+stops 0.5 mm above the posts, the holder joint takes the wafer (`NEST_HOLD`),
+the fork withdraws, the holder releases it (`NEST_DROP`), the wafer is placed
+on the seat by `set_pose` (`NEST_SEAT`, see the drop trap below), then the
+holder grips it for the ride (`NEST_ATTACH`). The C-nest
+3MF in `~/Downloads` is NOT the belt part (its rim is Ø124, the wafer is Ø127)
+and was removed from the repo.
+
+**Wafer vs nest geometry (measured off the STLs):** wafer Ø127.0; tower step
+wall r = 64 with a 6.5 mm ledge (r 57.5…64) under it; belt holder lip r ≈ 64
+over a seat ring. Both fit the wafer with ≈0.5 mm radial clearance. The sim
+therefore runs the controllers with 0.001 rad / 0.3 mm goal bands and 3 s
+goal_time, settles 0.8 s before every attach or release, stops the cup 2 mm
+above the wafer (a joint needs no contact), and gives the wafer a 63.0 mm
+COLLISION radius under its 63.5 mm visual so the ~7 mm drop into the holder
+lip has 1 mm per side, standing in for the chamfers a real print has.
+
+**Trap: the M1 Pro rest pose parks the fork 26 mm above the yellow nest, and
+the blade tip overhangs the fork seat by 30 mm.** A joint-space move from
+rest straight to a low approach point sweeps the blade down through the
+wafer's rim, and an approach point closer than 93.5 mm (30 mm overhang +
+63.5 mm wafer radius) behind the nest centre lands the descending tip on the
+rim. Both happened on 2026-09-04: the wafer was tipped 20°, flipped, or shoved
+40 mm out of the nest, and every later step inherited the offset (cycles 5–9
+all failed at the Pro 600 place). `cell_plan.py` therefore retreats at carry
+height first (`back_high`), descends 115 mm behind the nest, slides in 4 mm
+under the wafer, then raises the blade 1 mm above the wafer's resting
+underside (`engage`) so the wafer physically rests on the tines before the
+joint is made. Diagnose pick faults with a streamed pose log (wafer z and
+pitch against fork tip x), not with 2 s samples: the 20° tilt is invisible in
+the front camera. `/detail_yellow_cam` is the close-up for the pick.
+
+**Trap: a collision body that reaches past the frame the plan steers to.**
+The Pro 600 cup's collision cylinder ran 9 mm beyond `pro600_cup_tip`; the
+plan stopped the tip 2 mm above the wafer and the collision rammed the wafer
+17 mm down through the belt holder before the joint was made, so the wafer
+hung 20 mm below the cup and the place drove it into the blue ledge (cycle
+11). Any tool collision must end at its tip frame. The cup and the fork now
+do; check with the FK table `cell_sequencer.py --dry-run` prints against the
+xacro before trusting a new tool.
+
+**Rule: the last stretch of a cup pick or place is 20 mm, straight down.**
+A joint-space move of the 6-axis Pro 600 bows sideways mid-path (5 mm over a
+120 mm descent, cycle 10) and the nests leave 1 mm radial clearance, so
+`cell_plan.py` inserts `near_c` / `near_blue` waypoints 20 mm above the wafer
+and descends from there.
+
+**Trap: a free drop into the belt holder is a lottery.** Released from the
+fork the wafer falls 5.5 mm onto the holder's two crescent seats (the blade
+must clear the 45 mm posts, the seat is at 43 mm). In 3 of 5 runs the disc
+landed ~3° tilted and then climbed at ~15 mm/s until it stood at 23°, and the
+holder welded it that way for the ride; teleported onto the seat, or dropped
+level, it was stable, and the yellow tower (static) never misbehaved. The
+carriage is position-driven (`JointPositionReset`), so its contacts are
+kinematic. The ODE `max_vel` / `min_depth` tags in `models/wafer.sdf` do
+NOT fix it: DART solves the contacts itself and one lucky run misled me. The
+cycle therefore places the wafer on the seat with Gazebo's `set_pose`
+(`NEST_SEAT`, `wafer_seat.py`) between the release and the re-grip: a
+declared STAND-IN until the owner says how the real cell lowers it.
+
+**Both nests open toward −X** (owner, 2026-09-04). The 2026-09-02 photograph
+shows the blue one opening +X; the owner's instruction wins, noted in
+`cell_layout.py`.
 
 **M1 Pro base yaw is −90° by inference, not measurement.** With yaw 0 the fork
-cannot withdraw along −X out of the belt nest (the video shows it doing so);
+cannot back away along −X from the belt holder (the video shows it doing so);
 with the carriage facing the bench front every waypoint is reachable, matching
 the render and the parallax-corrected link positions. Still ⛔ metrology.
 

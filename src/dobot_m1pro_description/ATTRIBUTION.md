@@ -20,6 +20,12 @@ and there is nothing to resolve before distributing this project.
    is ±85° (J1) and ±135° (J2). Left as continuous, the sim would reach poses
    the hardware cannot. Converted to `revolute` with datasheet limits.
 
+3. **Elbow frame rolled −1° with the axis tilted back +1°.** The joint axis
+   comes out vertical but the forearm, wrist axis and tool are rolled 1.000°
+   (FK-measured). A SCARA wrist is vertical; the roll tilted a carried wafer
+   2.2 mm edge to edge. Roll removed and axis set to exactly `0 0 -1`
+   (2026-09-04). The 1.96° yaw offset of the elbow zero is kept.
+
 Masses are Dobot's SolidWorks values and are **light** (base 1.65 kg) because the
 export omits motors and castings; the real arm is ~41 kg. Harmless here — the
 base is fixed to the world and joints are position-controlled — but not valid

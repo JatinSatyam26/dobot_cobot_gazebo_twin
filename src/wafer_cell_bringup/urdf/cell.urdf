@@ -148,10 +148,10 @@
     <dynamics damping="1.0" friction="0.5" />
   </joint>
   <joint name="m1pro_elbow" type="revolute">
-    <origin rpy="-0.017453 0 0.034228" xyz="0.2 0 0" />
+    <origin rpy="0 0 0.034228" xyz="0.2 0 0" />
     <parent link="m1pro_upper_arm_link" />
     <child link="m1pro_forearm_link" />
-    <axis xyz="0 0.017452 -0.99985" />
+    <axis xyz="0 0 -1" />
     <limit effort="204.0" lower="-2.356194" upper="2.356194" velocity="3.14" />
     <dynamics damping="1.0" friction="0.5" />
   </joint>
@@ -225,6 +225,9 @@
       <geometry>
         <mesh filename="package://mycobot_pro600_description/meshes/base.stl" />
       </geometry>
+      <material name="pro600_body">
+        <color rgba="0.82 0.82 0.80 1" />
+      </material>
     </visual>
     <collision>
       <origin xyz="0 0 0.10" />
@@ -244,6 +247,9 @@
       <geometry>
         <mesh filename="package://mycobot_pro600_description/meshes/link1.stl" />
       </geometry>
+      <material name="pro600_body">
+        <color rgba="0.82 0.82 0.80 1" />
+      </material>
     </visual>
     <collision>
       <origin xyz="0 0 0" />
@@ -263,6 +269,9 @@
       <geometry>
         <mesh filename="package://mycobot_pro600_description/meshes/link2.stl" />
       </geometry>
+      <material name="pro600_body">
+        <color rgba="0.82 0.82 0.80 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5708 0" xyz="0.125 0 0" />
@@ -282,6 +291,9 @@
       <geometry>
         <mesh filename="package://mycobot_pro600_description/meshes/link3.stl" />
       </geometry>
+      <material name="pro600_body">
+        <color rgba="0.82 0.82 0.80 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5708 0" xyz="0.125 0 -0.055" />
@@ -301,6 +313,9 @@
       <geometry>
         <mesh filename="package://mycobot_pro600_description/meshes/link4.stl" />
       </geometry>
+      <material name="pro600_body">
+        <color rgba="0.82 0.82 0.80 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="1.5708 0 0" xyz="0 -0.054 0" />
@@ -320,6 +335,9 @@
       <geometry>
         <mesh filename="package://mycobot_pro600_description/meshes/link5.stl" />
       </geometry>
+      <material name="pro600_body">
+        <color rgba="0.82 0.82 0.80 1" />
+      </material>
     </visual>
     <collision>
       <origin rpy="0 1.5708 0" xyz="-0.038 0 0" />
@@ -340,7 +358,7 @@
         <mesh filename="package://mycobot_pro600_description/meshes/link6.stl" />
       </geometry>
       <material name="pro600_grey">
-        <color rgba="0.5 0.5 0.5 1" />
+        <color rgba="0.55 0.56 0.58 1" />
       </material>
     </visual>
     <collision>
@@ -435,9 +453,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.0300" />
+      <origin rpy="0 0 0" xyz="0 0 0.0255" />
       <geometry>
-        <cylinder length="0.0600" radius="0.0180" />
+        <cylinder length="0.0510" radius="0.0180" />
       </geometry>
     </collision>
     <inertial>
@@ -477,18 +495,18 @@
   </link>
   <link name="belt_carriage">
     <visual>
-      <origin rpy="1.5708 0 0" xyz="0 0 0.053" />
+      <origin rpy="-1.5708 0 0" xyz="0 0 0.045" />
       <geometry>
-        <mesh filename="package://wafer_cell_bringup/meshes/belt_nest.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://wafer_cell_bringup/meshes/belt_holder.stl" scale="0.001 0.001 0.001" />
       </geometry>
       <material name="holder_magenta">
         <color rgba="0.71 0.09 0.29 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="1.5708 0 0" xyz="0 0 0.053" />
+      <origin rpy="-1.5708 0 0" xyz="0 0 0.045" />
       <geometry>
-        <mesh filename="package://wafer_cell_bringup/meshes/belt_nest.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://wafer_cell_bringup/meshes/belt_holder.stl" scale="0.001 0.001 0.001" />
       </geometry>
     </collision>
     <inertial>
@@ -531,7 +549,7 @@
         <param name="max">1.48353</param>
       </command_interface>
       <state_interface name="position">
-        <param name="initial_value">-0.483</param>
+        <param name="initial_value">-0.4821</param>
       </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
@@ -542,7 +560,7 @@
         <param name="max">2.356194</param>
       </command_interface>
       <state_interface name="position">
-        <param name="initial_value">-1.7604</param>
+        <param name="initial_value">-1.7612</param>
       </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
@@ -553,7 +571,7 @@
         <param name="max">6.283185</param>
       </command_interface>
       <state_interface name="position">
-        <param name="initial_value">0.259</param>
+        <param name="initial_value">0.2567</param>
       </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />

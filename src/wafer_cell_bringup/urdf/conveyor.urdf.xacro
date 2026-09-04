@@ -13,16 +13,17 @@
   Swapping in a real conveyor-system plugin later replaces THIS FILE ONLY;
   the sequencer talks to a joint either way.
 
-  Carriage geometry (2026-09-04): the part that rides the belt is the magenta
-  C-NEST, print source ~/Downloads/Conveyor_Wafer_Holder.3MF, exported here as
-  meshes/belt_nest.stl (mm, Y up). Ring base r 29..45 mm, 3 mm thick; four
-  wall segments 53 mm tall with two 60-70 deg gaps on the mesh X axis (the
-  belt axis) for the fork tines and two small gaps on Z; a 3 mm ledge at
-  r 57.5..60.7 two mm below the rim, so the 127 mm wafer (r 63.5) actually
-  rests on the RIM TOP at 53 mm (NEST_SEAT_Z in cell_layout.py). Photographs
-  20260902_121240 and the cycle video show exactly this part on the belt with
-  its gap toward the M1 Pro. The earlier belt_holder.stl (180 x 70 x 45 flat
-  bridge) is a different part and is no longer used.
+  Carriage geometry (corrected by the owner 2026-09-04): the part that rides
+  the belt is meshes/belt_holder.stl, a 180 x 70 mm PLATE (3 mm) that lies
+  on the belt with two 45 mm POSTS rising at the belt-axis ends. Each post's
+  inner face is a concave arc of radius 57.5 mm (the "curve cuts"); a ring
+  seat at 43 mm and a 2 mm lip of radius ~64 mm hold the 127 mm wafer
+  (photo reference_photos_4/20260902_121240). The STL is modelled plate-up
+  (plate at file y 42..45, posts hanging to y 0), so it is rolled -90 deg
+  about X and lifted 45 mm: plate on the belt, posts up.
+  A fork blade under the wafer cannot pass a post along the belt, so the
+  fork releases the wafer from just above the posts and it drops ~7 mm
+  into the lip (cell_plan.py). NEST_SEAT_Z / HOLDER_POST_TOP in cell_layout.py.
   ===========================================================================
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="conveyor">
@@ -31,7 +32,7 @@
   <xacro:property name="prefix" value="$(arg prefix)"/>
   <xacro:arg name="controllers_file"
              default="$(find wafer_cell_bringup)/config/conveyor_controllers.yaml"/>
-  <xacro:property name="mesh" value="package://wafer_cell_bringup/meshes/belt_nest.stl"/>
+  <xacro:property name="mesh" value="package://wafer_cell_bringup/meshes/belt_holder.stl"/>
 
   <!-- travel: A = -0.25, C = +0.25. Limits are set WIDER (+/-0.30) so home
        never sits ON a limit - a joint initialised exactly at its limit latches
@@ -50,18 +51,18 @@
     </joint>
   </xacro:if>
 
-  <!-- mesh Y (up, -53..0) -> world Z via roll 90 deg; the bottom lands on
-       the belt surface with the +0.053 offset; mesh X (fork gaps) -> world X.
-       Collision is the mesh itself: the tines must pass between real wall
-       ends, a box would either block them or let them through walls. -->
+  <!-- file frame: Y is the height axis with the plate at the TOP (y 42..45).
+       roll -90 deg maps file +Y to world -Z (plate down, posts up), file Z
+       (70 mm) to world Y across the belt; +0.045 puts the plate on the belt.
+       Collision is the mesh: the wafer must land inside real posts and lip. -->
   <link name="${prefix}carriage">
     <visual>
-      <origin xyz="0 0 0.053" rpy="1.5708 0 0"/>
+      <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
       <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
       <material name="holder_magenta"><color rgba="0.71 0.09 0.29 1"/></material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.053" rpy="1.5708 0 0"/>
+      <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
       <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
     </collision>
     <inertial>

@@ -228,10 +228,11 @@ mirroring PLC or robot commands — do not assume `joint[2]` is Z:
 
 Links are 200 mm + 200 mm → 400 mm reach, matching the datasheet.
 
-**Two defects fixed on import** (see `src/dobot_m1pro_description/ATTRIBUTION.md`):
-`effort="0" velocity="0"` on the prismatic joint, and joints 2/3/4 shipped as
+**Three defects fixed on import** (see `src/dobot_m1pro_description/ATTRIBUTION.md`):
+`effort="0" velocity="0"` on the prismatic joint; joints 2/3/4 shipped as
 `continuous` — **no limits at all**, so the sim would reach poses the hardware
-cannot.
+cannot; and (found 2026-09-04) the elbow frame rolled −1° with the axis tilted
+back, which left the wrist axis and the fork blade rolled 1.000°.
 
 ### myCobot Pro 600 — ✅ OFFICIAL MODEL EXISTS, BSD LICENSED
 
@@ -458,10 +459,14 @@ pkill -9 -x gz-sim-server
 > **2026-09-04:** M1 Pro yaw set to **−90° by kinematic inference** (with yaw 0
 > the fork cannot withdraw from the belt nest along −X as the video shows; with
 > the carriage facing the bench front every cycle waypoint is reachable). The
-> belt carriage is the magenta **C-nest** (`Conveyor_Wafer_Holder.3MF`), not the
-> flat bridge; the wafer rests on its rim 53 mm above the belt. The fork's
-> wafer seat is 147 mm from the wrist (tips 30 mm past the wafer centre, inside
-> the nests' 57.5 mm free radius). All three remain 🟡 until measured.
+> belt carriage is `belt_holder.stl` ridden plate-down with its posts up
+> (owner, 2026-09-04 evening; the Ø124 C-nest 3MF briefly used that afternoon
+> was the wrong part and is gone); the wafer sits on its 43 mm seat inside a
+> 2 mm lip of radius 64. The fork's wafer seat is 147 mm from the wrist (tips
+> 30 mm past the wafer centre, inside the nests' 57.5 mm free radius). All
+> three remain 🟡 until measured. The wafer's last 5 mm into the holder is a
+> `set_pose` stand-in (`NEST_SEAT`) until the owner explains the real
+> mechanism: a blade cannot pass the 45 mm posts along the belt.
 
 The owner reviewed the Gazebo build against a reference render and confirmed
 **all four** of the following are wrong. No changes were made: they are recorded

@@ -16,8 +16,12 @@
         <material><ambient>0.55 0.57 0.60 1</ambient><diffuse>0.80 0.82 0.86 1</diffuse>
                   <specular>0.9 0.9 0.9 1</specular></material>
       </visual>
+      <!-- COLLISION radius 63.0 mm against a 63.5 mm visual: the nests' step
+           walls and the belt holder's lip are all at r = 64.0 (measured off
+           the STLs), 0.5 mm of real clearance. The sim drops the wafer ~7 mm
+           into the holder lip with no chamfers, so it gets 1.0 mm per side. -->
       <collision name="c">
-        <geometry><cylinder><radius>0.0635</radius><length>0.0015</length></cylinder></geometry>
+        <geometry><cylinder><radius>0.0630</radius><length>0.0015</length></cylinder></geometry>
         <surface><friction><ode><mu>0.6</mu><mu2>0.6</mu2></ode></friction></surface>
       </collision>
     </link>
