@@ -1,0 +1,66 @@
+=== pre-existing sim processes
+=== launching headless at 23:12:29
+=== controllers at +30s
+[INFO] [1788502380.906947083] [_ros2cli_25749]: waiting for service /controller_manager/list_controllers to become available...
+pro600_arm_controller   joint_trajectory_controller/JointTrajectoryController  active
+belt_controller         joint_trajectory_controller/JointTrajectoryController  active
+m1pro_arm_controller    joint_trajectory_controller/JointTrajectoryController  active
+joint_state_broadcaster joint_state_broadcaster/JointStateBroadcaster          active
+=== joint_states at +42s
+name:
+- belt_travel
+- m1pro_elbow
+- m1pro_shoulder
+- m1pro_wrist
+- m1pro_z_lift
+- pro600_joint1
+- pro600_joint2
+- pro600_joint3
+- pro600_joint4
+- pro600_joint5
+- pro600_joint6
+position:
+=== capture front
+saved /tmp/claude-1000/-home-jatin-satyam-dobot-cobot-gazebo-twin/01fd2013-c3f3-4000-b6c6-964b16cc8d87/scratchpad/verify_front.png  (1280x800, rgb8)
+=== capture plan
+saved /tmp/claude-1000/-home-jatin-satyam-dobot-cobot-gazebo-twin/01fd2013-c3f3-4000-b6c6-964b16cc8d87/scratchpad/verify_plan.png  (1280x800, rgb8)
+=== check_extents
+=== static world models ===
+m1pro_plate/v              x -0.6825..-0.4225  y +0.0200..+0.2800  z +0.0000..+0.0080
+pro600_plate/v             x +0.5200..+0.7200  y +0.0800..+0.2800  z +0.0000..+0.0080
+conveyor_frame/v           x -0.3490..+0.3490  y +0.0227..+0.2372  z -0.0000..+0.0626
+tower_yellow/v             x -0.5675..-0.4325  y -0.1875..-0.0800  z -0.0000..+0.1000
+tower_blue/v               x +0.4825..+0.6175  y -0.1875..-0.0800  z -0.0000..+0.1000
+=== robot links at home ===
+m1pro_base_link            x -0.6402..-0.4648  y +0.0348..+0.2652  z +0.0080..+0.6956
+m1pro_z_carriage_link      x -0.5202..-0.3897  y +0.1000..+0.2000  z +0.2239..+0.4289
+m1pro_upper_arm_link       x -0.4795..-0.2163  y +0.0326..+0.1895  z +0.2339..+0.3759
+m1pro_forearm_link         x -0.4480..-0.2247  y -0.0794..+0.1036  z +0.1839..+0.3544
+m1pro_wrist_link           x -0.4256..-0.4085  y -0.0547..-0.0376  z +0.1529..+0.2412
+m1pro_fork                 x -0.5947..-0.4049  y -0.0745..-0.0162  z +0.1249..+0.1533
+pro600_base                x +0.5653..+0.6795  y +0.1253..+0.2347  z +0.0080..+0.1570
+pro600_link1               x +0.5850..+0.6723  y +0.0853..+0.2150  z +0.1488..+0.2427
+pro600_link2               x +0.6030..+0.7819  y +0.0279..+0.1257  z +0.1724..+0.4687   <== overhang (in air) by 20 mm
+pro600_link3               x +0.4542..+0.7760  y +0.0930..+0.2276  z +0.3648..+0.4687   <== overhang (in air) by 14 mm
+pro600_link4               x +0.4484..+0.5343  y +0.0009..+0.1125  z +0.3649..+0.4289
+pro600_link5               x +0.3680..+0.4666  y -0.0120..+0.0634  z +0.3454..+0.4419
+pro600_link6               x +0.3679..+0.4319  y -0.0120..+0.0520  z +0.3210..+0.3505
+pro600_cup                 x +0.3789..+0.4211  y -0.0011..+0.0412  z +0.3000..+0.3510
+belt_carriage              x -0.3400..-0.1600  y +0.0950..+0.1650  z +0.0626..+0.1077
+
+parts RESTING off the bench: 0
+=== RTF sample
+  --versions                 Show the available versions.
+  --commands                 Show the available commands.
+Use 'gz help <command>' to print help for a command.
+=== shutting down at 23:13:17
+=== leftover sim processes
+  25312      58 /opt/ros/jazzy/lib/robot_state_publisher/robot_state_publisher --ros-args --params-file /tmp/launch_params_ygzxmmd8
+  25313      58 /opt/ros/jazzy/lib/ros_gz_bridge/parameter_bridge /clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock --ros-args
+  25315      58 /opt/ros/jazzy/lib/ros_gz_bridge/parameter_bridge /cell_cam@sensor_msgs/msg/Image[gz.msgs.Image /plan_cam@sensor_msgs/msg/Image[gz.msgs.Image --ros-args -r __node:=cam_bridge
+=== launch log errors/warnings
+[gazebo-1] [WARN] [1788502354.044275042] [gz_ros_control]: Waiting RM to load and initialize hardware...
+[gazebo-1] [WARN] [1788502354.224447454] [controller_manager.hardware_component.system.wafer_cell_system]: Executor is not available during hardware component initialization for 'wafer_cell_system'. Skipping node creation!
+[gazebo-1] [WARN] [1788502354.225083179] [controller_manager]: Component 'wafer_cell_system' does not have read or write statistics initialized, skipping registration.
+[gazebo-1] [WARN] [1788502356.121222228] [gz_ros_control]:  Desired controller update period (0.005 s) is slower than the gazebo simulation period (0.001 s).
+DONE
