@@ -21,6 +21,12 @@ Project brief, scope contract and hardware inventory live in
 | 1.5 | Cell world: board, conveyor, 2 towers, belt holder, wafer | ✅ verified |
 | 1.6 | Both arms + belt in ONE world, 11 joints under one controller manager | ✅ verified |
 
+> ⛔ **The cell LAYOUT is confirmed wrong** (tower facing, conveyor position,
+> base yaw, arm rest poses) and is deliberately left unfixed. See
+> [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) §14 before changing any pose, and
+> [`HANDOVER.md`](HANDOVER.md) for the asset inventory. The table above tracks
+> *mechanism* — that it builds, spawns and moves — not layout fidelity.
+
 **Phase 1 is complete.** Verified end to end on 2026-09-01: both controllers
 reach `active`, and `m1pro_wiggle.py` drives every joint to its commanded
 waypoint and back home with no tolerance violations.
