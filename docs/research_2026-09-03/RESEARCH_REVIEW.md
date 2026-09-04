@@ -319,10 +319,12 @@ docs/research_2026-09-03/
   wrong (rim Ø124 < wafer Ø127). Both nests open toward −X per the owner.
   Wafer/nest fit measured off the STLs: tower step wall r 64 over a 6.5 mm
   ledge, holder lip r ≈ 64 over a seat at 43 mm; the Ø127 wafer fits both
-  with ≈0.5 mm clearance. The holder's 180 mm side lies ACROSS the belt,
-  posts front and rear (owner's hand-off video, 2026-09-04 evening): the
-  fork slides the wafer in along the belt between the posts, sets it down
-  0.3 mm above the seat and backs out underneath. Consequences: controller
+  with ≈0.5 mm clearance. The holder's 180 mm side lies ALONG the belt with
+  the posts at the belt-axis ends (owner's picture); the wrist turns the
+  fork 90° during the transfer and it enters ACROSS the belt from the front
+  between the posts, sets the wafer down 0.3 mm above the seat and backs out
+  underneath (owner's videos, 2026-09-04). The holder loads beside the
+  column (`BELT_A = −0.25`). Consequences: controller
   goal tolerances tightened to 0.0005 rad / 0.3 mm, and
   four close-up cameras added for seating checks. The seating itself needed
   four more fixes, all logged as traps in `CLAUDE.md`: the fork's approach

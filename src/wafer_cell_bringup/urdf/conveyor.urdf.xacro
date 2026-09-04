@@ -20,12 +20,14 @@
   of radius ~64 mm hold the 127 mm wafer. The STL is modelled plate-up
   (plate at file y 42..45, posts hanging to y 0), so it is rolled -90 deg
   about X and lifted 45 mm: plate on the belt, posts up.
-  ORIENTATION (owner's hand-off video, 2026-09-04 evening): the plate's
-  180 mm side lies ACROSS the belt and the posts stand at the belt's FRONT
-  and REAR, overhanging the rails ~25 mm each side. The fork slides the
-  wafer in ALONG the belt between the posts, sets it on the seats and backs
-  out underneath (cell_plan.py). An earlier build had the posts at the
-  belt-axis ends, which made that hand-off impossible and forced a drop.
+  ORIENTATION (owner, 2026-09-04 late evening, with a picture): the plate's
+  180 mm side lies ALONG the belt, the posts stand at the belt-axis ends.
+  The fork does NOT enter along the belt: during the transfer from the
+  yellow nest the wrist turns the fork 90 deg so it enters ACROSS the belt
+  from the front, between the two posts, sets the wafer on the seats and
+  backs out underneath (owner's videos; cell_plan.py). I twice got this
+  wrong (posts across the belt, then a drop stand-in): read the videos
+  for the FORK's motion, not only the fixture's.
   NEST_SEAT_Z / HOLDER_POST_TOP in cell_layout.py.
   ===========================================================================
 -->
@@ -40,7 +42,7 @@
   <!-- travel: A = -0.25, C = +0.25. Limits are set WIDER (+/-0.30) so home
        never sits ON a limit - a joint initialised exactly at its limit latches
        and then silently ignores every command. -->
-  <xacro:property name="lo"   value="-0.30"/>
+  <xacro:property name="lo"   value="-0.32"/>   <!-- load position -0.25 keeps the 0.05 init margin -->
   <xacro:property name="hi"   value="0.30"/>
   <xacro:property name="home" value="-0.25"/>
 
@@ -55,19 +57,18 @@
   </xacro:if>
 
   <!-- file frame: Y is the height axis with the plate at the TOP (y 42..45).
-       roll -90 deg maps file +Y to world -Z (plate down, posts up); the yaw
-       of +90 deg then puts the file X (180 mm, posts at its ends) ACROSS the
-       belt (world Y) and the file Z (70 mm) along it; +0.045 puts the plate
-       on the belt. Collision is the mesh: the wafer must land inside real
-       posts and lip. -->
+       roll -90 deg maps file +Y to world -Z (plate down, posts up), file X
+       (180 mm, posts at its ends) stays along the belt (world X) and file Z
+       (70 mm) goes across it; +0.045 puts the plate on the belt.
+       Collision is the mesh: the wafer must land inside real posts and lip. -->
   <link name="${prefix}carriage">
     <visual>
-      <origin xyz="0 0 0.045" rpy="-1.5708 0 1.5708"/>
+      <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
       <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
       <material name="holder_magenta"><color rgba="0.71 0.09 0.29 1"/></material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.045" rpy="-1.5708 0 1.5708"/>
+      <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
       <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
     </collision>
     <inertial>

@@ -464,10 +464,12 @@ pkill -9 -x gz-sim-server
 > was the wrong part and is gone); the wafer sits on its 43 mm seat inside a
 > 2 mm lip of radius 64. The fork's wafer seat is 147 mm from the wrist (tips
 > 30 mm past the wafer centre, inside the nests' 57.5 mm free radius). All
-> three remain 🟡 until measured. The holder's 180 mm side lies ACROSS the
-> belt with the posts front and rear (owner's hand-off video, 2026-09-04
-> evening); the fork slides the wafer in along the belt between the posts,
-> sets it down and backs out underneath.
+> three remain 🟡 until measured. The holder's 180 mm side lies ALONG the
+> belt, posts at the belt-axis ends (owner's picture, 2026-09-04 late
+> evening); the wrist turns the fork 90° on the way and it enters ACROSS the
+> belt from the front between the posts, sets the wafer down and backs out
+> underneath (owner's videos). Load position `BELT_A = −0.25`, beside the
+> column, 🟡 from the video.
 
 The owner reviewed the Gazebo build against a reference render and confirmed
 **all four** of the following are wrong. No changes were made: they are recorded

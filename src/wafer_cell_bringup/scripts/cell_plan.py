@@ -19,7 +19,10 @@ from cell_layout import (HOME, M1PRO_JOINTS, PRO600_JOINTS, NEST_YELLOW, NEST_BL
                          WAFER_THICKNESS, FORK_UNDER, FORK_LIFT, CUP_GAP)
 from solve_home_poses import solve
 
-FORK_AX = {0: (1, 0, 0), 2: (0, 0, 1)}      # blade flat, pointing +X
+FORK_AX = {0: (1, 0, 0), 2: (0, 0, 1)}      # blade flat, pointing +X (yellow nest, opens -X)
+FORK_AX_BELT = {0: (0, 1, 0), 2: (0, 0, 1)} # blade flat, pointing +Y: the wrist turns the fork 90 deg on the way
+                                            # to the belt and it enters the holder ACROSS the belt from the front
+APPROACH_BELT = 0.08   # front approach: the wafer rides above the post tops, only the blade must clear, and it passes between the posts
 CUP_AX = {2: (0, 0, -1)}                     # cup pointing straight down
 APPROACH = 0.115   # seat behind the nest centre: the blade tip overhangs the seat 30 mm and the wafer rim is 63.5 mm out, so >93.5 mm or the descent lands the tip on the rim (cycle 9)
 CLEAR = 0.045                                # lift above a nest rim before travelling
@@ -35,9 +38,10 @@ STEPS = [
     ('M1_LIFT',               'm1pro',  'lift',               1.0),
     ('M1_TO_BELT',            'm1pro',  'to_belt',            3.0),
     ('M1_LOWER_TO_NEST',      'm1pro',  'belt_approach',      1.0),
-    ('M1_INSERT_INTO_NEST',   'm1pro',  'belt_insert',        2.0),   # wafer 2 mm above the lip, between the posts
-    # Hand-off as in the owner's video (2026-09-04): the posts stand at the
-    # belt's front and rear, the blade runs along the belt between them.
+    ('M1_INSERT_INTO_NEST',   'm1pro',  'belt_insert',        2.0),   # wafer 2 mm above the lip, blade between the posts
+    # Hand-off as in the owner's videos (2026-09-04): the fork, turned 90 deg
+    # on its wrist during M1_TO_BELT, enters ACROSS the belt from the front
+    # between the two posts (which stand at the belt-axis ends).
     ('M1_SET_DOWN',           'm1pro',  'belt_set',           1.0),   # lower until the wafer is 0.3 mm above the seat
     ('FORK_DETACH',           'grasp',  ('fork', False),      GRASP_SETTLE),
     ('M1_DROP_BLADE',         'm1pro',  'belt_free',          0.8),   # blade 4 mm below the seated wafer
@@ -74,10 +78,10 @@ def build_waypoints(chain, log=None):
     z_pick = SHELF_Z[2] - FORK_UNDER      # slide in well under the wafer
     z_engage = SHELF_Z[2] + FORK_LIFT     # raise: the tines lift the wafer 1 mm off its shelf, then it is welded
     z_carry = SHELF_Z[2] + CLEAR
-    # Belt holder hand-off as in the owner's video: the posts stand at the belt's
-    # front and rear, so the blade travels ALONG the belt between them. Carry the
-    # wafer in 2 mm above the lip, lower it to 0.3 mm above the seat, release,
-    # drop the blade 4 mm under the seated wafer and back out between the posts.
+    # Belt holder hand-off as in the owner's videos: the blade, turned to point +Y,
+    # travels ACROSS the belt from the front between the posts. Carry the wafer in
+    # 2 mm above the lip, lower it to 0.3 mm above the seat, release, drop the
+    # blade 4 mm under the seated wafer and back out to the front.
     z_hi = HOLDER_POST_TOP + 0.002                # blade top = wafer underside while sliding in over the lip
     z_set = NEST_SEAT_Z + 0.0003                  # wafer underside 0.3 mm above the seat at release
     z_free = NEST_SEAT_Z - FORK_UNDER             # blade top 4 mm below the seat (blade bottom 36 mm, plate top 3 mm)
@@ -95,13 +99,15 @@ def build_waypoints(chain, log=None):
     # 'back_high' first: the rest pose parks the fork 26 mm ABOVE this nest, and a straight
     # joint-space move from there to the low approach point sweeps the blade down through
     # the wafer's rim (streamed probe 2026-09-04: pitched it 20 deg, later flipped it).
-    for key, tgt in [('back_high', (yx - APPROACH, yy, z_carry)),
-                     ('approach', (yx - APPROACH, yy, z_pick)), ('insert', (yx, yy, z_pick)),
-                     ('engage', (yx, yy, z_engage)), ('lift', (yx, yy, z_carry)), ('to_belt', (BELT_A - APPROACH, belt_y, z_hi + CLEAR)),
-                     ('belt_approach', (BELT_A - APPROACH, belt_y, z_hi)), ('belt_insert', (BELT_A, belt_y, z_hi)),
-                     ('belt_set', (BELT_A, belt_y, z_set)), ('belt_free', (BELT_A, belt_y, z_free)),
-                     ('belt_retreat', (BELT_A - APPROACH, belt_y, z_free))]:
-        s = m[key] = ik(M1PRO_JOINTS, 'm1pro_fork_seat', tgt, FORK_AX, s)
+    for key, tgt, ax in [('back_high', (yx - APPROACH, yy, z_carry), FORK_AX),
+                         ('approach', (yx - APPROACH, yy, z_pick), FORK_AX), ('insert', (yx, yy, z_pick), FORK_AX),
+                         ('engage', (yx, yy, z_engage), FORK_AX), ('lift', (yx, yy, z_carry), FORK_AX),
+                         ('to_belt', (BELT_A, belt_y - APPROACH_BELT, z_hi + CLEAR), FORK_AX_BELT),
+                         ('belt_approach', (BELT_A, belt_y - APPROACH_BELT, z_hi), FORK_AX_BELT),
+                         ('belt_insert', (BELT_A, belt_y, z_hi), FORK_AX_BELT),
+                         ('belt_set', (BELT_A, belt_y, z_set), FORK_AX_BELT), ('belt_free', (BELT_A, belt_y, z_free), FORK_AX_BELT),
+                         ('belt_retreat', (BELT_A, belt_y - APPROACH_BELT, z_free), FORK_AX_BELT)]:
+        s = m[key] = ik(M1PRO_JOINTS, 'm1pro_fork_seat', tgt, ax, s)
     m['home'] = [HOME[j] for j in M1PRO_JOINTS]
 
     p = {}

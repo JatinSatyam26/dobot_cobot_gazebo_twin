@@ -53,7 +53,7 @@ ROBOTS = [
 ]
 
 # ---------------------------------------------------------------- belt waypoints (belt_travel joint, m)
-BELT_A = -0.14      # load: holder centre at rest in the photo
+BELT_A = -0.25      # load: holder beside the M1 Pro column, its end at the belt's end (owner's hand-off video); the photo had -0.14
 BELT_B =  0.03      # mid-belt dwell point (no dwell seen in the 09-03 video)
 BELT_C =  0.20      # unload: ~75 % along the belt in the video
 

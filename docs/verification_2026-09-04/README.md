@@ -1,25 +1,31 @@
 # Verification captures, 2026-09-04
 
-## Cycle 15 (current): real hand-off, holder across the belt
+## Cycle 16 (current): fork turns 90° and enters the belt holder across the belt
 
-* `cycle15_closeups.jpg` — the four close-up cameras through one full cycle:
-  yellow pick, belt hand-off seen END-ON along the belt (insert between the
-  posts 2 mm above the lip, set down, blade dropped 4 mm, retreat underneath,
-  wafer left seated), unloading end (release, cup descend), final blue nest,
-  front and plan views.
+* `cycle16_closeups.jpg` — one full cycle through the four close-up cameras:
+  yellow pick (engage, lift), the transfer (front view: the wrist turns the
+  fork 90° on the way), belt hand-off seen from BEHIND the belt (the fork
+  arrives from the bench front with the blade pointing to the rear, slides in
+  between the two end posts 2 mm above the lip, sets the wafer down, drops
+  the blade 4 mm, backs out underneath, wafer left seated), unloading end
+  (release, cup descend), final blue nest and plan view.
   Pose log of the run: set down at 43.7 mm above the belt (seat + half
-  thickness), 0.0 mm off the carriage centre; rides seated; ends at
-  (0.4300, −0.1530, 0.0997), the blue nest centre at ledge height.
+  thickness), 0.0 mm off the carriage centre, 0.0° tilt; rides seated; ends
+  at (0.4300, −0.1530, 0.0997), the blue nest centre at ledge height.
+* `belt_handoff_from_rear.jpg` — set-down, after retreat, and the wafer at
+  the unloading end (streamed probe of the same motion).
 * `belt_holder_seated_at_C.png` — the disc inside the lip after the ride,
-  posts at the belt's front and rear.
+  holder along the belt with the posts at the belt-axis ends.
 * `owner_video_handoff_frames_19-27.jpg`, `..._46-54.jpg` — zoomed frames of
-  the owner's video "How to move dobot and place wafer on magenta color holder
-  on the belt.mp4" (2.4 s, 30 fps): the fork slides the wafer in along the
-  belt between front and rear posts, sets it down, backs out underneath.
-  This is what fixed the model: the holder had been built with its posts at
-  the belt-axis ends.
+  the owner's clip "How to move dobot and place wafer on magenta color holder
+  on the belt.mp4" (2.4 s, 30 fps). Read with the M1 Pro column at the
+  rear-left: the fork points to the REAR (up-right in the picture) and comes
+  in from the front across the belt, then withdraws to the front. I first
+  misread this as an entry along the belt and turned the holder; the owner
+  corrected both.
 
 ## Earlier the same day (superseded)
 
-* `belt_holder_free_drop_failure.png` — with the end-posted holder the wafer
-  had to be dropped 5.5 mm; in 3 of 5 runs it ended standing on edge.
+* `belt_holder_free_drop_failure.png` — with the fork entering along the belt
+  it could not pass the posts; the wafer was dropped 5.5 mm and in 3 of 5
+  runs ended standing on edge.
