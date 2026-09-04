@@ -56,7 +56,8 @@ def fake_cycle_state(node):
     m1, p6 = build_waypoints(Chain(str(urdf)), log=node.get_logger().warning)
     cs = CycleState(m1, p6,
                     belt_speed=float(node.get_parameter('fake_belt_speed').value),
-                    dwell_b=float(node.get_parameter('fake_dwell_b').value))
+                    dwell_b=float(node.get_parameter('fake_dwell_b').value),
+                    cycles=int(node.get_parameter('fake_cycles').value))
     t0 = float(node.get_parameter('fake_t0').value) or time.time()
     node.get_logger().info(f'fake source: {cs.total:.1f} s cycle, epoch {t0:.1f}')
     return cs, t0
@@ -66,3 +67,4 @@ def declare_fake_params(node):
     node.declare_parameter('fake_t0', 0.0)
     node.declare_parameter('fake_belt_speed', 0.07)
     node.declare_parameter('fake_dwell_b', 0.0)
+    node.declare_parameter('fake_cycles', 1)      # 0 = loop forever (only sensible if someone puts the wafer back)

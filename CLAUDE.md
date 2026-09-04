@@ -169,7 +169,11 @@ events the moment the wafer spawns). All three carriers weld the wafer where it
 lies and every later attach answers `Already attached`, so nothing ever moves
 and no error is printed. `go_home.py` and the sequencer's `release_all()`
 therefore detach all three at start. Run with `verbose:=4` to see the plugin's
-`[Dbg]` lines; `-v 3` hides them.
+`[Dbg]` lines; `-v 3` hides them. The plugin also attaches the wafer WHEREVER
+it is, with no proximity check: an attach sent while the wafer sits in the blue
+nest welds it to the fork across the bench and the next move flings it. Only
+send attach when the carrier is at the wafer (the fake devices therefore run one
+cycle and hold).
 
 **The belt carriage is the magenta C-NEST**, not the flat bridge.
 `meshes/belt_nest.stl` is exported from `meshes/Conveyor_Wafer_Holder.3MF`

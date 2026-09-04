@@ -305,3 +305,11 @@ docs/research_2026-09-03/
   fake sources, a driver, bag recording; fake-device shadow verified end to
   end in the sim. Real mode blocked on the bench LAN, PLC tag names and joint
   conventions (all ⛔).
+* **Recorder → replay path verified.** A bag of the fake devices' `/shadow/*`
+  topics (`ros2 bag record` via `record:=true`), replayed into a fresh
+  simulator with `bridges:=false`, drove the same cycle: wafer on the fork,
+  into the belt nest, along the belt, lifted by the cup, placed in the blue
+  nest (`shadow_2026-09-04/bag_replay_frames.jpg`). Two lessons: a recorder
+  killed with SIGKILL leaves no `metadata.yaml` (`ros2 bag reindex -s mcap`
+  recovers it), and the fake devices must not loop, because the grasp plugin
+  welds the wafer wherever it is, even across the bench.

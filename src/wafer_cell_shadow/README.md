@@ -21,8 +21,13 @@ source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 launch waf
 ```
 
 `source:=real` switches every bridge to its device using `config/shadow.yaml`.
-`record:=true` bags every `/shadow/*` topic into `shadow_bag/`; replay with
-`ros2 bag play shadow_bag` plus `shadow.launch.py bridges:=false`. That replay
+The fake devices play one cycle and then hold (`cycles:=N`, `0` loops; looping
+only makes sense if someone returns the wafer to the yellow nest, because the
+grasp plugin welds the wafer wherever it is, even across the bench).
+`record:=true` bags every `/shadow/*` topic into `shadow_bag/` (stop the launch
+with Ctrl-C so the recorder writes `metadata.yaml`; a killed recorder leaves
+only the `.mcap`, recoverable with `ros2 bag reindex -s mcap shadow_bag`); replay
+with `ros2 bag play shadow_bag` plus `shadow.launch.py bridges:=false`. That replay
 is the safest first real shadow: nothing can go wrong on the hardware while
 you check that the sim follows the recording.
 

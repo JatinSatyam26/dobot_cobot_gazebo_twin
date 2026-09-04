@@ -114,13 +114,20 @@ class CycleState:
     joint vectors (linear interpolation between waypoints), belt position,
     the current step name, and which carrier holds the wafer."""
 
-    def __init__(self, m1, p6, belt_speed=0.07, dwell_b=0.0, speed_scale=1.0):
+    def __init__(self, m1, p6, belt_speed=0.07, dwell_b=0.0, speed_scale=1.0, cycles=1):
         self.m1, self.p6 = m1, p6
         self.tl = expand_timeline(belt_speed, dwell_b, speed_scale)
         self.total = self.tl[-1][1]
+        self.cycles = cycles                 # the real cell does not loop by itself; after the
+                                             # last cycle every device holds its final reading
 
     def at(self, t):
-        t = 0.0 if t < 0 else (t % self.total if self.total > 0 else 0.0)   # before the epoch: hold the start
+        if t < 0:
+            t = 0.0                                              # before the epoch: hold the start
+        elif self.cycles > 0 and t >= self.cycles * self.total:
+            t = self.total                                       # after the last cycle: hold the end
+        elif self.total > 0:
+            t = t % self.total
         q1, q6 = list(self.m1['home']), list(self.p6['home'])
         belt = BELT_A
         step = self.tl[0][2]

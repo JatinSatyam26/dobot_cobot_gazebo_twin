@@ -26,13 +26,15 @@ def generate_launch_description():
     t0 = str(time.time() + 6.0)
     common = [cfg, {'source': source, 'fake_t0': float(t0),
                     'fake_dwell_b': LaunchConfiguration('dwell_b'),
-                    'fake_belt_speed': LaunchConfiguration('belt_speed')}]
+                    'fake_belt_speed': LaunchConfiguration('belt_speed'),
+                    'fake_cycles': LaunchConfiguration('cycles')}]
     return LaunchDescription([
         DeclareLaunchArgument('source', default_value='fake', description='fake | real'),
         DeclareLaunchArgument('bridges', default_value='true'),
         DeclareLaunchArgument('record', default_value='false'),
         DeclareLaunchArgument('dwell_b', default_value='0.0'),
         DeclareLaunchArgument('belt_speed', default_value='0.07'),
+        DeclareLaunchArgument('cycles', default_value='1', description='fake devices: cycles to replay, 0 = loop'),
         Node(package='wafer_cell_shadow', executable='m1pro_bridge.py', output='screen',
              parameters=common, condition=IfCondition(LaunchConfiguration('bridges'))),
         Node(package='wafer_cell_shadow', executable='pro600_bridge.py', output='screen',
