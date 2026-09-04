@@ -39,6 +39,9 @@
   <xacro:arg name="controllers_file"
              default="$(find wafer_cell_bringup)/config/conveyor_controllers.yaml"/>
   <xacro:property name="mesh" value="package://wafer_cell_bringup/meshes/belt_holder.stl"/>
+  <!-- collision: the same surface cut into 8 mm bands (scripts/split_collision_mesh.py)
+       so the ODE mesh tree culls by height; see the tower note in the world file -->
+  <xacro:property name="mesh_collision" value="package://wafer_cell_bringup/meshes/belt_holder_collision.stl"/>
 
   <!-- travel: A = -0.25, C = +0.25. Limits are set WIDER (+/-0.30) so home
        never sits ON a limit - a joint initialised exactly at its limit latches
@@ -70,7 +73,7 @@
     </visual>
     <collision>
       <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
-      <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
+      <geometry><mesh filename="${mesh_collision}" scale="0.001 0.001 0.001"/></geometry>
     </collision>
     <inertial>
       <origin xyz="0 0 0.020"/>

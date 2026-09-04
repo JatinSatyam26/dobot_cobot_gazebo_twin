@@ -152,8 +152,8 @@ beside the column (the photo's −0.14 is out of reach for that entry).
 The carriage is centred on the belt's running surface (`BELT_SURFACE_Y`
 0.105, from a section of the conveyor mesh; the mesh box centre 0.135 is
 30 mm toward the rear because of the motor housing).
-Real-time factor: the towers collide with a band-split copy of their
-mesh (`wafer_tower_collision.stl`, `split_collision_mesh.py`), which lifted
+Real-time factor: the towers and the belt holder collide with band-split
+copies of their meshes (`*_collision.stl`, `split_collision_mesh.py`), which lifted
 the 1 ms headless cycle from dips of 0.4 to ≥ 0.83 with identical seating.
 Launch switches for a one-command GUI demo: `demo`, `cameras`, `gui_nvidia`,
 `step` (2 ms is demo-only, it moves the final place 2 mm).

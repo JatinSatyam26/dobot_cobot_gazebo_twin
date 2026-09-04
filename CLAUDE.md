@@ -94,7 +94,7 @@ source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 run wafer_
 ```
 
 Cuts a collision STL into horizontal bands (surface unchanged) so the mesh
-collider can cull by height; the towers' collision mesh is made this way.
+collider can cull by height; the towers' and the belt holder's collision meshes are made this way.
 
 ---
 
@@ -112,7 +112,7 @@ collider can cull by height; the towers' collision mesh is made this way.
 | `robot_description` YAML-parsed | Launch mangles the URDF | `ParameterValue(Command([...]), value_type=str)` |
 | ros2 daemon staleness | `topic list` disagrees with `topic hz` | `ros2 daemon stop` |
 | A world plugin silently absent | `[Err] SystemLoader ... library does not contain requested plugin` once at start-up; then `/world/.../dynamic_pose/info` has NO publisher and every pose logger returns empty blocks | A regex on `name="..."` also matches `filename="..."`; that renamed the SceneBroadcaster to its library name on 2026-09-04 and cost two hours of false conclusions. After any world edit, `gz topic -i -t /world/wafer_cell/dynamic_pose/info` must list a publisher |
-| GUI demo at half speed (solved 2026-09-04) | RTF 0.3–0.5 whenever an arm or the wafer was near a nest, headless too | Not the GPU. ODE's mesh tree culls by triangle bounding box, and the towers' 100 mm-tall wall triangles all overlap any query at any height, so every step tested all 1568. The towers now collide with `meshes/wafer_tower_collision.stl`, the same surface cut into 8 mm bands by `split_collision_mesh.py`: RTF ≥ 0.83 in every phase at 1 ms, seating numbers unchanged. Apply the same tool to any tall mesh that a moving part passes. `step:=0.002` remains a demo-only fallback that moves the final place by 2 mm |
+| GUI demo at half speed (solved 2026-09-04) | RTF 0.3–0.5 whenever an arm or the wafer was near a nest, headless too | Not the GPU. ODE's mesh tree culls by triangle bounding box, and the towers' 100 mm-tall wall triangles all overlap any query at any height, so every step tested all 1568. The towers and the belt holder now collide with `meshes/wafer_tower_collision.stl` / `belt_holder_collision.stl`, the same surfaces cut into 8 mm bands by `split_collision_mesh.py`: RTF 0.98 overall at 1 ms headless, seating numbers unchanged. Apply the same tool to any tall mesh that a moving part passes. `step:=0.002` remains a demo-only fallback that moves the final place by 2 mm |
 
 Vendor URDFs shipped real defects that are **fixed on import — do not restore
 upstream values**. See the header of each xacro and the two `ATTRIBUTION.md`

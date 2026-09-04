@@ -507,7 +507,7 @@
     <collision>
       <origin rpy="-1.5708 0 0" xyz="0 0 0.045" />
       <geometry>
-        <mesh filename="package://wafer_cell_bringup/meshes/belt_holder.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://wafer_cell_bringup/meshes/belt_holder_collision.stl" scale="0.001 0.001 0.001" />
       </geometry>
     </collision>
     <inertial>
