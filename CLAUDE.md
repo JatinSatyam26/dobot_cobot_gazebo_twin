@@ -32,7 +32,7 @@ Intel iGPU), `cameras` (bridge the six camera sensors, default true; they
 render only while bridged), `demo` (start `cell_sequencer.py` by itself 8 s
 after go_home; `demo_cycles`), `step` (physics step, default 0.001; 0.002 for
 a real-time GUI demo only, it moves the final place by 2 mm, see the trap table), `verbose`, `world`. One-command
-demo: `ros2 launch wafer_cell_bringup cell.launch.py gui:=true cameras:=false demo:=true step:=0.002`.
+demo at the exact 1 ms physics: `ros2 launch wafer_cell_bringup cell.launch.py gui:=true cameras:=false demo:=true`.
 
 Verified working end-to-end from a clean `rm -rf build install log` on
 2026-09-03: 3 packages build in ~3 s, all 4 controllers reach `active`,
@@ -89,6 +89,13 @@ source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 run wafer_
 Numerical IK on `cell.urdf` for the rest poses and any pick pose; prints joint
 values plus the worst limit margin. Its `solve()` is importable for reach checks.
 
+```bash
+source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 run wafer_cell_bringup split_collision_mesh.py in.stl out.stl 8 1
+```
+
+Cuts a collision STL into horizontal bands (surface unchanged) so the mesh
+collider can cull by height; the towers' collision mesh is made this way.
+
 ---
 
 ## Traps — all of these cost real time here
@@ -105,7 +112,7 @@ values plus the worst limit margin. Its `solve()` is importable for reach checks
 | `robot_description` YAML-parsed | Launch mangles the URDF | `ParameterValue(Command([...]), value_type=str)` |
 | ros2 daemon staleness | `topic list` disagrees with `topic hz` | `ros2 daemon stop` |
 | A world plugin silently absent | `[Err] SystemLoader ... library does not contain requested plugin` once at start-up; then `/world/.../dynamic_pose/info` has NO publisher and every pose logger returns empty blocks | A regex on `name="..."` also matches `filename="..."`; that renamed the SceneBroadcaster to its library name on 2026-09-04 and cost two hours of false conclusions. After any world edit, `gz topic -i -t /world/wafer_cell/dynamic_pose/info` must list a publisher |
-| GUI demo at half speed | RTF 0.3–0.5 in the GUI while headless runs at 0.95 | Not the GPU: both `gz sim` processes sit on the RTX 4060. The dips are arm primitives being narrow-phase tested against the 1568-triangle tower meshes while an arm passes over a nest (M1_BACK_HIGH 0.39, P6_UP 0.38 headless), and the GUI's own rendering deepens them. `step:=0.002` halves the physics cost (RTF 0.98 mean headless) but is NOT equivalent: the ride is seated identically, the final place ends 2.1 / 1.3 mm off centre and 0.6 mm high (measured 2026-09-04). Demo only; the approved verification and every recording stay at 1 ms |
+| GUI demo at half speed (solved 2026-09-04) | RTF 0.3–0.5 whenever an arm or the wafer was near a nest, headless too | Not the GPU. ODE's mesh tree culls by triangle bounding box, and the towers' 100 mm-tall wall triangles all overlap any query at any height, so every step tested all 1568. The towers now collide with `meshes/wafer_tower_collision.stl`, the same surface cut into 8 mm bands by `split_collision_mesh.py`: RTF ≥ 0.83 in every phase at 1 ms, seating numbers unchanged. Apply the same tool to any tall mesh that a moving part passes. `step:=0.002` remains a demo-only fallback that moves the final place by 2 mm |
 
 Vendor URDFs shipped real defects that are **fixed on import — do not restore
 upstream values**. See the header of each xacro and the two `ATTRIBUTION.md`

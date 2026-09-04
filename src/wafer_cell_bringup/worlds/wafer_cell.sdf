@@ -363,6 +363,12 @@
       </link>
     </model>
 
+    <!-- Tower COLLISION uses meshes/wafer_tower_collision.stl: the same surface
+         cut into 8 mm horizontal bands (scripts/split_collision_mesh.py), so
+         the ODE mesh tree culls by height. With the raw STL every arm move
+         over a nest tested all 1568 wall triangles and the real-time factor
+         fell to 0.4; banded it stays >= 0.83 in every phase at 1 ms, with the
+         seating numbers unchanged (2026-09-04). Visuals keep the raw STL. -->
     <!-- ============ yellow wafer tower — M1 Pro end ============
          STL is Y-up with its OPEN chord on +X; roll 90deg stands it up, yaw
          180deg turns the opening toward world -X, i.e. toward the M1 Pro, so
@@ -379,7 +385,7 @@
           <material><ambient>0.55 0.48 0.05 1</ambient><diffuse>0.92 0.82 0.10 1</diffuse></material>
         </visual>
         <collision name="c">
-          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
+          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower_collision.stl</uri>
                           <scale>0.001 0.001 0.001</scale></mesh></geometry>
         </collision>
       </link>
@@ -398,7 +404,7 @@
           <material><ambient>0.06 0.16 0.42 1</ambient><diffuse>0.13 0.32 0.75 1</diffuse></material>
         </visual>
         <collision name="c">
-          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
+          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower_collision.stl</uri>
                           <scale>0.001 0.001 0.001</scale></mesh></geometry>
         </collision>
       </link>

@@ -152,6 +152,11 @@ beside the column (the photo's −0.14 is out of reach for that entry).
 The carriage is centred on the belt's running surface (`BELT_SURFACE_Y`
 0.105, from a section of the conveyor mesh; the mesh box centre 0.135 is
 30 mm toward the rear because of the motor housing).
+Real-time factor: the towers collide with a band-split copy of their
+mesh (`wafer_tower_collision.stl`, `split_collision_mesh.py`), which lifted
+the 1 ms headless cycle from dips of 0.4 to ≥ 0.83 with identical seating.
+Launch switches for a one-command GUI demo: `demo`, `cameras`, `gui_nvidia`,
+`step` (2 ms is demo-only, it moves the final place 2 mm).
 Cycle verified: the wafer rides seated to 0.2 mm and ends in
 the blue nest 0.3 / 0.5 mm off centre at ledge height. Four close-up cameras
 (`/detail_yellow_cam`, `/detail_belt_cam`, `/detail_beltc_cam`,
