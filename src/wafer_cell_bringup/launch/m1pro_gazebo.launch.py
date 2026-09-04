@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Phase 1 bringup: spawn the Dobot M1 Pro placeholder alone in Gazebo Harmonic
 and bring up ros2_control so its joints can be commanded.

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 # Node keys are NAMESPACED to match <ros><namespace>/m1pro</namespace> in the
 # xacro's gz_ros2_control plugin. If the namespace and these keys disagree the
 # manager starts with default parameters and no controllers are declared.

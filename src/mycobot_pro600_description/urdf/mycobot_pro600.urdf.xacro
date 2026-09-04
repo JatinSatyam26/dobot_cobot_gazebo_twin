@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Modifications Copyright (c) 2026 Jatin Satyam, SPDX-License-Identifier: Apache-2.0.
+     Derived from Elephant Robotics' mycobot_ros2 (BSD-3-Clause); see ATTRIBUTION.md. -->
 <!--
   ============================================================================
   myCobot Pro 600 - 6 DoF, for ROS 2 Jazzy / Gazebo Harmonic

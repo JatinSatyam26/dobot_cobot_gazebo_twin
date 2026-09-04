@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Axis-aligned bounding box of EVERY visual in the cell, checked against the
 bench top rectangle.

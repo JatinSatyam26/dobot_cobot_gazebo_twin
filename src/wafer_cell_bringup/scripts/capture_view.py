@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Save one frame from the world's inspection camera to a PNG.
 

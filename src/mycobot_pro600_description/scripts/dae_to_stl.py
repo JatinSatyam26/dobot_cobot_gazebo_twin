@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Convert the Elephant Robotics Pro 600 COLLADA meshes to binary STL.
 

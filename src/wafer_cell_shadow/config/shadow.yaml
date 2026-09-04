@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 # Digital Shadow configuration. Every UNKNOWN below is a metrology item; the
 # fake sources ignore the network fields.
 m1pro_bridge:

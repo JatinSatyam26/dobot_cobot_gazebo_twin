@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """Shared helpers for the shadow bridges."""
 import os, sys, math, time
 from pathlib import Path

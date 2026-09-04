@@ -224,3 +224,12 @@ usable pick envelope — the wafer nest height in Phase 3 has to land inside it.
 The previous primitive model is kept at
 `urdf/dobot_m1pro_placeholder.urdf.xacro.bak` as a fallback, since this
 workspace is not under version control yet.
+
+## Copyright and licence
+
+Copyright (c) 2026 Jatin Satyam. Licensed under the Apache License,
+Version 2.0: see `LICENSE`. Third-party material and its licences (Dobot M1
+Pro description, MIT; myCobot Pro 600 description, BSD-3-Clause) are listed
+in `NOTICE` and in the two `ATTRIBUTION.md` files. Source files carry
+`SPDX-License-Identifier: Apache-2.0` headers; the two vendor-derived robot
+descriptions carry a modifications notice that keeps the upstream terms.

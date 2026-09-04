@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """Forward kinematics straight off cell.urdf — no assumptions about DH."""
 import numpy as np, xml.etree.ElementTree as ET, math
 

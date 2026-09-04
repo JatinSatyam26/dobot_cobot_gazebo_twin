@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Phase 1 proof-of-life: drive every M1 Pro joint through a short trajectory.
 

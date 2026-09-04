@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Dobot M1 Pro -> ROS 2 bridge (one third of the Digital Shadow).
 

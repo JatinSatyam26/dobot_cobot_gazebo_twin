@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Modifications Copyright (c) 2026 Jatin Satyam, SPDX-License-Identifier: Apache-2.0.
+     Derived from Dobot's m1pro_description (MIT License, Copyright (c) 2022 Dobot); see ATTRIBUTION.md. -->
 <!--
   ============================================================================
   Dobot M1 Pro - OFFICIAL Dobot model, adapted for ROS 2 Jazzy / Gazebo Harmonic

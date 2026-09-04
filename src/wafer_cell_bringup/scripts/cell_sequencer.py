@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Cell sequencer - the Micro850's state machine as a ROS 2 node (Digital Model).
 

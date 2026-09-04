@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Save frames from an inspection camera at a fixed sim-time interval, with the
 sim time in the file name, so a whole cycle can be reviewed as a contact sheet.

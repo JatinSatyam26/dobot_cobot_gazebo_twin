@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 # ONE controller_manager for the whole cell. See scripts/generate_cell_urdf.py
 # for why three separate managers do not work under gz_ros2_control.
 controller_manager:

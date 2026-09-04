@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Digital Shadow bring-up: three device bridges + the driver that makes the
 (already running) Gazebo cell follow them.

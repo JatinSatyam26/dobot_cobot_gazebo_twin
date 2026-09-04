@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """Spawn the myCobot Pro 600 alone in Gazebo Harmonic and bring up its
 controllers. Mirrors m1pro_gazebo.launch.py; used to validate the Pro 600
 import before both arms share a world."""

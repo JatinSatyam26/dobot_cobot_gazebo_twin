@@ -1,0 +1,19 @@
+dobot_cobot_gazebo_twin
+Copyright (c) 2026 Jatin Satyam
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes material from third parties, used under their own
+licences and retained with their notices:
+
+* Dobot M1 Pro robot description and meshes (src/dobot_m1pro_description),
+  derived from https://github.com/Dobot-Arm/M1Pro-ROS
+  MIT License, Copyright (c) 2022 Dobot. Details: src/dobot_m1pro_description/ATTRIBUTION.md
+* myCobot Pro 600 robot description (src/mycobot_pro600_description),
+  derived from https://github.com/elephantrobotics/mycobot_ros2
+  BSD-3-Clause, Elephant Robotics. Details: src/mycobot_pro600_description/ATTRIBUTION.md
+
+The wafer holder, belt holder and fork STLs, the conveyor mesh, the
+photographs, videos and recordings under docs/ are the copyright of
+Jatin Satyam and are covered by the same Apache-2.0 licence unless a file
+states otherwise.

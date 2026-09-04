@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """
 Solve the two rest poses (and any pick pose you like) by numerical IK on the
 generated cell.urdf, then check every joint's margin to its limits.

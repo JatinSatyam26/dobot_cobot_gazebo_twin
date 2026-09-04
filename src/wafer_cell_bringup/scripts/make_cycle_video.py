@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Jatin Satyam
+# SPDX-License-Identifier: Apache-2.0
 """Compose six record_frames.py recordings into one video: 3x2 grid, step name overlay, sim-time rate.
 
 usage: make_cycle_video.py <recdir> <out.mp4> [fps]
