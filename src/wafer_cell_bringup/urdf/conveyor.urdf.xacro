@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!--
+  ===========================================================================
+  Conveyor carriage — the magenta holder that rides the belt
+  ===========================================================================
+  Modelled as a 1-DOF PRISMATIC axis rather than a friction-driven belt, and
+  that is deliberate. The real cell runs the belt open-loop on PLC timers with
+  no sensors, and the holder is a rigid arch bolted to nothing - it simply
+  rides. A position-commanded prismatic joint reproduces exactly that, and
+  avoids simulating belt/holder friction, which is contact physics that would
+  be wrong at any tuning effort.
+
+  Swapping in a real conveyor-system plugin later replaces THIS FILE ONLY;
+  the sequencer talks to a joint either way.
+
+  Holder geometry is EXACT (customer STL): 180 mm along the belt x 70 mm
+  across x 45 mm tall, flat top with NO locating feature - the wafer is held
+  by friction alone, which is a real repeatability limit in the actual cell.
+  ===========================================================================
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="conveyor">
+
+  <xacro:arg name="prefix" default="belt_"/>
+  <xacro:property name="prefix" value="$(arg prefix)"/>
+  <xacro:arg name="controllers_file"
+             default="$(find wafer_cell_bringup)/config/conveyor_controllers.yaml"/>
+  <xacro:property name="mesh" value="package://wafer_cell_bringup/meshes/belt_holder.stl"/>
+
+  <!-- travel: A = -0.25, C = +0.25. Limits are set WIDER (+/-0.30) so home
+       never sits ON a limit - a joint initialised exactly at its limit latches
+       and then silently ignores every command. -->
+  <xacro:property name="lo"   value="-0.30"/>
+  <xacro:property name="hi"   value="0.30"/>
+  <xacro:property name="home" value="-0.25"/>
+
+  <xacro:arg name="fix_to_world" default="true"/>
+  <link name="${prefix}base"/>
+  <xacro:if value="$(arg fix_to_world)">
+    <link name="world"/>
+    <joint name="${prefix}anchor" type="fixed">
+      <parent link="world"/><child link="${prefix}base"/>
+      <origin xyz="0 0.05 0.06265" rpy="0 0 0"/>
+    </joint>
+  </xacro:if>
+
+  <link name="${prefix}carriage">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
+      <material name="holder_magenta"><color rgba="0.71 0.09 0.29 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.0405"/>
+      <geometry><box size="0.180 0.070 0.009"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.030"/>
+      <mass value="0.15"/>
+      <inertia ixx="8.0e-5" ixy="0" ixz="0" iyy="4.5e-4" iyz="0" izz="4.9e-4"/>
+    </inertial>
+  </link>
+
+  <joint name="${prefix}travel" type="prismatic">
+    <parent link="${prefix}base"/><child link="${prefix}carriage"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="${lo}" upper="${hi}" effort="200.0" velocity="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
+  </joint>
+
+  <xacro:arg name="use_gz_control" default="true"/>
+  <xacro:if value="$(arg use_gz_control)">
+  <ros2_control name="${prefix}system" type="system">
+    <hardware><plugin>gz_ros2_control/GazeboSimSystem</plugin></hardware>
+    <joint name="${prefix}travel">
+      <command_interface name="position">
+        <param name="min">${lo}</param><param name="max">${hi}</param>
+      </command_interface>
+      <state_interface name="position"><param name="initial_value">${home}</param></state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg controllers_file)</parameters>
+      <!-- Each robot gets its OWN ROS NAMESPACE. This is not cosmetic:
+           gz_ros2_control blocks inside Configure() waiting for
+           robot_description, and Gazebo loads plugins on its main thread. So a
+           single controller manager that never receives a description stalls
+           the WHOLE simulation and the other robots' plugins never load at all.
+           A namespace makes each manager resolve robot_description to its own
+           publisher (/m1pro/robot_description etc.), so all three initialise.
+           Node becomes <ns>/controller_manager - the YAML keys and the
+           spawners' -c argument must match. -->
+      <ros>
+        <namespace>/belt</namespace>
+      </ros>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+</robot>

@@ -1,0 +1,62 @@
+# ONE controller_manager for the whole cell. See scripts/generate_cell_urdf.py
+# for why three separate managers do not work under gz_ros2_control.
+controller_manager:
+  ros__parameters:
+    update_rate: 200
+    use_sim_time: true
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    m1pro_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    pro600_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    belt_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+
+m1pro_arm_controller:
+  ros__parameters:
+    use_sim_time: true
+    # chain order, NOT Dobot's J-numbering:
+    # z_lift = Dobot J3, shoulder = J1, elbow = J2, wrist = J4
+    joints: [m1pro_z_lift, m1pro_shoulder, m1pro_elbow, m1pro_wrist]
+    command_interfaces: [position]
+    state_interfaces: [position, velocity]
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 2.0
+      m1pro_z_lift:   { trajectory: 0.5, goal: 0.01 }
+      m1pro_shoulder: { trajectory: 0.5, goal: 0.05 }
+      m1pro_elbow:    { trajectory: 0.5, goal: 0.05 }
+      m1pro_wrist:    { trajectory: 0.5, goal: 0.05 }
+
+pro600_arm_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints: [pro600_joint1, pro600_joint2, pro600_joint3,
+             pro600_joint4, pro600_joint5, pro600_joint6]
+    command_interfaces: [position]
+    state_interfaces: [position, velocity]
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 2.0
+      pro600_joint1: { trajectory: 0.5, goal: 0.05 }
+      pro600_joint2: { trajectory: 0.5, goal: 0.05 }
+      pro600_joint3: { trajectory: 0.5, goal: 0.05 }
+      pro600_joint4: { trajectory: 0.5, goal: 0.05 }
+      pro600_joint5: { trajectory: 0.5, goal: 0.05 }
+      pro600_joint6: { trajectory: 0.5, goal: 0.05 }
+
+belt_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints: [belt_travel]
+    command_interfaces: [position]
+    state_interfaces: [position, velocity]
+    constraints:
+      stopped_velocity_tolerance: 0.02
+      goal_time: 3.0
+      belt_travel: { trajectory: 0.05, goal: 0.005 }

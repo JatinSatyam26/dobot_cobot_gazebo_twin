@@ -1,0 +1,466 @@
+<?xml version="1.0" ?>
+<!--
+  ===========================================================================
+  Wafer-handling cell — Gazebo Harmonic (gz-sim 8)
+  ===========================================================================
+  FRAME:  world z = 0 is the TOP SURFACE of the wooden workbench.
+          +X = wafer flow, M1 Pro -> Pro 600.  +Z up.  Ground at z = -0.9906.
+
+  MEASURED (owner, imperial -> metric):
+      bench slab   60 x 24 x 1 in   = 1.5240 x 0.6096 x 0.0254 m
+      top height   39 in            = 0.9906 m above ground
+      legs         1.5 x 1.5 in     = 0.0381 m square, 0.9652 m tall
+      leg inset    2 in from the long (60") edges, 8 in from the short (24")
+      leg centres  x = +/-0.53975   y = +/-0.23495
+      wafer        5 in diameter    = 0.1270 m  -> radius 0.06350
+
+  EXACT geometry from customer STLs:
+      wafer_tower  107.5 x 135.0 footprint, 100 tall, shelves at 50/72/94 mm
+      belt_holder  180 (along belt) x 70 (across) x 45 tall, flat top
+
+  CONVEYOR MESH — third-party, treat with suspicion:
+      Sourced from a 3D Warehouse SketchUp model, converted to STL. It is in
+      METRES (scale 1.0, not 0.001) and its facet winding was inconsistent
+      (5518 of 11603 facets had inverted normals) — repaired in place.
+      Overall 698 x 214.5 x 62.6 mm, belt carrying surface 36.0 mm above the
+      model origin, i.e. z = 0.06265 with the frame sat on the bench.
+      The 698 mm length agrees with the photo estimate, but NOTHING here is
+      verified against the real DT-AC-CB070-02E. Used for VISUAL ONLY;
+      collision is a primitive box. Metrology: belt_width_and_length,
+      belt_top_height.
+
+  LAYOUT — read off a plan-view photograph the owner sent IN CHAT on
+  2026-09-03. THAT IMAGE IS NOT IN THIS REPO: there is no reference_photos_6
+  directory, and an earlier version of this header wrongly cited one. The
+  layout below therefore has NO artifact backing it. See PROJECT_CONTEXT.md
+  section 14 - the owner has since confirmed this layout is WRONG.
+      conveyor y = +0.130.  NOTE: the plan-view PHOTO read as "hard against
+      the far edge" (+0.170); the reference RENDER the owner supplied on
+      2026-09-03 clearly shows bench behind the belt, so it is now +0.130.
+      Both are eyeballed - 40 mm apart. Metrology: belt_centreline_y.
+      M1 Pro  far-LEFT corner   base (-0.560, +0.150)
+      Pro 600 RIGHT edge        base (+0.620, +0.180)
+      Both were moved FORWARD on 2026-09-03: at y +0.220 / +0.200 the M1 Pro's
+      own base casting hung 30 mm off the rear edge and its plate 45 mm, and
+      the Pro 600 plate had only 4.8 mm of margin. Caught by an AABB audit of
+      every visual against the bench rectangle - an earlier check tested
+      footprint CENTRES only, which all passed while the parts overhung.
+      Re-run it with scripts/check_extents.py after moving anything.
+      yellow tower  near-left   (-0.500, -0.120)
+      blue tower    near-right  (+0.550, -0.120)
+      BOTH towers carry the SAME pose, so both open the same way. Verified
+      from the STL, not by eye: the material centroid sits 22 mm to -Y of the
+      bbox centre, i.e. the C opens toward +Y - toward the arm that serves it.
+      Confirmed again in the PLAN VIEW capture (docs/cell_plan.png).
+
+      SHELVES ARE MEASURED off the mesh, not assumed. Upward-facing horizontal
+      faces cluster at STL y = 0 / 50 / 72 / 94 / 95 mm; the three at 50/72/94
+      each carry exactly 1760 mm2 of area (identical -> they are the nests),
+      while 95 mm carries 1003 mm2 (the rim, not a shelf). With the model at
+      z = 0.005 the nests are at world z = 0.0550 / 0.0770 / 0.0990.
+      The wafer is spawned on the TOP nest, 0.0990 + half its 1.5 mm.
+
+  ADDED 2026-09-03 from the owner's reference render:
+      - black mounting plates under both arms (8 mm, OUTLINE + THICKNESS
+        ASSUMED); both robots now stand at z = 0.008, not 0
+      - M1 Pro blue fork (exact customer STL; MOUNTING assumed)
+      - Pro 600 vacuum cup (primitives, not a scan; STEM LENGTH assumed)
+      - both home poses re-solved by FK so the fork lies flat pointing -X and
+        the cup points STRAIGHT DOWN; see generate_cell_urdf.py
+      - light butcher-block top on dark legs, matching the render
+      Reach checked: M1 Pro 314/345 mm to belt-A/yellow (400 mm reach);
+      Pro 600 371/328 mm to belt-C/blue (600 mm reach). All on the bench.
+
+  ⚠️  The SIDE and CORNER each unit occupies now come from the photograph, but
+      the exact offsets and especially the BASE YAW angles are still unmeasured.
+      Yaw is the highest-leverage number in the cell: 1 deg = ~7 mm at the
+      M1 Pro's reach. Metrology: m1pro_base_yaw / pro600_base_yaw.
+  ===========================================================================
+-->
+<sdf version="1.10">
+  <world name="wafer_cell">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-contact-system"           name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <gravity>0 0 -9.8066</gravity>
+
+    <scene>
+      <ambient>0.55 0.55 0.58 1</ambient>
+      <background>0.78 0.82 0.87 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 6 0 0 0</pose>
+      <diffuse>0.95 0.94 0.90 1</diffuse>
+      <specular>0.25 0.25 0.25 1</specular>
+      <direction>-0.35 0.4 -0.85</direction>
+    </light>
+    <light type="directional" name="fill">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 4 0 0 0</pose>
+      <diffuse>0.35 0.36 0.40 1</diffuse>
+      <direction>0.5 -0.3 -0.75</direction>
+    </light>
+
+    <!-- ground plane + explicit 0.5 m reference grid drawn ON it. Gazebo's own
+         <grid> would sit at world z=0, which here is the BENCH TOP, not the
+         floor — misleading. This grid is at the real floor height. -->
+    <model name="floor">
+      <static>true</static>
+      <pose>0 0 -0.99060 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><plane><normal>0 0 1</normal><size>40 40</size></plane></geometry></collision>
+        <visual name="v">
+          <geometry><plane><normal>0 0 1</normal><size>40 40</size></plane></geometry>
+          <material><ambient>0.46 0.47 0.49 1</ambient><diffuse>0.58 0.59 0.61 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="floor_grid">
+      <static>true</static>
+      <link name="link">
+      <visual name="gx1">
+        <pose>-3.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy1">
+        <pose>0 -3.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx2">
+        <pose>-2.5 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy2">
+        <pose>0 -2.5 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx3">
+        <pose>-2.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy3">
+        <pose>0 -2.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx4">
+        <pose>-1.5 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy4">
+        <pose>0 -1.5 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx5">
+        <pose>-1.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy5">
+        <pose>0 -1.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx6">
+        <pose>-0.5 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy6">
+        <pose>0 -0.5 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx7">
+        <pose>0.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy7">
+        <pose>0 0.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx8">
+        <pose>0.5 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy8">
+        <pose>0 0.5 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx9">
+        <pose>1.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy9">
+        <pose>0 1.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx10">
+        <pose>1.5 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy10">
+        <pose>0 1.5 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx11">
+        <pose>2.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy11">
+        <pose>0 2.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx12">
+        <pose>2.5 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy12">
+        <pose>0 2.5 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gx13">
+        <pose>3.0 0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>0.006 6.0 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      <visual name="gy13">
+        <pose>0 3.0 -0.9895999999999999 0 0 0</pose>
+        <geometry><box><size>6.0 0.006 0.002</size></box></geometry>
+        <material><ambient>0.30 0.32 0.35 1</ambient><diffuse>0.38 0.41 0.45 1</diffuse></material>
+      </visual>
+      </link>
+    </model>
+
+    <!-- ============ wooden workbench — THE CELL DATUM ============ -->
+    <model name="workbench">
+      <static>true</static>
+      <link name="link">
+        <visual name="slab">
+          <pose>0 0 -0.01270 0 0 0</pose>
+          <geometry><box><size>1.52400 0.60960 0.02540</size></box></geometry>
+          <material><ambient>0.60 0.50 0.34 1</ambient><diffuse>0.87 0.75 0.56 1</diffuse></material>
+        </visual>
+        <collision name="slab_c">
+          <pose>0 0 -0.01270 0 0 0</pose>
+          <geometry><box><size>1.52400 0.60960 0.02540</size></box></geometry>
+        </collision>
+      <visual name="leg_0">
+        <pose>0.53975 0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+        <material><ambient>0.09 0.09 0.10 1</ambient><diffuse>0.20 0.21 0.23 1</diffuse></material>
+      </visual>
+      <collision name="leg_0_c">
+        <pose>0.53975 0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+      </collision>
+      <visual name="leg_1">
+        <pose>0.53975 -0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+        <material><ambient>0.09 0.09 0.10 1</ambient><diffuse>0.20 0.21 0.23 1</diffuse></material>
+      </visual>
+      <collision name="leg_1_c">
+        <pose>0.53975 -0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+      </collision>
+      <visual name="leg_2">
+        <pose>-0.53975 0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+        <material><ambient>0.09 0.09 0.10 1</ambient><diffuse>0.20 0.21 0.23 1</diffuse></material>
+      </visual>
+      <collision name="leg_2_c">
+        <pose>-0.53975 0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+      </collision>
+      <visual name="leg_3">
+        <pose>-0.53975 -0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+        <material><ambient>0.09 0.09 0.10 1</ambient><diffuse>0.20 0.21 0.23 1</diffuse></material>
+      </visual>
+      <collision name="leg_3_c">
+        <pose>-0.53975 -0.23495 -0.50800 0 0 0</pose>
+        <geometry><box><size>0.03810 0.03810 0.96520</size></box></geometry>
+      </collision>
+      </link>
+    </model>
+
+    <!-- ============ robot mounting plates ============
+         Both arms are bolted to black plates, not straight to the board (see
+         the reference render and reference_photos). Plate OUTLINE and
+         THICKNESS are ASSUMED - 8 mm is a guess, and it sets the base height
+         of both robots. Metrology: m1pro_plate, pro600_plate. -->
+    <model name="m1pro_plate">
+      <static>true</static>
+      <pose>-0.5525 0.150 0.004 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.260 0.260 0.008</size></box></geometry>
+          <material><ambient>0.05 0.05 0.06 1</ambient><diffuse>0.12 0.12 0.14 1</diffuse>
+                    <specular>0.3 0.3 0.3 1</specular></material>
+        </visual>
+        <collision name="c"><geometry><box><size>0.260 0.260 0.008</size></box></geometry></collision>
+      </link>
+    </model>
+    <model name="pro600_plate">
+      <static>true</static>
+      <pose>0.620 0.180 0.004 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.200 0.200 0.008</size></box></geometry>
+          <material><ambient>0.05 0.05 0.06 1</ambient><diffuse>0.12 0.12 0.14 1</diffuse>
+                    <specular>0.3 0.3 0.3 1</specular></material>
+        </visual>
+        <collision name="c"><geometry><box><size>0.200 0.200 0.008</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ============ conveyor DT-AC-CB070-02E ============
+         Mesh VISUAL (metres, Y-up -> rpy 90deg about X). Collision is a
+         primitive: the mesh is third-party, unverified, and mesh collision at
+         11.6k triangles is far too slow for real-time physics. -->
+    <model name="conveyor_frame">
+      <static>true</static>
+      <pose>-0.28407 0.11118 0.02665 1.5708 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry>
+            <mesh><uri>package://wafer_cell_bringup/meshes/dobot_conveyor.stl</uri>
+                  <scale>1 1 1</scale></mesh>
+          </geometry>
+          <material><ambient>0.13 0.13 0.15 1</ambient><diffuse>0.26 0.26 0.29 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="conveyor_collision">
+      <static>true</static>
+      <pose>0 0.130 0.03132 0 0 0</pose>
+      <link name="link">
+        <collision name="c">
+          <geometry><box><size>0.698 0.150 0.06265</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ============ yellow wafer tower — M1 Pro end ============
+         yaw +90deg puts the part's open chord at +Y, facing the M1 Pro.
+         POSE ESTIMATED. Metrology: nest_poses -->
+    <model name="tower_yellow">
+      <static>true</static>
+      <pose>-0.5 -0.12 0.005 1.5708 0 1.5708</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
+                          <scale>0.001 0.001 0.001</scale></mesh></geometry>
+          <material><ambient>0.55 0.48 0.05 1</ambient><diffuse>0.92 0.82 0.10 1</diffuse></material>
+        </visual>
+        <collision name="c">
+          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
+                          <scale>0.001 0.001 0.001</scale></mesh></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ============ blue wafer tower — Pro 600 end (SAME PART) ============ -->
+    <model name="tower_blue">
+      <static>true</static>
+      <pose>0.55 -0.12 0.005 1.5708 0 1.5708</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
+                          <scale>0.001 0.001 0.001</scale></mesh></geometry>
+          <material><ambient>0.06 0.16 0.42 1</ambient><diffuse>0.13 0.32 0.75 1</diffuse></material>
+        </visual>
+        <collision name="c">
+          <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
+                          <scale>0.001 0.001 0.001</scale></mesh></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ===================================================================
+         BELT WAYPOINTS (world X, belt centreline y = +0.17)
+         A x=-0.25 load     B x=0.00 dwell 5-10 s     C x=+0.25 unload
+         Belt surface z = 0.06265;  holder wafer seat z = 0.10765
+         =================================================================== -->
+    <!-- ===================================================================
+         INSPECTION CAMERA — verification tool, not part of the cell.
+         Lets the build be checked headlessly instead of relying on someone
+         looking at the GUI. Capture with:
+             ros2 run wafer_cell_bringup capture_view.py
+         =================================================================== -->
+    <model name="inspection_cam">
+      <static>true</static>
+      <pose>-0.150 -1.750 0.620 0 0.28800 1.48538</pose>
+      <link name="link">
+        <sensor name="cell_cam" type="camera">
+          <camera>
+            <horizontal_fov>1.05</horizontal_fov>
+            <image><width>1280</width><height>800</height><format>R8G8B8</format></image>
+            <clip><near>0.05</near><far>50</far></clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>10</update_rate>
+          <topic>cell_cam</topic>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- PLAN VIEW. Orientation of the towers and the belt is impossible to
+         judge from an oblique view - the C's opening can hide behind its own
+         back wall. This looks straight down so facing is unambiguous.
+             ros2 run wafer_cell_bringup capture_view.py out.png /plan_cam -->
+    <model name="plan_cam">
+      <static>true</static>
+      <!-- NOT exactly straight down: at pitch 1.5708 ogre2 hits the up-vector
+           degeneracy and the sensor renders nothing at all (verified - the gz
+           topic existed and never published). 1.44 is 8 deg off vertical. -->
+      <pose>0 -0.30 1.90 0 1.44 1.5708</pose>
+      <link name="link">
+        <sensor name="plan_cam" type="camera">
+          <camera>
+            <horizontal_fov>0.95</horizontal_fov>
+            <image><width>1280</width><height>800</height><format>R8G8B8</format></image>
+            <clip><near>0.05</near><far>50</far></clip>
+          </camera>
+          <always_on>1</always_on><update_rate>10</update_rate>
+          <topic>plan_cam</topic>
+        </sensor>
+      </link>
+    </model>
+
+  </world>
+</sdf>

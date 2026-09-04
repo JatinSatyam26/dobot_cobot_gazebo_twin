@@ -1,0 +1,36 @@
+# Node keys are NAMESPACED to match <ros><namespace>/m1pro</namespace> in the
+# xacro's gz_ros2_control plugin. If the namespace and these keys disagree the
+# manager starts with default parameters and no controllers are declared.
+/m1pro/controller_manager:
+  ros__parameters:
+    update_rate: 200
+    use_sim_time: true
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    m1pro_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+/m1pro/joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+
+/m1pro/m1pro_arm_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      # Chain order, NOT Dobot's J-numbering.
+      # z_lift = Dobot J3, shoulder = J1, elbow = J2, wrist = J4
+      - m1pro_z_lift
+      - m1pro_shoulder
+      - m1pro_elbow
+      - m1pro_wrist
+    command_interfaces: [position]
+    state_interfaces: [position, velocity]
+    allow_partial_joints_goal: false
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 2.0
+      m1pro_z_lift:   { trajectory: 0.5, goal: 0.01 }
+      m1pro_shoulder: { trajectory: 0.5, goal: 0.05 }
+      m1pro_elbow:    { trajectory: 0.5, goal: 0.05 }
+      m1pro_wrist:    { trajectory: 0.5, goal: 0.05 }

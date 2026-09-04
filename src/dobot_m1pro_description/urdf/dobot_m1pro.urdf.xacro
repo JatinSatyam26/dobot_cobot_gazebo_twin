@@ -1,0 +1,303 @@
+<?xml version="1.0"?>
+<!--
+  ============================================================================
+  Dobot M1 Pro - OFFICIAL Dobot model, adapted for ROS 2 Jazzy / Gazebo Harmonic
+  ============================================================================
+
+  SOURCE: Dobot-Arm/M1Pro-ROS, m1pro_description  (MIT, (c) 2022 Dobot)
+  https://github.com/Dobot-Arm/M1Pro-ROS
+  Links, joint origins, meshes and INERTIA TENSORS are Dobot's own, exported
+  from their SolidWorks model. See ATTRIBUTION.md.
+
+  This REPLACES an earlier hand-built model (kept as
+  dobot_m1pro_handbuilt.urdf.xacro.bak). The hand-built one used meshes from a
+  third-party GPLv2 repo and guessed offsets. It got the STRUCTURE right - the
+  official file confirms prismatic-first - but several numbers wrong:
+  Z stroke was 0.21 m not 0.25, the arm was laid along +Y not +X, and the
+  shoulder was at the carriage origin instead of 123 mm forward in X.
+
+  ===========================================================================
+  KINEMATIC ORDER
+  ===========================================================================
+      base -> [PRISMATIC Z] -> [REV] -> [REV] -> [REV]
+
+  The whole arm assembly rides a carriage up the column; there is no
+  ball-screw spline at the wrist. Dobot's axis LABELS do not match chain order:
+
+      chain position | this model    | Dobot's label
+      ===============|===============|===============
+      1 (prismatic)  | m1pro_z_lift  | J3  (Z, 0 - 250 mm)
+      2 (revolute)   | m1pro_shoulder| J1  (+/- 85 deg)
+      3 (revolute)   | m1pro_elbow   | J2  (+/- 135 deg)
+      4 (revolute)   | m1pro_wrist   | J4  (+/- 360 deg)
+
+  ===========================================================================
+  TWO DEFECTS FIXED ON IMPORT - do not restore upstream values
+  ===========================================================================
+  1. effort="0" velocity="0" on joint1. Zero limits mean the controller
+     refuses to move the joint. Replaced with real values.
+  2. joints 2/3/4 were type="continuous" - NO LIMITS AT ALL. The real M1 Pro
+     is +/-85 deg and +/-135 deg. Left as continuous, the sim would happily
+     reach poses the hardware cannot. Converted to revolute with datasheet
+     limits.
+
+  Masses are Dobot's SolidWorks values and are LIGHT (base 1.65 kg) because the
+  export excludes motors and castings; the real arm is ~41 kg. Harmless here -
+  the base is fixed to the world and the joints are position-controlled - but
+  do not use these for dynamics or payload work.
+  ============================================================================
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dobot_m1pro">
+
+  <xacro:arg name="prefix" default="m1pro_"/>
+  <xacro:property name="prefix" value="$(arg prefix)"/>
+  <xacro:arg name="fix_to_world" default="true"/>
+  <xacro:arg name="use_gz_control" default="true"/>
+  <xacro:arg name="controllers_file"
+             default="$(find dobot_m1pro_description)/config/m1pro_controllers.yaml"/>
+  <xacro:property name="mesh_dir" value="package://dobot_m1pro_description/meshes"/>
+
+  <xacro:if value="$(arg fix_to_world)">
+    <link name="world"/>
+    <joint name="${prefix}world_fixed" type="fixed">
+      <parent link="world"/><child link="${prefix}base_link"/>
+      <origin xyz="0 0 0"/>
+    </joint>
+  </xacro:if>
+
+  <link name="${prefix}base_link">
+    <inertial>
+      <origin xyz="0.0020887 0.24592 -9.2948E-06" rpy="0 0 0"/>
+      <mass value="1.6489"/>
+      <inertia ixx="0.090971" ixy="0.002094" ixz="-4.8449E-06" iyy="0.009863" iyz="1.4427E-05" izz="0.089585"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/base_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/base_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="${prefix}z_carriage_link">
+    <inertial>
+      <origin xyz="0.096709 6.1822E-05 0.090051" rpy="0 0 0"/>
+      <mass value="0.34234"/>
+      <inertia ixx="0.0016183" ixy="1.9963E-06" ixz="-0.00029873" iyy="0.0016941" iyz="8.0481E-07" izz="0.00088121"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link1.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link1.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="${prefix}upper_arm_link">
+    <inertial>
+      <origin xyz="0.11428 -2.1681E-05 0.038255" rpy="0 0 0"/>
+      <mass value="0.37995"/>
+      <inertia ixx="0.00096644" ixy="2.2955E-06" ixz="-0.00059955" iyy="0.0031741" iyz="-2.4057E-09" izz="0.0027963"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link2.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link2.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="${prefix}forearm_link">
+    <inertial>
+      <origin xyz="0.097934 0.00036211 0.0056251" rpy="0 0 0"/>
+      <mass value="0.33738"/>
+      <inertia ixx="0.00099637" ixy="-1.0881E-06" ixz="-0.00074781" iyy="0.003254" iyz="-3.8055E-07" izz="0.0025681"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link3.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link3.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="${prefix}wrist_link">
+    <inertial>
+      <origin xyz="3.505E-13 -1.5772E-11 -0.038921" rpy="0 0 0"/>
+      <mass value="0.010941"/>
+      <inertia ixx="7.2568E-06" ixy="4.4734E-21" ixz="6.1388E-17" iyy="7.2589E-06" iyz="-4.5944E-15" izz="4.4133E-07"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.08081" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link4.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1"/>
+      </material>
+    </visual>
+    <!-- VENDOR DEFECT FIXED: shipped as origin "0 0 0" while the visual above
+         carries "0 0 0.08081", so the wrist's collision shape sat 81 mm below
+         where it renders. -->
+    <collision>
+      <origin xyz="0 0 0.08081" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${mesh_dir}/Link4.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="${prefix}z_lift" type="prismatic">
+    <origin xyz="-0.003 0 0.0959" rpy="0 0 0"/>
+    <parent link="${prefix}base_link"/>
+    <child link="${prefix}z_carriage_link"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="0.000000" upper="0.250000" effort="2000.0" velocity="0.5"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+  <joint name="${prefix}shoulder" type="revolute">
+    <origin xyz="0.123 0 0.0099745" rpy="0 0 0"/>
+    <parent link="${prefix}z_carriage_link"/>
+    <child link="${prefix}upper_arm_link"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.483530" upper="1.483530" effort="204.0" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+  <joint name="${prefix}elbow" type="revolute">
+    <origin xyz="0.2 0 0" rpy="-0.017453 0 0.034228"/>
+    <parent link="${prefix}upper_arm_link"/>
+    <child link="${prefix}forearm_link"/>
+    <axis xyz="0 0.017452 -0.99985"/>
+    <limit lower="-2.356194" upper="2.356194" effort="204.0" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+  <joint name="${prefix}wrist" type="revolute">
+    <origin xyz="0.2 0.00020895 -0.08081" rpy="0 0 0"/>
+    <parent link="${prefix}forearm_link"/>
+    <child link="${prefix}wrist_link"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.283185" upper="6.283185" effort="20.0" velocity="6.0"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+  <!-- TCP at the wrist output face. -->
+  <link name="${prefix}tcp"/>
+  <joint name="${prefix}tcp_fixed" type="fixed">
+    <parent link="${prefix}wrist_link"/><child link="${prefix}tcp"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+  <!-- ==================== blue wafer fork ====================
+       Geometry is EXACT (customer print STL m1pro_fork.stl). Read off the
+       mesh, not guessed: the blade is 3 mm thick spanning local y -3..0,
+       58.2 mm across (x), 189.5 mm long (z); a 25 x 25 mm mounting boss
+       rises to local y = +25 centred on local z = 0.
+
+       MOUNTING IS ASSUMED, not measured. The wrist_link VISUAL carries an
+       origin of z = +0.08081, which puts the bottom face of Link4 (the wrist
+       output shaft) exactly at z = 0 in the wrist frame - so the fork's boss
+       top face goes there, on the wrist axis. Reading Link4's raw mesh extent
+       instead (-0.0808) hangs the fork 81 mm below the arm in mid-air.
+       rpy maps the mesh's local
+       X -> tool +Y, Y -> +Z (up), Z -> +X, i.e. the blade lies flat and
+       points along tool +X. Metrology: fork_tcp_offset, fork_clocking. -->
+  <link name="${prefix}fork">
+    <visual>
+      <origin xyz="0 0 -0.0250" rpy="1.5708 0 1.5708"/>
+      <geometry><mesh filename="package://wafer_cell_bringup/meshes/m1pro_fork.stl"
+                      scale="0.001 0.001 0.001"/></geometry>
+      <material name="fork_blue"><color rgba="0.10 0.35 0.75 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0.0823 0 -0.0265" rpy="0 0 0"/>
+      <geometry><box size="0.1895 0.0582 0.003"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0823 0 -0.0265"/>
+      <mass value="0.08"/>
+      <inertia ixx="2.3e-5" ixy="0" ixz="0" iyy="2.4e-4" iyz="0" izz="2.6e-4"/>
+    </inertial>
+  </link>
+  <joint name="${prefix}fork_fixed" type="fixed">
+    <parent link="${prefix}tcp"/><child link="${prefix}fork"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+  <!-- Wafer seat: on top of the blade, on the fork centreline. -->
+  <link name="${prefix}fork_seat"/>
+  <joint name="${prefix}fork_seat_fixed" type="fixed">
+    <parent link="${prefix}fork"/><child link="${prefix}fork_seat"/>
+    <origin xyz="0.1150 0 -0.0250"/>
+  </joint>
+
+  <xacro:if value="$(arg use_gz_control)">
+  <ros2_control name="${prefix}system" type="system">
+    <hardware><plugin>gz_ros2_control/GazeboSimSystem</plugin></hardware>
+    <xacro:macro name="j" params="name lo hi init">
+      <joint name="${name}">
+        <command_interface name="position">
+          <param name="min">${lo}</param><param name="max">${hi}</param>
+        </command_interface>
+        <!-- never initialise AT a limit: it latches and ignores all commands -->
+        <state_interface name="position"><param name="initial_value">${init}</param></state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </xacro:macro>
+    <xacro:j name="${prefix}z_lift"   lo="0.0"      hi="0.25"    init="0.125"/>
+    <xacro:j name="${prefix}shoulder" lo="-1.483530" hi="1.483530" init="0.0"/>
+    <xacro:j name="${prefix}elbow"    lo="-2.356194" hi="2.356194" init="0.0"/>
+    <xacro:j name="${prefix}wrist"    lo="-6.283185" hi="6.283185" init="0.0"/>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg controllers_file)</parameters>
+      <!-- Each robot gets its OWN ROS NAMESPACE. This is not cosmetic:
+           gz_ros2_control blocks inside Configure() waiting for
+           robot_description, and Gazebo loads plugins on its main thread. So a
+           single controller manager that never receives a description stalls
+           the WHOLE simulation and the other robots' plugins never load at all.
+           A namespace makes each manager resolve robot_description to its own
+           publisher (/m1pro/robot_description etc.), so all three initialise.
+           Node becomes <ns>/controller_manager - the YAML keys and the
+           spawners' -c argument must match. -->
+      <ros>
+        <namespace>/m1pro</namespace>
+      </ros>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+
+</robot>

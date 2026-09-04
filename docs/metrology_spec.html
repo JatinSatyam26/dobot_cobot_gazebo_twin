@@ -1,0 +1,731 @@
+<title>Wafer Cell Metrology Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root{
+    --ground:#F1F4F6; --surface:#FFFFFF; --surface-2:#E5EAEE; --sunken:#E9EDF0;
+    --ink:#141A20; --ink-2:#4C5966; --ink-3:#77848F;
+    --rule:#D2DAE1; --rule-strong:#B4C0CA;
+    --accent:#1F4E79; --accent-soft:#E2EBF3;
+    --crit:#B8322A; --crit-bg:#F7E4E2;
+    --imp:#8E6015; --imp-bg:#F6ECDA;
+    --opt:#26636A; --opt-bg:#DFEDEE;
+    --shadow:0 1px 2px rgba(20,26,32,.06), 0 4px 14px rgba(20,26,32,.05);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0E1317; --surface:#161D23; --surface-2:#1E272F; --sunken:#121A20;
+      --ink:#E7EDF3; --ink-2:#9DAAB6; --ink-3:#75838F;
+      --rule:#28323B; --rule-strong:#3A4753;
+      --accent:#7FB2DC; --accent-soft:#1A2B3A;
+      --crit:#E9705E; --crit-bg:#33201D;
+      --imp:#D6A24C; --imp-bg:#2E2717;
+      --opt:#5EA8AD; --opt-bg:#152A2B;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E1317; --surface:#161D23; --surface-2:#1E272F; --sunken:#121A20;
+    --ink:#E7EDF3; --ink-2:#9DAAB6; --ink-3:#75838F;
+    --rule:#28323B; --rule-strong:#3A4753;
+    --accent:#7FB2DC; --accent-soft:#1A2B3A;
+    --crit:#E9705E; --crit-bg:#33201D;
+    --imp:#D6A24C; --imp-bg:#2E2717;
+    --opt:#5EA8AD; --opt-bg:#152A2B;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+    font-size:16px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px; margin:0 auto; padding:0 24px 96px}
+
+  /* ---------- masthead ---------- */
+  header.mast{
+    padding:56px 0 28px; border-bottom:2px solid var(--ink);
+    margin-bottom:0;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin:0 0 14px;
+  }
+  h1{
+    font-family:"IBM Plex Sans Condensed",Arial Narrow,sans-serif;
+    font-weight:700; font-size:clamp(34px,6.2vw,54px); line-height:1.03;
+    letter-spacing:-.015em; margin:0 0 16px; text-wrap:balance;
+  }
+  .standfirst{
+    font-size:18px; color:var(--ink-2); margin:0; max-width:64ch;
+  }
+  .meta{
+    display:flex; flex-wrap:wrap; gap:8px 26px; margin-top:24px;
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px;
+    color:var(--ink-3);
+  }
+  .meta b{color:var(--ink-2); font-weight:500}
+
+  /* ---------- callouts ---------- */
+  .note{
+    background:var(--surface); border:1px solid var(--rule);
+    border-left:3px solid var(--accent);
+    padding:20px 22px; margin:26px 0; box-shadow:var(--shadow);
+  }
+  .note.warn{border-left-color:var(--crit)}
+  .note.key{border-left-color:var(--opt)}
+  .note h4{
+    font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:600;
+    font-size:15.5px; letter-spacing:.01em; margin:0 0 8px; color:var(--ink);
+  }
+  .note p{margin:0 0 10px} .note p:last-child{margin-bottom:0}
+
+  /* ---------- sections ---------- */
+  section{padding-top:52px}
+  .shead{display:flex; gap:16px; align-items:baseline; border-bottom:1px solid var(--rule-strong); padding-bottom:10px; margin-bottom:8px}
+  .snum{
+    font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600;
+    color:var(--accent); flex:none; padding-top:4px;
+  }
+  h2{
+    font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:600;
+    font-size:clamp(23px,3.4vw,29px); margin:0; letter-spacing:-.008em;
+    text-wrap:balance;
+  }
+  .sintro{color:var(--ink-2); margin:14px 0 22px; max-width:66ch}
+  h3{
+    font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:600;
+    font-size:18px; margin:34px 0 12px; letter-spacing:.005em;
+  }
+  p{max-width:68ch}
+
+  /* ---------- parameter cards ---------- */
+  .params{display:flex; flex-direction:column; gap:10px; margin:20px 0}
+  .p{
+    background:var(--surface); border:1px solid var(--rule);
+    border-left:3px solid var(--tier); box-shadow:var(--shadow);
+    display:grid; grid-template-columns:26px 1fr; gap:0 14px;
+    padding:15px 18px 15px 15px;
+  }
+  .p[data-tier="crit"]{--tier:var(--crit); --tbg:var(--crit-bg); --tfg:var(--crit)}
+  .p[data-tier="imp"] {--tier:var(--imp);  --tbg:var(--imp-bg);  --tfg:var(--imp)}
+  .p[data-tier="opt"] {--tier:var(--opt);  --tbg:var(--opt-bg);  --tfg:var(--opt)}
+  .p input[type=checkbox]{
+    width:17px; height:17px; margin:4px 0 0; accent-color:var(--accent); cursor:pointer;
+  }
+  .p.done .pbody{opacity:.45}
+  .ptop{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px; margin-bottom:6px}
+  .pname{
+    font-family:"IBM Plex Mono",monospace; font-size:13.5px; font-weight:600;
+    color:var(--ink); letter-spacing:-.01em;
+  }
+  .tier{
+    font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600;
+    letter-spacing:.11em; text-transform:uppercase;
+    background:var(--tbg); color:var(--tfg); padding:2.5px 7px; border-radius:2px;
+    flex:none;
+  }
+  .tol{
+    font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--accent);
+    font-weight:500; margin-left:auto; font-variant-numeric:tabular-nums;
+  }
+  .p dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:14.5px}
+  .p dt{
+    font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3);
+    padding-top:5px;
+  }
+  .p dd{margin:0; color:var(--ink-2)}
+  .p dd b{color:var(--ink); font-weight:600}
+
+  /* ---------- tables ---------- */
+  .twrap{overflow-x:auto; margin:22px 0; border:1px solid var(--rule); background:var(--surface); box-shadow:var(--shadow)}
+  table{border-collapse:collapse; width:100%; min-width:520px; font-size:14px}
+  th,td{padding:11px 15px; text-align:left; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{
+    font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:600; font-size:12.5px;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2);
+    background:var(--sunken); border-bottom:1px solid var(--rule-strong);
+  }
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+  code{
+    font-family:"IBM Plex Mono",monospace; font-size:.88em;
+    background:var(--surface-2); padding:1.5px 5px; border-radius:2px;
+  }
+
+  /* ---------- progress ---------- */
+  .prog{
+    position:sticky; top:0; z-index:5; background:var(--ground);
+    border-bottom:1px solid var(--rule); padding:11px 0 10px;
+    display:flex; align-items:center; gap:14px;
+    font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-2);
+  }
+  .bar{flex:1; height:4px; background:var(--surface-2); overflow:hidden}
+  .bar i{display:block; height:100%; width:0; background:var(--accent); transition:width .25s ease}
+  .prog button{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3);
+    background:none; border:1px solid var(--rule); padding:4px 9px; cursor:pointer;
+    border-radius:2px;
+  }
+  .prog button:hover{color:var(--ink); border-color:var(--rule-strong)}
+  .prog button:focus-visible, .p input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  ul,ol{max-width:68ch; padding-left:22px}
+  li{margin:6px 0}
+  strong{font-weight:600; color:var(--ink)}
+  hr{border:none; border-top:1px solid var(--rule); margin:44px 0}
+  .foot{margin-top:56px; padding-top:22px; border-top:2px solid var(--ink); color:var(--ink-3); font-size:13.5px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:620px){
+    .p{grid-template-columns:22px 1fr; padding:13px 14px 13px 12px}
+    .p dl{grid-template-columns:1fr; gap:1px}
+    .p dt{padding-top:8px}
+    .tol{margin-left:0; width:100%}
+  }
+</style>
+<style>
+  .fact td:first-child{font-family:"IBM Plex Mono",monospace; font-size:12.5px; white-space:nowrap; color:var(--ink)}
+  .badge{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600; letter-spacing:.1em;
+         text-transform:uppercase; padding:2.5px 7px; border-radius:2px; background:var(--opt-bg); color:var(--opt)}
+  .badge.new{background:var(--crit-bg); color:var(--crit)}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Real-to-Sim · Measurement Order · Rev B</p>
+  <h1>Wafer Cell Metrology Spec</h1>
+  <p class="standfirst">Every real-world quantity the Gazebo twin needs, what tolerance each one actually deserves, and how to measure it with the tools in the lab. Revised against 25 photographs of the built cell.</p>
+  <div class="meta">
+    <span><b>Cell:</b> Dobot M1 Pro · myCobot Pro 600 · DT-AC-CB070-02E</span>
+    <span><b>Target:</b> gz-sim 8 / ROS 2 Jazzy</span>
+    <span><b>Params:</b> <span id="ptotal">—</span></span>
+  </div>
+</header>
+
+<div class="prog">
+  <span id="pcount">0 measured</span>
+  <span class="bar"><i id="pbar"></i></span>
+  <button id="reset" type="button">Reset</button>
+</div>
+
+<section id="s0" style="padding-top:34px">
+  <div class="shead"><span class="snum">00</span><h2>Read this before you pick up a tape measure</h2></div>
+
+  <div class="note warn">
+    <h4>Four things in the photographs overturned the earlier plan</h4>
+    <p><strong>1. The M1 Pro does not use vacuum.</strong> Its tool is a passive blue 3D-printed <em>slotted fork blade</em>. The wafer rests on it under gravity alone — no cup, no vacuum line, no suction. Only the Pro 600 has a suction cup.</p>
+    <p><strong>2. That changes the pick motion, not just a parameter.</strong> A cup descends vertically and seals. A fork must be <em>inserted horizontally beneath the wafer and then lifted</em>. Approach direction, clearance under the wafer, and fork blade thickness all become first-class requirements that a vacuum cell never has.</p>
+    <p><strong>3. There are no photoelectric sensors.</strong> The belt is stepper-driven and the PLC runs it purely on time. Belt speed accuracy therefore <em>is</em> position accuracy — the opposite of a sensor-triggered cell.</p>
+    <p><strong>4. The belt makes a three-part move, not one.</strong> Point A (load) → run → <strong>Point B, mid-journey dwell of 5–10 s</strong> → run → Point C (unload). The dwell is part of the cycle and must be in the sequencer.</p>
+  </div>
+
+  <div class="note">
+    <h4>“100% real-to-sim” is not the goal, and chasing it will cost you the deadline</h4>
+    <p>A simulation cannot match reality exactly — belt slip, stepper microstep error, joint backlash, and the wafer shifting on the fork are all real and none are in your model. The achievable and genuinely useful target is different: <strong>the sim should predict the same outcomes as the cell.</strong> Does the fork get under the wafer? Does anything collide? Is the cycle time right to within a few percent? Get those three and you have a legitimate digital twin.</p>
+  </div>
+
+  <div class="note key">
+    <h4>You do not need absolute positions on the table</h4>
+    <p>Where the cell sits on the lab table is cosmetic. What determines whether the sim behaves like the cell is a chain of <strong>relative transforms</strong> between stations:</p>
+    <ol style="margin:10px 0 10px">
+      <li><code>M1 Pro base</code> → <code>yellow nest</code> (pick)</li>
+      <li><code>M1 Pro base</code> → <code>magenta holder at Point A</code> (place)</li>
+      <li><code>Point A</code> → <code>Point B</code> → <code>Point C</code> (belt travel, in time)</li>
+      <li><code>Pro 600 base</code> → <code>magenta holder at Point C</code> (pick)</li>
+      <li><code>Pro 600 base</code> → <code>blue nest</code> (place)</li>
+    </ol>
+    <p>Get those right and the twin is right even if the whole board is 50 mm from where you think it is on the lab table. Spend your measuring time here.</p>
+  </div>
+
+  <h3>Tolerance tiers used throughout</h3>
+  <div class="twrap"><table>
+    <thead><tr><th>Tier</th><th>Meaning</th><th>Spend</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tier" style="--tbg:var(--crit-bg);--tfg:var(--crit)">Critical</span></td><td>Error here directly breaks a pick or causes a collision in sim that does not happen in reality (or vice versa).</td><td>Calipers, measured twice, or read off the robot itself.</td></tr>
+      <tr><td><span class="tier" style="--tbg:var(--imp-bg);--tfg:var(--imp)">Important</span></td><td>Affects timing realism or visual credibility. Wrong values look wrong but the loop still runs.</td><td>Tape measure and a careful eye.</td></tr>
+      <tr><td><span class="tier" style="--tbg:var(--opt-bg);--tfg:var(--opt)">Nice&nbsp;to&nbsp;have</span></td><td>Fidelity polish. Estimate it, note the estimate, move on.</td><td>Eyeball or datasheet.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s1">
+  <div class="shead"><span class="snum">01</span><h2>Already settled by the photographs</h2></div>
+  <p class="sintro">Do not spend bench time re-establishing these. They are read directly off the images or off equipment labels, and they are already reflected in the model.</p>
+
+  <div class="twrap"><table class="fact">
+    <thead><tr><th>Established</th><th>Finding</th></tr></thead>
+    <tbody>
+      <tr><td>Cell baseplate</td><td>All three stations are bolted to <b>one wooden butcher-block board</b> that rests on a grey height-adjustable lab table. The board — not the lab table — is the cell's rigid body and must carry the datum.</td></tr>
+      <tr><td>Layout</td><td>M1 Pro at one end, Pro 600 at the other, conveyor between them with its long axis along the board.</td></tr>
+      <tr><td>M1 Pro mounting</td><td>Black base bolted flat to the board through four corner bolts. Column vertical.</td></tr>
+      <tr><td>Pro 600 mounting</td><td>Base bolted flat to the board on a black flange. Base axis vertical.</td></tr>
+      <tr><td>Conveyor</td><td><b>Dobot Mini Conveyor Belt, model DT-AC-CB070-02E.</b> Aluminium extrusion frame, black belt, adjustable feet at both ends.</td></tr>
+      <tr><td>Conveyor drive</td><td><b>Stepper motor</b> coupled directly to one end roller, run from a DIP-switch stepper driver. No encoder, no gearbox visible.</td></tr>
+      <tr><td>Sensors</td><td><b>None fitted.</b> The PLC controls belt start/stop on time alone.</td></tr>
+      <tr><td>M1 Pro tool</td><td><b>Passive blue two-tine fork</b>, bolted to the wrist with two thumbscrews. A slot runs most of the blade length between two long parallel tines; the tips are chamfered to help them start under the wafer; the section is thin and flat with a tapered wedge root. <b>No vacuum port, no tube</b> — the wafer rests on the tines by gravity alone.</td></tr>
+      <tr><td>Pro 600 tool</td><td>Five-part stack: machined <b>flange adapter disc</b> (bolt circle + central bore) → <b>black L-bracket</b> extending sideways → threaded stem through the bracket arm, locked with nuts → black collar → <b>blue single-bellows suction cup</b>. Brass push-fit fitting and blue tube enter at the top of the stem. The cup sits <b>well off the flange rotation axis</b> — that offset is real and must be modelled.</td></tr>
+      <tr><td>Wafer</td><td>Real silicon wafer, mirror finish, square die-scribe grid, "DAMAGED" marking, and a <b>primary flat</b> on one edge.</td></tr>
+      <tr><td>Fixtures</td><td>Three of the same family: <b>stepped semicircular nests</b> with concentric terraces and an <b>open chord side</b>. Yellow (M1 Pro), magenta (rides the belt), blue (Pro 600). Wafer lies <b>horizontally in all three</b>, overhanging the open side — which is what gives the fork its access. The blue nest's walls look taller than the yellow one's; confirm by measurement.</td></tr>
+      <tr><td>Belt payload</td><td>The magenta holder <b>lives on the belt</b>. M1 Pro places only the wafer onto it; Pro 600 lifts only the wafer off.</td></tr>
+      <tr><td>Wafer orientation</td><td><b>Horizontal end to end — the wafer is never reoriented.</b> M1 Pro lifts it flat on the fork, it travels flat on the belt, and the Pro 600's cup picks and places it flat, top-down. No 90° flip anywhere in the cycle, so the Pro 600's extra axes are for reach and approach angle, not for turning the wafer.</td></tr>
+      <tr><td>Position markers</td><td>The blue nest already has <b>painter's tape witness marks</b> on the board around its footprint. Extend that practice to every fixture before measuring — it makes each number re-derivable if something is knocked.</td></tr>
+      <tr><td>Control</td><td>Micro850 PLC is master. Both robots and the conveyor are wired to it. Belt motion is time-based with a mid-journey dwell.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s2">
+  <div class="shead"><span class="snum">02</span><h2>Datum and frame convention</h2></div>
+  <p class="sintro">Nothing else means anything until a datum exists. The datum belongs on the <em>wooden board</em>, because the board is what the three stations share — the lab table underneath it is height-adjustable and irrelevant.</p>
+  <div class="params" data-sec="2"></div>
+</section>
+
+<section id="s3">
+  <div class="shead"><span class="snum">03</span><h2>Board and robot mounting poses</h2></div>
+  <p class="sintro">Six numbers place each robot. Five are easy; yaw is the one that quietly ruins everything, because angular error multiplies by reach.</p>
+  <div class="params" data-sec="3"></div>
+</section>
+
+<section id="s4">
+  <div class="shead"><span class="snum">04</span><h2>Conveyor geometry and stepper drive</h2></div>
+  <p class="sintro">Because the belt is stepper-driven with no encoder and no sensor, you can <em>calculate</em> its speed far more precisely than you can time it — provided you capture the drive parameters below.</p>
+
+  <div class="note key">
+    <h4>Compute belt speed, don't just stopwatch it</h4>
+    <p>With a stepper coupled directly to the end roller:</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;background:var(--sunken);padding:12px 14px;border:1px solid var(--rule)">mm_per_step = (π × D_roller) / (steps_per_rev × microsteps)<br>belt_speed  = mm_per_step × step_frequency</p>
+    <p>Capture all four inputs and you get belt speed to a fraction of a percent. Then <strong>stopwatch it once over ≥500 mm as a sanity check</strong> — if measured and calculated disagree by more than a few percent, the belt is slipping on the roller, which is itself something the sim should know about.</p>
+  </div>
+
+  <div class="params" data-sec="4"></div>
+</section>
+
+<section id="s5">
+  <div class="shead"><span class="snum">05</span><h2>Wafer</h2></div>
+  <p class="sintro">The wafer is the moving part the whole cell exists to handle, and it has a primary flat — which means its <em>orientation</em> is a real state variable, not just its position.</p>
+  <div class="params" data-sec="5"></div>
+</section>
+
+<section id="s6">
+  <div class="shead"><span class="snum">06</span><h2>Stepped nests and the belt holder</h2></div>
+  <p class="sintro">All three fixtures share a geometry: concentric semicircular terraces with an open chord side. The terraces centre the wafer; the open side is fork clearance. Measure one carefully and the others go quickly.</p>
+
+  <div class="note warn">
+    <h4>The single most likely physical failure in this cell</h4>
+    <p>The fork does not reach under the wafer <em>inside</em> the nest — it slides under the portion that <strong>overhangs the open chord side</strong>. So the governing inequality is:</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;background:var(--sunken);padding:12px 14px;border:1px solid var(--rule)">wafer_underside_height − surface_below_overhang &gt; fork_thickness + clearance</p>
+    <p>At the yellow and blue nests the surface below the overhang is the wooden board. <strong>On the conveyor it is the belt</strong>, and that is the tight one: the magenta holder is short, so the gap between the wafer's underside and the belt may be only a few millimetres. If the fork blade is thicker than that gap, the cell physically cannot work — and no amount of tuning the sim will reveal it unless you have measured both numbers.</p>
+  </div>
+
+  <div class="params" data-sec="6"></div>
+</section>
+
+<section id="s7">
+  <div class="shead"><span class="snum">07</span><h2>End effectors</h2></div>
+  <p class="sintro">The two robots pick in fundamentally different ways — a passive fork lifting from below, a vacuum cup pressing from above. Both tools are now fully visible in the photographs, so what follows is dimensioning a known shape rather than discovering one.</p>
+  <div class="params" data-sec="7"></div>
+</section>
+
+<section id="s8">
+  <div class="shead"><span class="snum">08</span><h2>PLC sequence and timing</h2></div>
+  <p class="sintro">With no sensors, the PLC's clock <em>is</em> the cell's position feedback. Every duration below is load-bearing — get one wrong and the wafer stops in the wrong place.</p>
+  <div class="params" data-sec="8"></div>
+</section>
+
+<section id="s9">
+  <div class="shead"><span class="snum">09</span><h2>Error budget — where the millimetres actually go</h2></div>
+  <p class="sintro">Before measuring anything to a tolerance, know what that tolerance buys you. These are the sensitivities for this cell as it is actually built.</p>
+
+  <div class="twrap"><table>
+    <thead><tr><th>Error source</th><th>Magnitude</th><th>Error at the wafer</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Robot base <b>yaw</b></td><td class="num">1.0°</td><td class="num">≈ 7.0 mm</td><td>At the M1 Pro's 400 mm reach: 400·sin(1°). Still the dominant term.</td></tr>
+      <tr><td>Robot base <b>yaw</b></td><td class="num">0.25°</td><td class="num">≈ 1.7 mm</td><td>Realistic target with a careful two-point measurement.</td></tr>
+      <tr><td>Robot base <b>X/Y</b></td><td class="num">1.0 mm</td><td class="num">1.0 mm</td><td>Translates one-for-one.</td></tr>
+      <tr><td><b>Belt speed</b> error, timed stop</td><td class="num">3%</td><td class="num">≈ 18 mm</td><td>Over 600 mm of travel. <b>With no sensor this does not wash out</b> — it lands directly on where the wafer stops.</td></tr>
+      <tr><td><b>Belt speed</b> error, timed stop</td><td class="num">0.5%</td><td class="num">≈ 3 mm</td><td>Achievable if you compute from stepper parameters instead of stopwatching.</td></tr>
+      <tr><td>PLC <b>timer</b> resolution</td><td class="num">10 ms</td><td class="num">≈ 1 mm</td><td>At a 100 mm/s belt. Usually negligible; confirm the timer base.</td></tr>
+      <tr><td>Belt <b>start/stop ramp</b> ignored</td><td class="num">200 ms</td><td class="num">≈ 10 mm</td><td>If the sim treats the belt as starting instantly, it overshoots by roughly half the ramp distance at each end.</td></tr>
+      <tr><td>Wafer <b>seat height</b></td><td class="num">1.0 mm</td><td class="num">1.0 mm in Z</td><td>Straight into fork clearance and cup contact height.</td></tr>
+      <tr><td><b>Fork thickness</b> vs gap</td><td class="num">—</td><td class="num">pass / fail</td><td>Not a gradual error. Either the blade fits under the wafer or the cell does not run.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <h4>Setting your budget</h4>
+    <p>Two capture tolerances matter, and they are different for the two robots. For the <strong>Pro 600's cup</strong>, the budget is how far off-centre it can land and still seal — generous on a large flat wafer. For the <strong>M1 Pro's fork</strong>, the budget is set by the nest's open chord width and the fork's width: the blade has to enter the gap without clipping the nest walls, and it has to end up far enough under the wafer's centre of mass that the wafer does not tip when lifted.</p>
+    <p>Read the table one way: <strong>base yaw and belt speed dominate.</strong> If you have time to measure exactly three things well, make them the two robot yaw angles and the stepper drive parameters.</p>
+  </div>
+</section>
+
+<section id="s10">
+  <div class="shead"><span class="snum">10</span><h2>The shortcut that beats measuring</h2></div>
+
+  <div class="note key">
+    <h4>Use the robots as their own measuring machines</h4>
+    <p>Jog each real robot to each waypoint — nest pick, fork-insert, lift, conveyor place, retreat — and <strong>record the joint values off the pendant or DobotStudio</strong>. Those numbers are already in the robot's own frame, which is exactly the frame the sim controller commands in.</p>
+    <p>Replay the recorded joint values in Gazebo and every error in your world model cancels out of the arm's motion: you are no longer asking the sim to <em>compute</em> where the nest is.</p>
+    <p><strong>This matters more for a fork than for a cup.</strong> A fork pick is a multi-segment move — approach, insert horizontally, lift, retract — and each intermediate pose has to clear the nest walls. Teaching those poses on the real robot captures clearances you would otherwise have to derive from fixture geometry you have not measured yet.</p>
+    <p><strong>Two honest limits.</strong> It works because the model's kinematics come from Dobot's CAD — a wrong link length would still corrupt the replay. And it validates the <em>motion</em>, not the <em>environment</em>: for reach envelopes and collisions you still need sections 02–06.</p>
+  </div>
+
+  <h3>What this means for the 24-hour build</h3>
+  <div class="twrap"><table>
+    <thead><tr><th>Do now</th><th>Approximate</th><th>Skip entirely</th></tr></thead>
+    <tbody><tr>
+      <td>
+        Datum + axes on the board<br>
+        Both base yaw angles<br>
+        Both base X/Y/Z<br>
+        Stepper drive parameters<br>
+        Belt A→B→C timings<br>
+        Fork thickness + belt gap<br>
+        Taught joint values
+      </td>
+      <td>
+        Nest terrace dimensions<br>
+        Wafer mass<br>
+        Cup bellows travel<br>
+        Board footprint<br>
+        Conveyor frame styling
+      </td>
+      <td>
+        Link inertia tensors<br>
+        Friction coefficients<br>
+        Real vacuum physics<br>
+        Belt tension / slip<br>
+        Stepper torque curves
+      </td>
+    </tr></tbody>
+  </table></div>
+
+  <p>That split follows the scope contract in <code>PROJECT_CONTEXT.md</code> §7: anything that does not move the end-to-end loop forward waits.</p>
+</section>
+
+<div class="foot">
+  <p>Tolerances here are engineering targets for this cell, not manufacturer specifications. Record what you actually measure — including the uncertainty — next to each value, so a number that later looks wrong can be re-derived rather than re-guessed. Revision B supersedes the vacuum-and-sensors assumptions of Revision A.</p>
+</div>
+
+</div>
+
+<script>
+const P = [
+ // ---- 2. datum
+ {s:2,t:"crit",n:"cell_datum_origin",tol:"fixed, permanent",
+  d:"One physical point on the WOODEN BOARD that will not move for the life of the project. Best choice is a corner of the board itself, or a mounting bolt centre on the M1 Pro base.",
+  m:"Pick it, mark it physically (scribe, punch, or labelled sticker), photograph it.",
+  w:"The board is the cell's rigid body. Putting the datum on the grey lab table underneath would be a mistake - that table is height-adjustable and the board can be lifted off it."},
+ {s:2,t:"crit",n:"cell_axis_convention",tol:"right-handed, Z up",
+  d:"Recommend: +X along the board from the M1 Pro toward the Pro 600 (the direction of wafer flow), Z up, Y completing a right-handed set.",
+  m:"Decide once, draw it on a photo of the board, put that drawing in the repo.",
+  w:"Aligning +X with wafer flow makes every belt distance a positive X number and makes sign errors obvious. A sign flip between you and your teammate is the most common source of mirrored cells."},
+ {s:2,t:"imp",n:"board_flatness",tol:"±1 mm",
+  d:"Whether the board is flat across the span between the two robots, and whether it sits flat on the lab table or rocks.",
+  m:"Spirit level along and across; check surface height at four corners and the centre.",
+  w:"A board that sags or rocks tilts the two robots relative to each other, and no amount of base-pose measuring fixes the resulting mismatch."},
+
+ // ---- 3. board + robots
+ {s:3,t:"imp",n:"board_dimensions",tol:"±2 mm",
+  d:"Length, width and thickness of the wooden board, and its height above the floor.",
+  m:"Tape measure; calipers for thickness.",
+  w:"Defines the sim's ground plane and gives every other measurement a visual frame of reference."},
+ {s:3,t:"crit",n:"m1pro_base_xy",tol:"±1 mm",
+  d:"In-plane position of the M1 Pro base-plate centre relative to the cell datum.",
+  m:"Measure to two of the four visible corner bolt centres and derive the centre, rather than eyeballing the middle of a curved housing.",
+  w:"Origin of the whole arm chain. Translates one-for-one into wafer position error."},
+ {s:3,t:"crit",n:"m1pro_base_yaw",tol:"±0.25°",
+  d:"Rotation of the M1 Pro about vertical, relative to the cell X axis. The highest-leverage single number in this document.",
+  m:"Two-point method: perpendicular distance from two base features a known distance L apart to a straight edge; yaw = atan(Δd / L). With L = 200 mm and 0.5 mm reads you get ≈0.14°. Better: jog the arm along its own axis, mark two points 300 mm apart, measure those.",
+  w:"1° of yaw is ~7 mm at full reach. For a fork pick that is the difference between sliding under the wafer and clipping the nest wall."},
+ {s:3,t:"crit",n:"m1pro_base_z",tol:"±1 mm",
+  d:"Height of the M1 Pro base mounting face above the board surface, including any shim or spacer under it.",
+  m:"Calipers or depth gauge on the actual stack - do not add up nominal part thicknesses.",
+  w:"Offsets every Z target. Combines additively with nest and belt heights."},
+ {s:3,t:"imp",n:"m1pro_base_roll_pitch",tol:"±0.2°",
+  d:"Tilt of the M1 Pro base out of horizontal, both directions.",
+  m:"Digital angle gauge or phone inclinometer on the base plate, two orthogonal directions.",
+  w:"A tilted base makes the fork drift in Z as the arm extends - the classic 'picks fine near the base, misses far away' symptom. Worse for a fork than a cup, because a fork has no compliance."},
+ {s:3,t:"crit",n:"pro600_base_xy",tol:"±1 mm",
+  d:"In-plane position of the Pro 600 base-flange centre relative to the same cell datum.",
+  m:"Derive from two identifiable features on the black mounting flange.",
+  w:"Defines the unload half of the cell."},
+ {s:3,t:"crit",n:"pro600_base_yaw",tol:"±0.25°",
+  d:"Rotation of the Pro 600 about vertical relative to cell X, and which way the arm's 'front' faces.",
+  m:"Two-point method against the flange edges, or jog joint 1 to a known zero and sight along the arm.",
+  w:"A 6-DoF arm accumulates base orientation error through the whole chain; it does not wash out."},
+ {s:3,t:"crit",n:"pro600_base_z",tol:"±1 mm",
+  d:"Height of the Pro 600 mounting face above the board, including the black flange.",
+  m:"Calipers on the assembled stack.",
+  w:"Same additive Z budget as the M1 Pro."},
+ {s:3,t:"imp",n:"pro600_base_roll_pitch",tol:"±0.2°",
+  d:"Out-of-horizontal tilt of the Pro 600 base flange.",
+  m:"Digital angle gauge, two orthogonal directions.",
+  w:"Propagates through six joints; worse here than on the SCARA."},
+ {s:3,t:"crit",n:"pro600_joint_zero_convention",tol:"exact",
+  d:"The joint angles the Pro 600 reports at its home pose, and the sign convention of each of the six joints.",
+  m:"Read directly off the pendant with the arm at home. Photograph the pose next to the readout.",
+  w:"Elephant Robotics' zero pose and joint signs will not match whatever URDF you build. Without this the sim arm mirrors or folds the wrong way, and no geometry fix will help."},
+
+ // ---- 4. conveyor
+ {s:4,t:"crit",n:"belt_top_height",tol:"±1 mm",
+  d:"Height of the belt's upper carrying surface above the board, measured at rest and unloaded, at both ends and the middle.",
+  m:"Depth gauge or steel rule. Note that the conveyor's feet are ADJUSTABLE - record whether they have been set and locked.",
+  w:"Sets the Z of the place and pick on the belt, and one half of the fork clearance inequality in section 06."},
+ {s:4,t:"crit",n:"conveyor_origin_xy",tol:"±1 mm",
+  d:"Position of a defined conveyor reference - recommend the centre of the drive-end roller - relative to the cell datum.",
+  m:"Measure to the frame extrusion ends, which are square and machined, not to the belt.",
+  w:"Places the transport path relative to both arms."},
+ {s:4,t:"crit",n:"conveyor_yaw",tol:"±0.3°",
+  d:"Angle of the conveyor centreline relative to the cell X axis.",
+  m:"Perpendicular offset from the frame extrusion to a datum edge at both ends; yaw = atan(Δ / span).",
+  w:"Over a 600 mm belt, 1° of yaw moves the far end ~10 mm sideways - enough for the Pro 600 to miss the wafer centre."},
+ {s:4,t:"imp",n:"belt_width_and_length",tol:"±1 mm",
+  d:"Belt width, usable lateral band inside the frame rails, and centre distance between the two end rollers.",
+  m:"Calipers across the belt and to the inner frame faces. Cross-check against the DT-AC-CB070-02E datasheet if you can find it.",
+  w:"Constrains where the magenta holder can sit, and tells you how far the wafer overhangs the belt edge - which decides whether the fork can approach from the side."},
+ {s:4,t:"crit",n:"roller_diameter",tol:"±0.2 mm",
+  d:"Outside diameter of the DRIVE roller, measured over the belt if you cannot get to the bare roller (then subtract twice the belt thickness).",
+  m:"Calipers. Measure twice at 90° to catch out-of-round.",
+  w:"Directly sets mm-per-step. A 2% error in diameter is a 2% error in every belt distance, and with no sensor nothing corrects it."},
+ {s:4,t:"crit",n:"stepper_steps_per_rev",tol:"exact",
+  d:"Full steps per revolution of the stepper motor (almost always 200 for a 1.8° motor - confirm from the motor label).",
+  m:"Read the motor nameplate or its datasheet.",
+  w:"Second term in the mm-per-step calculation."},
+ {s:4,t:"crit",n:"driver_microstep_setting",tol:"exact",
+  d:"Microstep setting configured on the stepper driver's DIP switches, and the driver's current limit setting.",
+  m:"Read the DIP switch positions against the legend printed on the driver body. Photograph the switches.",
+  w:"Multiplies steps per revolution. Getting this wrong scales every belt distance by an integer factor - the most likely single cause of the wafer stopping in completely the wrong place."},
+ {s:4,t:"crit",n:"step_frequency",tol:"±1%",
+  d:"Step pulse frequency the PLC sends during belt motion, and whether it ramps.",
+  m:"Read it out of the Micro850 program (pulse-train output configuration), or scope the step line.",
+  w:"Final term in the speed calculation. Combined with the three above, gives belt speed to a fraction of a percent."},
+ {s:4,t:"imp",n:"belt_speed_verified",tol:"±3%",
+  d:"Measured belt surface speed, as an independent check on the calculated value.",
+  m:"Mark the belt, run it over a measured ≥500 mm, time it. Five trials, take the mean.",
+  w:"If measured and calculated disagree by more than a few percent, the belt is slipping on the drive roller - which means the cell is not repeatable and the sim should not pretend it is."},
+ {s:4,t:"imp",n:"belt_accel_ramp",tol:"±50 ms",
+  d:"Time from start command to full belt speed, and from stop command to standstill, including driver and contactor latency.",
+  m:"Video at 60 fps and count frames, or scope the step line against the PLC output.",
+  w:"A belt modelled as starting instantly overshoots by roughly half the ramp distance at each of the three stops. Worth ~10 mm."},
+ {s:4,t:"opt",n:"belt_travel_direction",tol:"exact",
+  d:"Which way the belt runs, expressed in the cell frame, and whether it ever reverses to reset the holder.",
+  m:"Watch it. Write it down in cell-frame terms, not 'left to right'.",
+  w:"Cheap to record, embarrassing to get backwards. Also: if the holder never returns automatically, someone resets it by hand and the sim's cycle is not actually a loop."},
+
+ // ---- 5. wafer
+ {s:5,t:"crit",n:"wafer_diameter",tol:"±0.5 mm",
+  d:"Outside diameter of the wafer. Standard sizes are 100/150/200 mm - measure rather than assume.",
+  m:"Calipers across two perpendicular axes, avoiding the flat.",
+  w:"Sets how far the wafer overhangs each nest, which is exactly the region the fork has to reach under."},
+ {s:5,t:"crit",n:"wafer_primary_flat",tol:"±1 mm / ±2°",
+  d:"Chord length of the primary flat, and its angular orientation when the wafer is seated in each nest.",
+  m:"Calipers for the chord. For orientation, seat the wafer and note which way the flat points at the yellow nest, on the belt holder, and at the blue nest.",
+  w:"The wafer is NOT rotationally symmetric. If the flat has to end up in a particular orientation at the blue nest, then wrist angle becomes part of the pick spec, not a free parameter."},
+ {s:5,t:"imp",n:"wafer_thickness",tol:"±0.05 mm",
+  d:"Wafer thickness.",
+  m:"Calipers at several points around the edge.",
+  w:"Adds to every pick Z, and enters the fork clearance calculation."},
+ {s:5,t:"opt",n:"wafer_mass",tol:"±20%",
+  d:"Mass of the wafer.",
+  m:"Lab scale.",
+  w:"Only matters for sim dynamics, which are not load-bearing for a position-controlled pick. A 150 mm silicon wafer is roughly 30 g."},
+
+ // ---- 6. nests + holder
+ {s:6,t:"crit",n:"nest_seat_height",tol:"±0.5 mm",
+  d:"For each of the three fixtures: height of the terrace the wafer ACTUALLY rests on, measured from the fixture's own base.",
+  m:"Seat the wafer, then measure from the base surface to the wafer's underside with a depth gauge. Measure the real stack, not the CAD intent.",
+  w:"Sets the pick and place Z at every station. The stepped nests have several terraces - only one of them is the one in use, so measure with the wafer in place."},
+ {s:6,t:"imp",n:"blue_nest_wall_height",tol:"±0.5 mm",
+  d:"Height of the blue nest's outer wall above the wafer seat, compared with the yellow nest's. The blue one looks noticeably taller in the photographs.",
+  m:"Depth gauge from the wall top down to the seated wafer's top face, on both nests.",
+  w:"The Pro 600's cup descends vertically INTO the nest. If the wall is taller than the cup plus its bracket, the tool fouls the rim before the cup reaches the wafer - a collision the sim will only predict if the wall height is right."},
+ {s:6,t:"crit",n:"nest_terrace_diameters",tol:"±0.5 mm",
+  d:"Diameter of each concentric terrace, and which one the current wafer seats on.",
+  m:"Calipers across each step.",
+  w:"The terraces are what centre the wafer. The clearance between wafer OD and terrace ID is the wafer's positional slop - it is the irreducible uncertainty in where the wafer actually is, and it belongs in the error budget."},
+ {s:6,t:"crit",n:"nest_chord_opening",tol:"±0.5 mm",
+  d:"Width of the open chord side of each fixture, and the height of the side walls either side of that opening.",
+  m:"Calipers across the opening; depth gauge for wall height above the wafer seat.",
+  w:"The fork has to enter through this gap without clipping the walls. Opening width minus fork width is your lateral capture tolerance for the whole pick."},
+ {s:6,t:"crit",n:"belt_holder_gap",tol:"±0.5 mm",
+  d:"THE CRITICAL ONE. With the wafer seated on the magenta holder on the belt, the vertical gap between the wafer's underside (at the overhang) and the belt surface.",
+  m:"Feeler gauge or a stack of shims slid under the overhanging wafer edge until it lifts.",
+  w:"Must exceed the fork blade thickness plus clearance or the M1 Pro physically cannot place or the Pro 600 cannot be fed. This is a pass/fail dimension, not a gradual error - and it is the tightest one in the cell."},
+ {s:6,t:"crit",n:"nest_poses",tol:"±1 mm / ±0.5°",
+  d:"Position AND orientation of the yellow nest and the blue nest relative to the cell datum. Orientation means: which way does the open chord side face?",
+  m:"Measure to two features on each fixture to capture position and rotation together.",
+  w:"The chord direction defines the fork's approach vector. Get the angle wrong and the fork arrives at the closed side."},
+ {s:6,t:"crit",n:"holder_position_on_belt",tol:"±1 mm",
+  d:"Where the magenta holder sits across the belt width, and its rotational orientation (which way the chord faces) at Points A and C.",
+  m:"Measure from the frame rail to the holder edge at both ends of its journey.",
+  w:"If the holder is free to shift or rotate while riding the belt, the Pro 600's pick pose is not deterministic and the sim must not pretend it is. Check by running the belt and re-measuring."},
+ {s:6,t:"imp",n:"holder_footprint",tol:"±1 mm",
+  d:"Overall footprint and height of the magenta holder, and how it is retained on the belt - friction alone, or a fixture?",
+  m:"Calipers; then try nudging it while the belt runs.",
+  w:"Needed to model the object, and to know whether it can walk sideways over repeated cycles."},
+ {s:6,t:"opt",n:"nest_footprints",tol:"±1 mm",
+  d:"Outer footprint and overall height of the yellow and blue nests.",
+  m:"Calipers.",
+  w:"Collision geometry and visual credibility."},
+
+ // ---- 7. end effectors
+ {s:7,t:"crit",n:"fork_blade_thickness",tol:"±0.1 mm",
+  d:"Thickness of the blue fork blade, measured at the tip where it enters under the wafer. 3D-printed parts vary along their length - measure at the thinnest AND thickest points.",
+  m:"Calipers at the tip, mid-tine, and root.",
+  w:"Half of the pass/fail clearance inequality in section 06. Also the first thing to change if the clearance fails - a thinner blade is a cheap reprint."},
+ {s:7,t:"crit",n:"fork_slot_and_tines",tol:"±0.5 mm",
+  d:"Slot width and slot length (it runs most of the blade), width of each tine, overall outside width across both tines, and total length from the mounting face to the chamfered tips.",
+  m:"Calipers on every dimension. Photograph with a rule alongside.",
+  w:"Outside width vs nest chord opening is the lateral capture tolerance. Slot length sets how far the fork can advance before the wafer's centre clears the slot. Total length sets the insertion stroke."},
+ {s:7,t:"crit",n:"fork_tip_chamfer",tol:"±0.5 mm",
+  d:"Chamfer angle and length on the tine tips, and the blade thickness at the very tip versus at the root.",
+  m:"Calipers at the tip and root; protractor or photograph against a grid for the angle.",
+  w:"The chamfer is what lets the tines start under a wafer that is only a millimetre or two clear. It also means the blade is THINNER at the tip than the root, so the clearance check must use the thickest section that ends up under the wafer, not the tip."},
+ {s:7,t:"crit",n:"fork_tcp_offset",tol:"±0.5 mm",
+  d:"Full transform from the M1 Pro's J4 output face to the fork's wafer-support surface: the lateral offset (X, Y) and the vertical drop (Z) to the blade's top face.",
+  m:"Calipers on the assembled tool, referenced to the wrist flange. Note the two thumbscrews fix the blade in one orientation - record which.",
+  w:"This is the TCP the sim needs. The blade extends well forward of the wrist axis, so J4 rotation sweeps the blade through a large arc - the offset is definitely not zero and must be modelled."},
+ {s:7,t:"crit",n:"fork_support_geometry",tol:"±1 mm",
+  d:"Where the wafer actually contacts the blade, and how far the wafer's centre of mass sits from the blade tip when carried.",
+  m:"Seat the wafer on the fork as the robot carries it, and mark the contact region.",
+  w:"A passive fork holds by gravity alone. If the wafer's centre of mass is outside the support region it tips off during acceleration - which is a real failure mode the sim should reproduce, and a reason to cap the M1 Pro's speed."},
+ {s:7,t:"imp",n:"fork_flatness",tol:"±0.5 mm",
+  d:"Whether the blade is flat or has warped, and whether it deflects measurably under the wafer's weight.",
+  m:"Straight edge across the blade; then load it with the wafer and look again.",
+  w:"A 3D-printed cantilever blade sags. Sag at the tip adds directly to the Z error at exactly the moment you need clearance."},
+ {s:7,t:"crit",n:"pro600_cup_offset",tol:"±0.5 mm",
+  d:"The cup centre's LATERAL offset from the Pro 600's flange rotation axis, and its vertical drop from the flange face to the cup's uncompressed sealing lip. The photographs show the cup mounted on an L-bracket arm well off the axis - this offset is large, not a rounding error.",
+  m:"Calipers from the flange adapter's central bore to the stem centreline for the lateral offset; from the flange face to the cup lip for the drop. Measure the assembled tool, not the parts.",
+  w:"A large lateral offset means the final wrist joint SWEEPS the cup through an arc. Rotating the wrist to change approach angle also moves the pick point by up to twice the offset. This is the single easiest way to get a Pro 600 pick that works at one wrist angle and misses at another."},
+ {s:7,t:"crit",n:"pro600_tool_stack",tol:"±0.5 mm",
+  d:"Thickness of each element in the stack: flange adapter disc, L-bracket base and arm, stem length between the bracket arm and the cup collar, collar height, cup body height.",
+  m:"Calipers on each part, then verify the total against a single flange-face-to-cup-lip measurement. The two must agree.",
+  w:"Five stacked parts is five chances for an error to accumulate. Measuring the total independently catches a mistake in any one of them."},
+ {s:7,t:"imp",n:"pro600_flange_bolt_pattern",tol:"±0.5 mm",
+  d:"Bolt circle diameter, hole count and central bore of the flange adapter disc, plus which angular position the L-bracket is clocked to.",
+  m:"Calipers; photograph the adapter face square-on with a rule.",
+  w:"The bracket's clocking sets the DIRECTION of the lateral offset in the wrist frame. Get the direction wrong and the offset error is doubled rather than cancelled."},
+ {s:7,t:"crit",n:"cup_contact_point_on_wafer",tol:"±2 mm",
+  d:"Where on the wafer the cup actually lands - the photographs show it near the centre. Record the offset from the wafer centre, and whether that is deliberate.",
+  m:"Run a real pick, then mark or photograph the cup's footprint on the wafer.",
+  w:"Contact near the centre gives the most tolerance and the least tipping moment. Contact near the rim risks breaking the seal as the wafer flexes, and it makes wafer rotation about the cup much more likely during a move."},
+ {s:7,t:"imp",n:"cup_compliance_travel",tol:"±0.5 mm",
+  d:"Whether the stem includes a spring or compliant element, and if so its travel and preload. If it is rigid, record that explicitly.",
+  m:"Press the cup against a flat surface and watch whether the stem retracts as well as the bellows compressing.",
+  w:"Determines the Pro 600's Z forgiveness. A rigid stem means all the compliance comes from the single bellows, which is much less than people assume - and it makes the belt-height measurement tighter."},
+ {s:7,t:"imp",n:"pro600_cup_spec",tol:"±0.5 mm",
+  d:"Cup diameter and bellows travel (how far it compresses under load).",
+  m:"Calipers; press the cup against a flat surface to gauge travel.",
+  w:"Bellows travel is the Pro 600's real Z tolerance - it tells you whether a 2 mm Z error is absorbed or is a failed seal. The M1 Pro's fork has no equivalent compliance, which is why its Z budget is tighter."},
+ {s:7,t:"imp",n:"vacuum_timings",tol:"±20 ms",
+  d:"For the Pro 600 only: time from solenoid energising to the pressure switch confirming grip, and the release delay including any positive-pressure blow-off pulse.",
+  m:"Log the PLC output against the pressure-switch input, or video the switch display.",
+  w:"The pneumatic panel has both positive and negative pressure control, so a blow-off pulse likely exists. Wafers stick to a cup after vacuum is cut - blow-off duration is a real sequence step."},
+ {s:7,t:"imp",n:"vacuum_switch_threshold",tol:"read setting",
+  d:"Pressure threshold configured on the digital pressure switch, its units, and its output logic (NO/NC).",
+  m:"Read the value off the switch display.",
+  w:"This is the Pro 600's 'wafer present' signal. In sim it becomes a boolean you fake, but it must fire at the same point in the sequence."},
+
+ // ---- 8. PLC
+ {s:8,t:"crit",n:"belt_time_A_to_B",tol:"±10 ms",
+  d:"Commanded belt run duration from Point A (load) to Point B (mid-journey dwell).",
+  m:"Read the timer preset out of the Micro850 program. Do not time it by eye.",
+  w:"With no sensors this timer IS the position command. It and the belt speed together determine where the wafer stops."},
+ {s:8,t:"crit",n:"dwell_time_at_B",tol:"±10 ms",
+  d:"How long the belt is held stationary at Point B. Currently undecided between 5 s and 10 s - the sim needs whichever value ships.",
+  m:"Read the timer preset once it is set.",
+  w:"Part of the cycle and of the cycle time. Also worth recording WHY the dwell exists - if it is a placeholder for an inspection step, the sim should leave room for it."},
+ {s:8,t:"crit",n:"belt_time_B_to_C",tol:"±10 ms",
+  d:"Commanded belt run duration from Point B to Point C (unload).",
+  m:"Read the timer preset out of the PLC program.",
+  w:"Second half of the position command."},
+ {s:8,t:"crit",n:"point_positions",tol:"±2 mm",
+  d:"Measured physical positions of Points A, B and C along the belt, relative to the cell datum - where the holder actually comes to rest.",
+  m:"Run the real cycle, stop it at each point, and measure to the holder. Do this AFTER the timers are set.",
+  w:"This is the ground truth that tells you whether your timers and your speed calculation agree with reality. If measured A/B/C do not match speed × time, something in the drive chain is off."},
+ {s:8,t:"crit",n:"plc_io_map",tol:"complete",
+  d:"Full mapping of Micro850 terminals to devices via the Magic Box breakout: which output drives the stepper enable/direction/pulse, which I/O talks to each robot, and the active state of each.",
+  m:"Trace wiring from the Magic Box terminals and cross-check against the PLC program. Photograph the terminal blocks.",
+  w:"Phase 4 mirrors this logic as a ROS 2 node. Every signal you cannot name becomes a guess in the sequencer."},
+ {s:8,t:"crit",n:"robot_plc_handshake",tol:"complete",
+  d:"The exact signals exchanged between the PLC and each robot: how the M1 Pro tells the PLC 'wafer placed, clear of the belt', and how the PLC tells the Pro 600 'wafer at Point C, safe to pick'.",
+  m:"Read the PLC program and both robot programs. Write it out as a signal table with directions.",
+  w:"This is the interface the sequencer node has to reproduce. Note especially the 'clear of the belt' condition - with a fork, the arm is still over the belt after releasing, so belt start must wait for retraction, not just for release."},
+ {s:8,t:"crit",n:"cell_sequence_and_interlocks",tol:"complete",
+  d:"The full step sequence with conditions: what must be true to advance, what happens on fault, what blocks motion.",
+  m:"Export or photograph the ladder logic. Write it out as a numbered state list.",
+  w:"This is the specification the sequencer node implements. Guessing it produces a demo that looks right and is wrong."},
+ {s:8,t:"imp",n:"robot_cycle_times",tol:"±100 ms",
+  d:"How long each robot takes for its portion: M1 Pro pick-to-place, Pro 600 pick-to-place, plus the speed/acceleration settings in use.",
+  m:"Time the real cycle; read the speed percentages out of each robot program.",
+  w:"Sets total cycle time and tells you whether the belt or the arms are the bottleneck."},
+ {s:8,t:"imp",n:"estop_behaviour",tol:"describe it",
+  d:"What each of the two E-stops cuts - robot power, stepper drive, pneumatics - and what recovery requires.",
+  m:"Read the safety wiring. Do not test by pressing it mid-cycle.",
+  w:"Determines whether the sim needs a fault state, and what recovery looks like if it does."},
+ {s:8,t:"opt",n:"plc_scan_time",tol:"±1 ms",
+  d:"Micro850 scan cycle time and timer time-base.",
+  m:"Read from controller diagnostics in Connected Components Workbench.",
+  w:"Bounds the timing resolution of every duration above. At 100 mm/s a 10 ms timer granularity is ~1 mm."}
+];
+
+const TIER = {crit:"Critical", imp:"Important", opt:"Nice to have"};
+const KEY = "wafercell.metrology.v2";
+let done = {};
+try{ done = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ done = {}; }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(done)); }catch(e){} }
+
+function render(){
+  document.querySelectorAll(".params").forEach(host=>{
+    const sec = +host.dataset.sec;
+    host.innerHTML = "";
+    P.filter(p=>p.s===sec).forEach(p=>{
+      const el = document.createElement("div");
+      el.className = "p" + (done[p.n] ? " done" : "");
+      el.dataset.tier = p.t;
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = !!done[p.n];
+      cb.setAttribute("aria-label", "Mark " + p.n + " as measured");
+      cb.addEventListener("change", ()=>{
+        if(cb.checked) done[p.n]=1; else delete done[p.n];
+        el.classList.toggle("done", cb.checked);
+        save(); tally();
+      });
+      const body = document.createElement("div");
+      body.className = "pbody";
+      const dl = document.createElement("dl");
+      [["What",p.d],["How",p.m],["Why",p.w]].forEach(([k,v])=>{
+        const dt=document.createElement("dt"); dt.textContent=k;
+        const dd=document.createElement("dd"); dd.textContent=v;
+        dl.append(dt,dd);
+      });
+      const top = document.createElement("div");
+      top.className = "ptop";
+      const nm=document.createElement("span"); nm.className="pname"; nm.textContent=p.n;
+      const tr=document.createElement("span"); tr.className="tier"; tr.textContent=TIER[p.t];
+      const to=document.createElement("span"); to.className="tol"; to.textContent=p.tol;
+      top.append(nm,tr,to);
+      body.append(top,dl);
+      el.append(cb, body);
+      host.appendChild(el);
+    });
+  });
+  tally();
+}
+
+function tally(){
+  const n = Object.keys(done).filter(k=>P.some(p=>p.n===k)).length;
+  document.getElementById("pcount").textContent = n + " of " + P.length + " measured";
+  document.getElementById("pbar").style.width = (100*n/P.length).toFixed(1) + "%";
+}
+
+document.getElementById("ptotal").textContent = P.length;
+document.getElementById("reset").addEventListener("click", ()=>{ done = {}; save(); render(); });
+render();
+</script>

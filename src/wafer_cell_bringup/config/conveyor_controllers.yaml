@@ -1,0 +1,23 @@
+/belt/controller_manager:
+  ros__parameters:
+    update_rate: 200
+    use_sim_time: true
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    belt_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+/belt/joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+
+/belt/belt_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints: [belt_travel]
+    command_interfaces: [position]
+    state_interfaces: [position, velocity]
+    constraints:
+      stopped_velocity_tolerance: 0.02
+      goal_time: 3.0
+      belt_travel: { trajectory: 0.05, goal: 0.005 }

@@ -1,0 +1,318 @@
+<?xml version="1.0"?>
+<!--
+  ============================================================================
+  myCobot Pro 600 - 6 DoF, for ROS 2 Jazzy / Gazebo Harmonic
+  ============================================================================
+
+  GEOMETRY AND KINEMATICS ARE THE MANUFACTURER'S. Meshes and joint origins come
+  from Elephant Robotics' own mycobot_ros2 repository, branch
+  fix/mycobot_pro_600_joint_limits (BSD). See ATTRIBUTION.md.
+
+  Verified against the datasheet: 250 mm + 250 mm arm links plus the wrist
+  stack gives the Pro 600's published 600 mm reach.
+
+  ===========================================================================
+  THREE DEFECTS FIXED ON IMPORT - do not "restore" these to upstream values
+  ===========================================================================
+  1. velocity="0" on all six joints upstream. A zero velocity limit makes
+     joint_trajectory_controller refuse to move the arm. Replaced with real
+     values below.
+  2. NO <inertial> elements anywhere upstream. Gazebo needs mass and inertia
+     on every link or the model is unusable. Masses below are apportioned to
+     the Pro 600's ~22 kg published weight; inertias are primitive
+     approximations. Fine for position-controlled pick-and-place, NOT valid
+     for dynamics or payload studies.
+  3. Collision used the full 31 MB COLLADA meshes. Replaced with primitives -
+     mesh collision at that resolution is far too slow for real-time physics.
+     Visual meshes are kept unchanged.
+
+  Joint limits are upstream's CORRECTED values (that branch exists precisely
+  to fix them). Note they are strongly asymmetric - J2 is -270 to +90 deg and
+  J4 is -260 to +80 deg. Do not assume symmetric ranges when planning poses.
+  ============================================================================
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mycobot_pro600">
+
+  <xacro:include filename="$(find mycobot_pro600_description)/urdf/inertial_macros.xacro"/>
+
+  <xacro:arg name="prefix" default="pro600_"/>
+  <xacro:property name="prefix" value="$(arg prefix)"/>
+
+  <xacro:arg name="fix_to_world" default="true"/>
+  <xacro:arg name="use_gz_control" default="true"/>
+  <xacro:arg name="controllers_file"
+             default="$(find mycobot_pro600_description)/config/pro600_controllers.yaml"/>
+
+  <xacro:property name="mesh_dir" value="package://mycobot_pro600_description/meshes"/>
+
+  <!-- ===== manufacturer joint limits (rad) ===== -->
+  <xacro:property name="j1_lo" value="-3.1400"/>  <xacro:property name="j1_hi" value="3.14159"/>
+  <xacro:property name="j2_lo" value="-4.7123"/>  <xacro:property name="j2_hi" value="1.5708"/>
+  <xacro:property name="j3_lo" value="-2.6179"/>  <xacro:property name="j3_hi" value="2.6179"/>
+  <xacro:property name="j4_lo" value="-4.5378"/>  <xacro:property name="j4_hi" value="1.3962"/>
+  <xacro:property name="j5_lo" value="-2.9321"/>  <xacro:property name="j5_hi" value="2.9321"/>
+  <xacro:property name="j6_lo" value="-3.0368"/>  <xacro:property name="j6_hi" value="3.0368"/>
+
+  <!-- Upstream effort of 1000 N.m is generous but harmless under position
+       control, and keeps the arm from stalling against gravity. Velocity is
+       APPROXIMATE - replace with datasheet values if you find them. -->
+  <xacro:property name="eff"  value="1000.0"/>
+  <xacro:property name="vel"  value="2.0"/>
+
+  <!-- masses apportioned to the Pro 600's ~22 kg published weight -->
+  <xacro:property name="m_base"  value="8.0"/>
+  <xacro:property name="m_l1"    value="4.0"/>
+  <xacro:property name="m_l2"    value="4.0"/>
+  <xacro:property name="m_l3"    value="2.5"/>
+  <xacro:property name="m_l4"    value="1.5"/>
+  <xacro:property name="m_l5"    value="1.2"/>
+  <xacro:property name="m_l6"    value="0.8"/>
+
+  <xacro:if value="$(arg fix_to_world)">
+    <link name="world"/>
+    <joint name="${prefix}world_fixed" type="fixed">
+      <parent link="world"/><child link="${prefix}base"/>
+      <origin xyz="0 0 0"/>
+    </joint>
+  </xacro:if>
+
+  <!-- ==================== links ==================== -->
+  <link name="${prefix}base">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="${mesh_dir}/base.stl"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.10"/>
+      <geometry><cylinder radius="0.090" length="0.200"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_base}" radius="0.090" length="0.200">
+      <origin xyz="0 0 0.10"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <link name="${prefix}link1">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 3.1415926"/>
+      <geometry><mesh filename="${mesh_dir}/link1.stl"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry><cylinder radius="0.075" length="0.150"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_l1}" radius="0.075" length="0.150">
+      <origin xyz="0 0 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <!-- link2 and link3 run along their own +X: the next joint sits at x=0.25 -->
+  <link name="${prefix}link2">
+    <visual>
+      <origin xyz="0 0 -0.080" rpy="3.1415926 0 3.1415926"/>
+      <geometry><mesh filename="${mesh_dir}/link2.stl"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.125 0 0" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.060" length="0.250"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_l2}" radius="0.060" length="0.250">
+      <origin xyz="0.125 0 0" rpy="0 1.5708 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <link name="${prefix}link3">
+    <visual>
+      <origin xyz="0 0 -0.0855" rpy="3.1415926 0 3.1415926"/>
+      <geometry><mesh filename="${mesh_dir}/link3.stl"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.125 0 -0.055" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.050" length="0.250"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_l3}" radius="0.050" length="0.250">
+      <origin xyz="0.125 0 -0.055" rpy="0 1.5708 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <link name="${prefix}link4">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 3.1415926 0"/>
+      <geometry><mesh filename="${mesh_dir}/link4.stl"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.054 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.048" length="0.130"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_l4}" radius="0.048" length="0.130">
+      <origin xyz="0 -0.054 0" rpy="1.5708 0 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <link name="${prefix}link5">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 1.5707"/>
+      <geometry><mesh filename="${mesh_dir}/link5.stl"/></geometry>
+    </visual>
+    <collision>
+      <origin xyz="-0.038 0 0" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.045" length="0.100"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_l5}" radius="0.045" length="0.100">
+      <origin xyz="-0.038 0 0" rpy="0 1.5708 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <link name="${prefix}link6">
+    <visual>
+      <origin xyz="0.03 0 0" rpy="0 -1.5707 0"/>
+      <geometry><mesh filename="${mesh_dir}/link6.stl"/></geometry>
+      <material name="pro600_grey"><color rgba="0.5 0.5 0.5 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0.015 0 0" rpy="0 1.5708 0"/>
+      <geometry><cylinder radius="0.032" length="0.050"/></geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${m_l6}" radius="0.032" length="0.050">
+      <origin xyz="0.015 0 0" rpy="0 1.5708 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <!-- ==================== joints ==================== -->
+  <joint name="${prefix}joint1" type="revolute">
+    <axis xyz="0 0 1"/>
+    <limit effort="${eff}" lower="${j1_lo}" upper="${j1_hi}" velocity="${vel}"/>
+    <parent link="${prefix}base"/><child link="${prefix}link1"/>
+    <origin xyz="0 0 0.19934" rpy="0 0 0"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <joint name="${prefix}joint2" type="revolute">
+    <axis xyz="0 0 -1"/>
+    <limit effort="${eff}" lower="${j2_lo}" upper="${j2_hi}" velocity="${vel}"/>
+    <parent link="${prefix}link1"/><child link="${prefix}link2"/>
+    <origin xyz="0 0 0" rpy="1.5708 -1.5708 0"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <joint name="${prefix}joint3" type="revolute">
+    <axis xyz="0 0 -1"/>
+    <limit effort="${eff}" lower="${j3_lo}" upper="${j3_hi}" velocity="${vel}"/>
+    <parent link="${prefix}link2"/><child link="${prefix}link3"/>
+    <origin xyz="0.25 0 0" rpy="0 0 0"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <joint name="${prefix}joint4" type="revolute">
+    <axis xyz="0 0 -1"/>
+    <limit effort="${eff}" lower="${j4_lo}" upper="${j4_hi}" velocity="${vel}"/>
+    <parent link="${prefix}link3"/><child link="${prefix}link4"/>
+    <origin xyz="0.25 0 -0.1091" rpy="0 0 1.5708"/>
+    <dynamics damping="0.5" friction="0.2"/>
+  </joint>
+
+  <joint name="${prefix}joint5" type="revolute">
+    <axis xyz="0 0 1"/>
+    <limit effort="${eff}" lower="${j5_lo}" upper="${j5_hi}" velocity="${vel}"/>
+    <parent link="${prefix}link4"/><child link="${prefix}link5"/>
+    <origin xyz="0 -0.108 0" rpy="1.5708 -1.5708 0"/>
+    <dynamics damping="0.5" friction="0.2"/>
+  </joint>
+
+  <joint name="${prefix}joint6" type="revolute">
+    <axis xyz="-1 0 0"/>
+    <limit effort="${eff}" lower="${j6_lo}" upper="${j6_hi}" velocity="${vel}"/>
+    <parent link="${prefix}link5"/><child link="${prefix}link6"/>
+    <origin xyz="-0.07586 0 0" rpy="-1.5708 0 0"/>
+    <dynamics damping="0.3" friction="0.1"/>
+  </joint>
+
+  <!-- Tool flange face. Flange +Z is the tool approach direction. -->
+  <link name="${prefix}flange"/>
+  <joint name="${prefix}flange_fixed" type="fixed">
+    <parent link="${prefix}link6"/><child link="${prefix}flange"/>
+    <origin xyz="0.03 0 0" rpy="0 -1.5708 0"/>
+  </joint>
+
+  <!-- ==================== vacuum cup ====================
+       PRIMITIVES, NOT A SCAN. There is no cup STL: this is a 12 mm steel stem
+       and a 36 mm bellows cup, built to look like the photographs. Stem
+       length sets where the wafer is grasped, so it is the number that
+       matters and it is a GUESS. Metrology: pro600_cup_offset, cup_diameter. -->
+  <link name="${prefix}cup">
+    <visual>
+      <origin xyz="0 0 0.0175" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0060" length="0.0350"/></geometry>
+      <material name="cup_steel"><color rgba="0.62 0.64 0.68 1"/></material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.0430" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0180" length="0.0160"/></geometry>
+      <material name="cup_blue"><color rgba="0.11 0.40 0.78 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.0300" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.0180" length="0.0600"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.0300"/>
+      <mass value="0.05"/>
+      <inertia ixx="2.0e-5" ixy="0" ixz="0" iyy="2.0e-5" iyz="0" izz="8.0e-6"/>
+    </inertial>
+  </link>
+  <joint name="${prefix}cup_fixed" type="fixed">
+    <parent link="${prefix}flange"/><child link="${prefix}cup"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+  <!-- Grasp point: the cup lip, where the wafer is held. -->
+  <link name="${prefix}cup_tip"/>
+  <joint name="${prefix}cup_tip_fixed" type="fixed">
+    <parent link="${prefix}cup"/><child link="${prefix}cup_tip"/>
+    <origin xyz="0 0 0.0510"/>
+  </joint>
+
+  <!-- ==================== ros2_control ==================== -->
+  <xacro:if value="$(arg use_gz_control)">
+  <ros2_control name="${prefix}system" type="system">
+    <hardware><plugin>gz_ros2_control/GazeboSimSystem</plugin></hardware>
+    <xacro:macro name="j" params="name lo hi">
+      <joint name="${name}">
+        <command_interface name="position">
+          <param name="min">${lo}</param><param name="max">${hi}</param>
+        </command_interface>
+        <!-- 0.0 is strictly inside every one of these ranges. Never initialise
+             a joint AT a limit - it latches and then ignores all commands. -->
+        <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </xacro:macro>
+    <xacro:j name="${prefix}joint1" lo="${j1_lo}" hi="${j1_hi}"/>
+    <xacro:j name="${prefix}joint2" lo="${j2_lo}" hi="${j2_hi}"/>
+    <xacro:j name="${prefix}joint3" lo="${j3_lo}" hi="${j3_hi}"/>
+    <xacro:j name="${prefix}joint4" lo="${j4_lo}" hi="${j4_hi}"/>
+    <xacro:j name="${prefix}joint5" lo="${j5_lo}" hi="${j5_hi}"/>
+    <xacro:j name="${prefix}joint6" lo="${j6_lo}" hi="${j6_hi}"/>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg controllers_file)</parameters>
+      <!-- Each robot gets its OWN ROS NAMESPACE. This is not cosmetic:
+           gz_ros2_control blocks inside Configure() waiting for
+           robot_description, and Gazebo loads plugins on its main thread. So a
+           single controller manager that never receives a description stalls
+           the WHOLE simulation and the other robots' plugins never load at all.
+           A namespace makes each manager resolve robot_description to its own
+           publisher (/m1pro/robot_description etc.), so all three initialise.
+           Node becomes <ns>/controller_manager - the YAML keys and the
+           spawners' -c argument must match. -->
+      <ros>
+        <namespace>/pro600</namespace>
+      </ros>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+
+</robot>

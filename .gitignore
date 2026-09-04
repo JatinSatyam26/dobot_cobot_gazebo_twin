@@ -1,0 +1,8 @@
+# colcon build products — regenerate with: colcon build --symlink-install
+build/
+install/
+log/
+
+# python
+__pycache__/
+*.pyc
