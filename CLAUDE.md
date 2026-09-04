@@ -155,7 +155,9 @@ Runs one full cycle (parameters `belt_speed`, `dwell_b`, `speed_scale`,
 waypoint is solved at start-up from `cell_layout.py`. Step names are published
 on `/cell/state`; a PLC bridge publishing the same names is the shadow hook.
 `record_frames.py <dir> [/cell_cam] [interval]` saves timestamped frames and the
-state log for a contact sheet.
+state log for a contact sheet; `make_cycle_video.py <recdir> <out.mp4> [fps]`
+composes six such recordings into one step-labelled video (cameras run at
+15 Hz).
 
 **Trap: DetachableJoint parent links must survive URDF→SDF.** sdformat merges
 every link that hangs off a *fixed* joint into its parent, so `m1pro_fork` and

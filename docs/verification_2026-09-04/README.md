@@ -2,6 +2,11 @@
 
 ## Cycle 16 (current): fork turns 90° and enters the belt holder across the belt
 
+* `cycle_recording.mp4` — one full cycle from all six camera sensors at 15 fps
+  simulation time (front, plan, yellow nest, belt holder from behind the belt,
+  unloading end, blue nest), step names overlaid. Made with
+  `record_frames.py` at 1/15 s per camera and `make_cycle_video.py`.
+
 * `cycle16_closeups.jpg` — one full cycle through the four close-up cameras:
   yellow pick (engage, lift), the transfer (front view: the wrist turns the
   fork 90° on the way), belt hand-off seen from BEHIND the belt (the fork
