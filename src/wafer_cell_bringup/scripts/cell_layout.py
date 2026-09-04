@@ -41,7 +41,13 @@ M1PRO_YAW  = -math.pi / 2
 PRO600_XYZ = (0.600, 0.200, 0.008)
 PRO600_YAW = math.pi                    # UNKNOWN - never measured
 # belt surface height from the conveyor MESH (36.0 mm above its origin)
-BELT_XYZ   = (0.0, 0.135, 0.06265)      # centreline y from the rectified plan
+BELT_XYZ   = (0.0, 0.135, 0.06265)      # conveyor MESH anchor: its bounding-box centre y from the rectified plan
+# The mesh's box includes the motor housing on the rear side, so its centre is NOT the
+# belt's running surface. A cross-section of dobot_conveyor.stl at mid-length puts the
+# belt band at world y 0.045..0.165 (owner's GUI screenshot 2026-09-04: the holder sat
+# 30 mm toward the rear). The carriage, the wafer targets and the belt cameras use this.
+BELT_SURFACE_Y = 0.105
+CARRIAGE_XYZ   = (0.0, BELT_SURFACE_Y, BELT_XYZ[2])
 
 ROBOTS = [
     ('m1pro',  'dobot_m1pro_description',    'dobot_m1pro.urdf.xacro',    'm1pro_',
@@ -49,7 +55,7 @@ ROBOTS = [
     ('pro600', 'mycobot_pro600_description', 'mycobot_pro600.urdf.xacro', 'pro600_',
      PRO600_XYZ, (0.0, 0.0, PRO600_YAW)),
     ('belt',   'wafer_cell_bringup',         'conveyor.urdf.xacro',       'belt_',
-     BELT_XYZ, (0.0, 0.0, 0.0)),
+     CARRIAGE_XYZ, (0.0, 0.0, 0.0)),
 ]
 
 # ---------------------------------------------------------------- belt waypoints (belt_travel joint, m)

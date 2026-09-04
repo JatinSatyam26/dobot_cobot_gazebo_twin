@@ -149,6 +149,9 @@ owner's videos the wrist turns the fork 90° on the way and it enters ACROSS
 the belt from the front, between the posts, sets the wafer down and backs
 out underneath, with no stand-in. The holder loads at `BELT_A = −0.25`,
 beside the column (the photo's −0.14 is out of reach for that entry).
+The carriage is centred on the belt's running surface (`BELT_SURFACE_Y`
+0.105, from a section of the conveyor mesh; the mesh box centre 0.135 is
+30 mm toward the rear because of the motor housing).
 Cycle verified: the wafer rides seated to 0.2 mm and ends in
 the blue nest 0.3 / 0.5 mm off centre at ledge height. Four close-up cameras
 (`/detail_yellow_cam`, `/detail_belt_cam`, `/detail_beltc_cam`,

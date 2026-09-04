@@ -115,7 +115,7 @@ both captures), and committed. Status now:
 | Item | State | Tag |
 |---|---|---|
 | Tower opening | yellow opens −X (toward M1 Pro), blue opens +X (toward Pro 600) | ✅ direction from photo |
-| Nest / conveyor / base positions | from the rectified overhead photo, see `docs/research_2026-09-03/` | 🟡 ±20 mm |
+| Nest / conveyor / base positions | from the rectified overhead photo, see `docs/research_2026-09-03/`; carriage centred on the belt band (`BELT_SURFACE_Y`) | 🟡 ±20 mm |
 | Conveyor mesh | yawed 180°: motor at the −X rear corner as in the photos | 🟡 |
 | Base yaw (both) | **still the old values, never measured** | ⛔ metrology `m1pro_base_yaw`, `pro600_base_yaw` |
 | Rest poses | FK-solved by `solve_home_poses.py`, not pendant values | ⛔ metrology `m1pro_home`, `pro600_home` |
@@ -249,6 +249,16 @@ The carriage is position-driven (`JointPositionReset`), so its contacts are
 kinematic. ODE `max_vel` / `min_depth` tags do nothing here: DART solves the
 contacts itself, and one lucky run misled me. With the fork entering across
 the belt the wafer is set down 0.3 mm above the seat and the problem is gone.
+
+**Trap: the conveyor mesh's bounding-box centre is not the belt.** The box
+includes the motor housing on the rear side, so a carriage placed at
+`BELT_XYZ` y rode 30 mm toward the rear of the running surface (owner's GUI
+screenshot, 2026-09-04). A cross-section of `dobot_conveyor.stl` at
+mid-length puts the belt band at world y 0.045..0.165, hence
+`BELT_SURFACE_Y = 0.105` and `CARRIAGE_XYZ` in `cell_layout.py`; the plan,
+the solver helper and both belt cameras use it, `BELT_XYZ` only anchors the
+mesh. Check any fixture against a section of the mesh it rides on, not its
+bounding box.
 
 **Both nests open toward −X** (owner, 2026-09-04). The 2026-09-02 photograph
 shows the blue one opening +X; the owner's instruction wins, noted in

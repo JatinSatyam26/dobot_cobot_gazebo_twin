@@ -15,7 +15,7 @@ Durations are the 2026-09-03 video timings, rounded; the PLC program is the
 authority (metrology robot_cycle_times, point_positions).
 """
 from cell_layout import (HOME, M1PRO_JOINTS, PRO600_JOINTS, NEST_YELLOW, NEST_BLUE, SHELF_Z,
-                         BELT_XYZ, BELT_A, BELT_B, BELT_C, NEST_SEAT_Z, HOLDER_POST_TOP,
+                         BELT_SURFACE_Y, BELT_A, BELT_B, BELT_C, NEST_SEAT_Z, HOLDER_POST_TOP,
                          WAFER_THICKNESS, FORK_UNDER, FORK_LIFT, CUP_GAP)
 from solve_home_poses import solve
 
@@ -74,7 +74,7 @@ def build_waypoints(chain, log=None):
     """IK for every waypoint from the current layout. Returns ({m1pro key: q}, {pro600 key: q})."""
     yx, yy = NEST_YELLOW[0], NEST_YELLOW[1]
     bx, by = NEST_BLUE[0], NEST_BLUE[1]
-    belt_y = BELT_XYZ[1]
+    belt_y = BELT_SURFACE_Y            # the carriage rides the belt band, not the mesh box centre
     z_pick = SHELF_Z[2] - FORK_UNDER      # slide in well under the wafer
     z_engage = SHELF_Z[2] + FORK_LIFT     # raise: the tines lift the wafer 1 mm off its shelf, then it is welded
     z_carry = SHELF_Z[2] + CLEAR
