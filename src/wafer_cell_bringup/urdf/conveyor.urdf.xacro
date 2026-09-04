@@ -15,15 +15,18 @@
 
   Carriage geometry (corrected by the owner 2026-09-04): the part that rides
   the belt is meshes/belt_holder.stl, a 180 x 70 mm PLATE (3 mm) that lies
-  on the belt with two 45 mm POSTS rising at the belt-axis ends. Each post's
-  inner face is a concave arc of radius 57.5 mm (the "curve cuts"); a ring
-  seat at 43 mm and a 2 mm lip of radius ~64 mm hold the 127 mm wafer
-  (photo reference_photos_4/20260902_121240). The STL is modelled plate-up
+  on the belt with two 45 mm POSTS. Each post's inner face is a concave arc
+  of radius 57.5 mm (the "curve cuts"); a ring seat at 43 mm and a 2 mm lip
+  of radius ~64 mm hold the 127 mm wafer. The STL is modelled plate-up
   (plate at file y 42..45, posts hanging to y 0), so it is rolled -90 deg
   about X and lifted 45 mm: plate on the belt, posts up.
-  A fork blade under the wafer cannot pass a post along the belt, so the
-  fork releases the wafer from just above the posts and it drops ~7 mm
-  into the lip (cell_plan.py). NEST_SEAT_Z / HOLDER_POST_TOP in cell_layout.py.
+  ORIENTATION (owner's hand-off video, 2026-09-04 evening): the plate's
+  180 mm side lies ACROSS the belt and the posts stand at the belt's FRONT
+  and REAR, overhanging the rails ~25 mm each side. The fork slides the
+  wafer in ALONG the belt between the posts, sets it on the seats and backs
+  out underneath (cell_plan.py). An earlier build had the posts at the
+  belt-axis ends, which made that hand-off impossible and forced a drop.
+  NEST_SEAT_Z / HOLDER_POST_TOP in cell_layout.py.
   ===========================================================================
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="conveyor">
@@ -52,17 +55,19 @@
   </xacro:if>
 
   <!-- file frame: Y is the height axis with the plate at the TOP (y 42..45).
-       roll -90 deg maps file +Y to world -Z (plate down, posts up), file Z
-       (70 mm) to world Y across the belt; +0.045 puts the plate on the belt.
-       Collision is the mesh: the wafer must land inside real posts and lip. -->
+       roll -90 deg maps file +Y to world -Z (plate down, posts up); the yaw
+       of +90 deg then puts the file X (180 mm, posts at its ends) ACROSS the
+       belt (world Y) and the file Z (70 mm) along it; +0.045 puts the plate
+       on the belt. Collision is the mesh: the wafer must land inside real
+       posts and lip. -->
   <link name="${prefix}carriage">
     <visual>
-      <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
+      <origin xyz="0 0 0.045" rpy="-1.5708 0 1.5708"/>
       <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
       <material name="holder_magenta"><color rgba="0.71 0.09 0.29 1"/></material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
+      <origin xyz="0 0 0.045" rpy="-1.5708 0 1.5708"/>
       <geometry><mesh filename="${mesh}" scale="0.001 0.001 0.001"/></geometry>
     </collision>
     <inertial>

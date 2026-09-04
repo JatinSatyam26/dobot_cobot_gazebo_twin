@@ -6,7 +6,6 @@ The cell's cycle as ONE table, used by three consumers:
   * shadow tests           compare a recorded real cycle against it
 
 STEPS rows: (state name, kind, payload, nominal duration s)
-  kind 'seat'             : place the wafer on the belt holder's seat (stand-in, wafer_seat.py)
   kind 'm1pro' / 'pro600' : payload = waypoint key from build_waypoints()
   kind 'belt'             : payload = (x_from, x_to); duration = |dx| / belt_speed
   kind 'dwell'            : duration = dwell_b parameter
@@ -36,17 +35,14 @@ STEPS = [
     ('M1_LIFT',               'm1pro',  'lift',               1.0),
     ('M1_TO_BELT',            'm1pro',  'to_belt',            3.0),
     ('M1_LOWER_TO_NEST',      'm1pro',  'belt_approach',      1.0),
-    ('M1_INSERT_INTO_NEST',   'm1pro',  'belt_insert',        2.0),
-    # STAND-IN for the real release (owner to confirm the real mechanism):
-    # the holder's crescent posts block a blade under a seated wafer, so the
-    # sim hands the wafer from the fork to the holder joint 3.5 mm above the
-    # seat, withdraws the fork, then lets it drop into the lip and settle.
-    ('NEST_HOLD',             'grasp',  ('nest', True),       GRASP_SETTLE),
+    ('M1_INSERT_INTO_NEST',   'm1pro',  'belt_insert',        2.0),   # wafer 2 mm above the lip, between the posts
+    # Hand-off as in the owner's video (2026-09-04): the posts stand at the
+    # belt's front and rear, the blade runs along the belt between them.
+    ('M1_SET_DOWN',           'm1pro',  'belt_set',           1.0),   # lower until the wafer is 0.3 mm above the seat
     ('FORK_DETACH',           'grasp',  ('fork', False),      GRASP_SETTLE),
-    ('M1_RETREAT',            'm1pro',  'belt_retreat',       1.5),
-    ('NEST_DROP',             'grasp',  ('nest', False),      0.3),
-    ('NEST_SEAT',             'seat',   None,                 0.5),   # stand-in: place on the seat (wafer_seat.py)
+    ('M1_DROP_BLADE',         'm1pro',  'belt_free',          0.8),   # blade 4 mm below the seated wafer
     ('NEST_ATTACH',           'grasp',  ('nest', True),       GRASP_SETTLE),
+    ('M1_RETREAT',            'm1pro',  'belt_retreat',       1.5),   # back out under the wafer, between the posts
     ('M1_HOME',               'm1pro',  'home',               3.0),
     ('BELT_A_TO_B',           'belt',   (BELT_A, BELT_B),     None),
     ('BELT_DWELL_B',          'dwell',  None,                 None),
@@ -78,11 +74,13 @@ def build_waypoints(chain, log=None):
     z_pick = SHELF_Z[2] - FORK_UNDER      # slide in well under the wafer
     z_engage = SHELF_Z[2] + FORK_LIFT     # raise: the tines lift the wafer 1 mm off its shelf, then it is welded
     z_carry = SHELF_Z[2] + CLEAR
-    # The belt holder's posts sit at the belt-axis ends, so the blade cannot
-    # pass under the wafer past a post: it releases the wafer with the blade
-    # just above the post tops and the wafer drops ~7 mm into the lip.
-    z_place = HOLDER_POST_TOP + 0.003 + 0.0005    # blade top: 3 mm blade + 0.5 mm clearance above the posts; the wafer is then seated by NEST_SEAT
-    z_free = z_place                              # no lowering; retreat at the same height
+    # Belt holder hand-off as in the owner's video: the posts stand at the belt's
+    # front and rear, so the blade travels ALONG the belt between them. Carry the
+    # wafer in 2 mm above the lip, lower it to 0.3 mm above the seat, release,
+    # drop the blade 4 mm under the seated wafer and back out between the posts.
+    z_hi = HOLDER_POST_TOP + 0.002                # blade top = wafer underside while sliding in over the lip
+    z_set = NEST_SEAT_Z + 0.0003                  # wafer underside 0.3 mm above the seat at release
+    z_free = NEST_SEAT_Z - FORK_UNDER             # blade top 4 mm below the seat (blade bottom 36 mm, plate top 3 mm)
     w_top_nest = NEST_SEAT_Z + WAFER_THICKNESS
     w_top_blue = SHELF_Z[2] + WAFER_THICKNESS
 
@@ -99,9 +97,10 @@ def build_waypoints(chain, log=None):
     # the wafer's rim (streamed probe 2026-09-04: pitched it 20 deg, later flipped it).
     for key, tgt in [('back_high', (yx - APPROACH, yy, z_carry)),
                      ('approach', (yx - APPROACH, yy, z_pick)), ('insert', (yx, yy, z_pick)),
-                     ('engage', (yx, yy, z_engage)), ('lift', (yx, yy, z_carry)), ('to_belt', (BELT_A - APPROACH, belt_y, z_place + CLEAR)),
-                     ('belt_approach', (BELT_A - APPROACH, belt_y, z_place)), ('belt_insert', (BELT_A, belt_y, z_place)),
-                     ('belt_lower', (BELT_A, belt_y, z_free)), ('belt_retreat', (BELT_A - APPROACH, belt_y, z_free))]:
+                     ('engage', (yx, yy, z_engage)), ('lift', (yx, yy, z_carry)), ('to_belt', (BELT_A - APPROACH, belt_y, z_hi + CLEAR)),
+                     ('belt_approach', (BELT_A - APPROACH, belt_y, z_hi)), ('belt_insert', (BELT_A, belt_y, z_hi)),
+                     ('belt_set', (BELT_A, belt_y, z_set)), ('belt_free', (BELT_A, belt_y, z_free)),
+                     ('belt_retreat', (BELT_A - APPROACH, belt_y, z_free))]:
         s = m[key] = ik(M1PRO_JOINTS, 'm1pro_fork_seat', tgt, FORK_AX, s)
     m['home'] = [HOME[j] for j in M1PRO_JOINTS]
 

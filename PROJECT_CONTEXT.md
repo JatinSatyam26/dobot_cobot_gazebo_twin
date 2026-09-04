@@ -464,9 +464,10 @@ pkill -9 -x gz-sim-server
 > was the wrong part and is gone); the wafer sits on its 43 mm seat inside a
 > 2 mm lip of radius 64. The fork's wafer seat is 147 mm from the wrist (tips
 > 30 mm past the wafer centre, inside the nests' 57.5 mm free radius). All
-> three remain 🟡 until measured. The wafer's last 5 mm into the holder is a
-> `set_pose` stand-in (`NEST_SEAT`) until the owner explains the real
-> mechanism: a blade cannot pass the 45 mm posts along the belt.
+> three remain 🟡 until measured. The holder's 180 mm side lies ACROSS the
+> belt with the posts front and rear (owner's hand-off video, 2026-09-04
+> evening); the fork slides the wafer in along the belt between the posts,
+> sets it down and backs out underneath.
 
 The owner reviewed the Gazebo build against a reference render and confirmed
 **all four** of the following are wrong. No changes were made: they are recorded

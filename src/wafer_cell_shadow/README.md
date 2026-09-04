@@ -44,7 +44,7 @@ you check that the sim follows the recording.
 | Belt position | dead-reckoned from `belt_run` × `belt_speed`, sign from `belt_reverse` (stepper DIR tag, if exposed), reset to A at `CYCLE_DONE`: the real belt has no sensor |
 | Grasp timing | the sim arm trails the real one by ~one trajectory horizon; the driver applies grasp events after `event_delay` (0.35 s) so the sim fork has arrived |
 | Grasp events with a real PLC that has no step tag | needs inference from belt/vacuum edges — not written |
-| `NEST_HOLD` / `NEST_DROP` / `NEST_SEAT` steps | a sim stand-in for the wafer hand-off into the belt holder (see CLAUDE.md); a real PLC has no such signals, the driver treats them as holder attach/detach |
+| `M1_SET_DOWN` / `M1_DROP_BLADE` steps | a sim stand-in for the wafer hand-off into the belt holder (see CLAUDE.md); a real PLC has no such signals, the driver treats them as holder attach/detach |
 
 ## Real mode prerequisites
 

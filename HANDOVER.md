@@ -135,23 +135,25 @@ primitive collisions on every M1 Pro link. Real-mode client libraries are in
 `~/venvs/wafer_shadow` (🟢 regenerable: `python3 -m venv --system-site-packages
 ~/venvs/wafer_shadow && pip install pymycobot pycomm3`).
 **Corrections 2026-09-04, evening (owner's five points):** belt carriage is
-`belt_holder.stl` plate-down with the posts up; Pro 600 recoloured; blue nest
+`belt_holder.stl` plate-down, posts up, 180 mm side ACROSS the belt (posts
+front and rear, per the owner's hand-off video); Pro 600 recoloured; blue nest
 turned to open −X like the yellow one; wafer Ø127 checked against all three
 nests (0.5 mm radial clearance each); wafer seating fixed end to end. The
 seating needed five root causes, all in `CLAUDE.md` traps: the fork's
 approach point clipped the wafer's rim (now 115 mm back, descend, slide in,
 lift 1 mm), the cup's collision ran 9 mm past its tip, the Pro 600's
 joint-space descents bowed 5 mm (20 mm `near_*` waypoints), a third M1 Pro
-vendor defect (elbow rolled 1°), and the free drop into the belt holder
-kicked the disc (now placed by `set_pose`, `NEST_SEAT`, a declared
-stand-in). Cycle verified: the wafer rides seated to 0.2 mm and ends in
+vendor defect (elbow rolled 1°), and the holder's orientation: with the
+posts at the belt-axis ends the fork could not set the wafer down and a free
+drop kicked it; across the belt, as in the video, the fork slides in between
+the posts, sets the wafer down and backs out underneath, with no stand-in.
+Cycle verified: the wafer rides seated to 0.2 mm and ends in
 the blue nest 0.3 / 0.5 mm off centre at ledge height. Four close-up cameras
 (`/detail_yellow_cam`, `/detail_belt_cam`, `/detail_beltc_cam`,
 `/detail_blue_cam`) exist for the next round.
 **What is NOT done:** the shadow against real hardware (no bench LAN, no tag
 names, no joint conventions yet), any measured yaw or pendant rest pose, the
-PLC sequence details (dwell), and the owner's answer on how the real fork
-lowers the wafer the last 5 mm into the belt holder.
+PLC sequence details (dwell).
 
 ## Git
 

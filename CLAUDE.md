@@ -177,22 +177,23 @@ nest welds it to the fork across the bench and the next move flings it. Only
 send attach when the carrier is at the wafer (the fake devices therefore run one
 cycle and hold).
 
-**The belt carriage is `meshes/belt_holder.stl` lying PLATE-DOWN** (owner,
-2026-09-04): a 180 × 70 plate on the belt with two 45 mm posts at the belt-axis
-ends, concave 57.5 mm arcs on their inner faces, a ring seat at 43 mm and a
-2 mm lip of radius ≈64 mm. The STL is modelled plate-up, so the xacro rolls it
-180° and lifts it 45 mm. A blade under the wafer cannot pass a post along the
-belt. Each post is a thin crescent (6.5–8 mm radially, full 70 mm across) and
-the fork's slot is only ≈19 mm wide, so with this STL a blade cannot be under a
-seated wafer at all, yet the cycle video shows exactly that. **Open question for
-the owner: how does the real fork get out from under the wafer at the belt
-holder?** Until answered, `cell_plan.py` uses a STAND-IN hand-off: the fork
-stops 0.5 mm above the posts, the holder joint takes the wafer (`NEST_HOLD`),
-the fork withdraws, the holder releases it (`NEST_DROP`), the wafer is placed
-on the seat by `set_pose` (`NEST_SEAT`, see the drop trap below), then the
-holder grips it for the ride (`NEST_ATTACH`). The C-nest
-3MF in `~/Downloads` is NOT the belt part (its rim is Ø124, the wafer is Ø127)
-and was removed from the repo.
+**The belt carriage is `meshes/belt_holder.stl` lying PLATE-DOWN with its
+180 mm side ACROSS the belt** (owner's hand-off video, 2026-09-04 evening,
+`~/Downloads/How to move dobot and place wafer on magenta color holder on
+the belt.mp4`, 72 frames analysed): a 180 × 70 plate on the belt, two 45 mm
+posts at the belt's FRONT and REAR (overhanging the rails ~25 mm each side),
+concave 57.5 mm arcs on their inner faces, a ring seat at 43 mm and a 2 mm
+lip of radius ≈64 mm. The STL is modelled plate-up, so the xacro rolls it
+−90° about X, yaws it +90° and lifts it 45 mm. The fork slides the wafer in
+ALONG the belt between the posts 2 mm above the lip, lowers it to 0.3 mm
+above the seat, releases, drops the blade 4 mm and backs out underneath
+(`cell_plan.py`: `M1_SET_DOWN`, `FORK_DETACH`, `M1_DROP_BLADE`,
+`NEST_ATTACH`, `M1_RETREAT`). No stand-in remains. An earlier build had the
+posts at the belt-axis ends; that made this hand-off impossible, cost a day of
+drop experiments and a `set_pose` stand-in, and was wrong: when a hand-off
+looks impossible, check the fixture's orientation against the video first.
+The C-nest 3MF in `~/Downloads` is NOT the belt part (its rim is Ø124, the
+wafer is Ø127) and was removed from the repo.
 
 **Wafer vs nest geometry (measured off the STLs):** wafer Ø127.0; tower step
 wall r = 64 with a 6.5 mm ledge (r 57.5…64) under it; belt holder lip r ≈ 64
@@ -233,18 +234,15 @@ A joint-space move of the 6-axis Pro 600 bows sideways mid-path (5 mm over a
 `cell_plan.py` inserts `near_c` / `near_blue` waypoints 20 mm above the wafer
 and descends from there.
 
-**Trap: a free drop into the belt holder is a lottery.** Released from the
-fork the wafer falls 5.5 mm onto the holder's two crescent seats (the blade
-must clear the 45 mm posts, the seat is at 43 mm). In 3 of 5 runs the disc
-landed ~3° tilted and then climbed at ~15 mm/s until it stood at 23°, and the
-holder welded it that way for the ride; teleported onto the seat, or dropped
-level, it was stable, and the yellow tower (static) never misbehaved. The
-carriage is position-driven (`JointPositionReset`), so its contacts are
-kinematic. The ODE `max_vel` / `min_depth` tags in `models/wafer.sdf` do
-NOT fix it: DART solves the contacts itself and one lucky run misled me. The
-cycle therefore places the wafer on the seat with Gazebo's `set_pose`
-(`NEST_SEAT`, `wafer_seat.py`) between the release and the re-grip: a
-declared STAND-IN until the owner says how the real cell lowers it.
+**Trap: a free drop onto a position-driven fixture is a lottery.** When
+the holder was still end-posted the wafer had to fall 5.5 mm onto two
+crescent seats; in 3 of 5 runs it landed ~3° tilted and climbed at ~15 mm/s
+until it stood at 23°, welded that way for the ride. Teleported onto the seat,
+or dropped level, it was stable; the static yellow tower never misbehaved.
+The carriage is position-driven (`JointPositionReset`), so its contacts are
+kinematic. ODE `max_vel` / `min_depth` tags do nothing here: DART solves the
+contacts itself, and one lucky run misled me. With the holder oriented
+correctly the wafer is set down 0.3 mm above the seat and the problem is gone.
 
 **Both nests open toward −X** (owner, 2026-09-04). The 2026-09-02 photograph
 shows the blue one opening +X; the owner's instruction wins, noted in
