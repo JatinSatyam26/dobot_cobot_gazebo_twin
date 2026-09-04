@@ -331,6 +331,11 @@ docs/research_2026-09-03/
   point clipped the wafer rim, the cup's collision ran 9 mm past its tip, the
   Pro 600's joint-space descents bowed 5 mm, and the M1 Pro rest pose sits
   right above the pick nest.
+* **Owner approval (2026-09-04, late evening):** the simulated cycle was
+  declared correct at commit 5645a1f after the GUI viewing and the
+  six-camera recording; the belt carriage was first centred on the belt's
+  running surface (mesh section, `BELT_SURFACE_Y`). Base yaws, rest poses
+  and photo positions remain 🟡 / ⛔.
 * **Third M1 Pro vendor defect (2026-09-04):** the elbow joint's frame is
   rolled −1° and its axis tilted +1°, so the axis is vertical but the wrist
   axis and the fork blade come out rolled 1.000° (FK-measured). It tilted a

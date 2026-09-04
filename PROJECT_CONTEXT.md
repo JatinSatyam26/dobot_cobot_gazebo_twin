@@ -469,7 +469,13 @@ pkill -9 -x gz-sim-server
 > evening); the wrist turns the fork 90° on the way and it enters ACROSS the
 > belt from the front between the posts, sets the wafer down and backs out
 > underneath (owner's videos). Load position `BELT_A = −0.25`, beside the
-> column, 🟡 from the video.
+> column, 🟡 from the video. Carriage centred on the belt band
+> (`BELT_SURFACE_Y = 0.105`, from a mesh section).
+>
+> **2026-09-04, late evening: the owner declared the simulated cycle correct**
+> (commit 5645a1f) after the GUI viewing and the six-camera recording. The
+> four items in the table below remain measurement gaps; the motion sequence
+> is approved.
 
 The owner reviewed the Gazebo build against a reference render and confirmed
 **all four** of the following are wrong. No changes were made: they are recorded

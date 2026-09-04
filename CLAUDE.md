@@ -138,6 +138,19 @@ render and a 28 s cycle video in `~/Downloads` (paths in
 `docs/research_2026-09-03/RESEARCH_REVIEW.md`). Decode HEIC with GdkPixbuf;
 `heif-thumbnailer` silently caps at 512 px.
 
+## ✅ Owner-approved cycle (2026-09-04, late evening)
+
+The owner watched the cycle in the GUI, reviewed the six-camera recording
+(`docs/verification_2026-09-04/cycle_recording_09_04_2026.mp4`) and declared
+the simulation correct at commit 5645a1f. What that approval covers: the
+belt holder's orientation and centring, the fork's 90° wrist turn and its
+entry across the belt from the front, the set-down / release / retreat
+hand-off, the ride, the cup pick and the place into the blue nest, and the
+Pro 600 colour. It does NOT turn the ⛔ / 🟡 items below into measurements:
+base yaws, pendant rest poses and the ±20 mm photo positions are unchanged.
+Treat the approved motion sequence as fixed; change geometry only with a
+measurement or an owner instruction, and re-record the cycle afterwards.
+
 ## Grasp and sequencer (added 2026-09-04)
 
 The wafer is grasped by **gz DetachableJoint** fixed joints, three of them,

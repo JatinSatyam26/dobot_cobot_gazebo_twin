@@ -156,6 +156,11 @@ Cycle verified: the wafer rides seated to 0.2 mm and ends in
 the blue nest 0.3 / 0.5 mm off centre at ledge height. Four close-up cameras
 (`/detail_yellow_cam`, `/detail_belt_cam`, `/detail_beltc_cam`,
 `/detail_blue_cam`) exist for the next round.
+**Owner approval (2026-09-04, late evening):** after the GUI viewing and the
+six-camera recording (`docs/verification_2026-09-04/cycle_recording_09_04_2026.mp4`)
+the owner declared the simulation correct at commit 5645a1f. The motion
+sequence is fixed from here; geometry changes need a measurement or an owner
+instruction and a fresh recording.
 **What is NOT done:** the shadow against real hardware (no bench LAN, no tag
 names, no joint conventions yet), any measured yaw or pendant rest pose, the
 PLC sequence details (dwell).

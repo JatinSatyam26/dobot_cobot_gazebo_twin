@@ -1,5 +1,8 @@
 # Verification captures, 2026-09-04
 
+**Approved by the owner on 2026-09-04 (late evening) at commit 5645a1f:**
+"The simulation is correct now." The recording below is the approved state.
+
 ## Cycle 16 (current): fork turns 90° and enters the belt holder across the belt
 
 * `cycle_recording_09_04_2026.mp4` — one full cycle from all six camera
