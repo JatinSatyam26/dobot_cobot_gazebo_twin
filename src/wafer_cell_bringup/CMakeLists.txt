@@ -10,7 +10,8 @@ install(
 
 install(
   PROGRAMS scripts/m1pro_wiggle.py scripts/generate_cell_urdf.py scripts/capture_view.py scripts/go_home.py
-           scripts/check_extents.py scripts/cell_fk.py
+           scripts/check_extents.py scripts/cell_fk.py scripts/cell_layout.py
+           scripts/solve_home_poses.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

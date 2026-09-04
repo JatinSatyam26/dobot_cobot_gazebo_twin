@@ -32,9 +32,15 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
-# Yellow tower, TOP shelf (owner's instruction). Shelf tops sit at world
-# z = 0.055 / 0.077 / 0.099; + half the wafer's 1.5 mm thickness.
-WAFER_POSE = ('-0.5', '-0.12', '0.09975')
+# Wafer spawns on the yellow tower's TOP shelf (owner's instruction). The
+# numbers live in scripts/cell_layout.py (installed to lib/<pkg>), the same
+# file the generator and check_extents use.
+import os, sys
+from ament_index_python.packages import get_package_prefix
+sys.path.insert(0, os.path.join(get_package_prefix('wafer_cell_bringup'),
+                                'lib', 'wafer_cell_bringup'))
+from cell_layout import WAFER_SPAWN
+WAFER_POSE = tuple(f'{v:.5f}' for v in WAFER_SPAWN)
 
 CM = ['--controller-manager', '/controller_manager',
       '--controller-manager-timeout', '60',

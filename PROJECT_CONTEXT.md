@@ -443,6 +443,18 @@ pkill -9 -x gz-sim-server
 
 ## 14. OPEN — layout confirmed WRONG by the owner, 2026-09-03. Awaiting measurement.
 
+> **UPDATE 2026-09-03, late evening.** On the owner's instruction an **interim,
+> photo-derived layout** was applied (rectified overhead photograph
+> `docs/reference_photos_2/20260902_114748.heic`, ±20 mm; method and the
+> sim-vs-photo table in `docs/research_2026-09-03/RESEARCH_REVIEW.md` §4).
+> Items 1 (opening direction: yellow → −X, blue → +X) and 2 (conveyor:
+> centreline ≈ +0.135, mesh yawed 180° so the motor is at the −X rear corner)
+> are addressed. Items 3 (base yaw) and 4 (rest poses) are **still unmeasured**;
+> the yaws keep the old values and the rest poses are FK-solved. All poses now
+> live in `src/wafer_cell_bringup/scripts/cell_layout.py`. The two images
+> described below as "not saved" **are on disk** (see the review); the
+> reference render is a Gemini-generated concept image, not a measurement.
+
 The owner reviewed the Gazebo build against a reference render and confirmed
 **all four** of the following are wrong. No changes were made: they are recorded
 here to be fixed once real measurements exist. **Do not guess at these again.**

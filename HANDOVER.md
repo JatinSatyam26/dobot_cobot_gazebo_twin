@@ -36,15 +36,32 @@ These came over chat and exist nowhere but in the docs. Re-derive nothing:
 * belt is **PLC time-based, open loop, no sensors**; dwell 5–10 s at point B
 * PLC label reads **`2080-L60E-24QBB`**
 
-### ⚠️ Two images the project depends on are NOT in this repo
+### Reference images and video — found on disk 2026-09-03
 
-The plan-view photograph and the reference render that define the target layout
-were both sent in chat and never saved to disk. **Ask the owner to save them
-into `docs/` before doing any layout work.** An earlier world-file header cited
-a `docs/reference_photos_6` that has never existed; that false citation has been
-corrected.
+Earlier revisions of this file said the plan-view photograph and the reference
+render were sent in chat and never saved. Both exist, plus a cycle video:
 
----
+* plan-view photographs: `docs/reference_photos_2/20260902_114748.heic` (16320 × 9180)
+  and `20260902_113823.heic`; front elevation `20260902_114701.heic`
+* reference render: `~/Downloads/Gemini_Generated_Image_uac9e6uac9e6uac9.png`
+  (AI-generated concept image, not a measurement — copy it into `docs/` if you
+  want it under git)
+* 28 s cycle video: `~/Downloads/WhatsApp Video 2026-09-03 at 4.47.55 PM.mp4`
+  and `setup_isolated_28s.mp4` (background removed)
+* print sources: `~/Downloads/Conveyor_Wafer_Holder.3MF`, conveyor SketchUp
+  `~/Downloads/Dobot+Conveyer.skp`
+
+Derived from them, and 🔴 worth keeping: `docs/research_2026-09-03/` (the
+rectified plan with the sim overlay, the corner fit, the cycle timeline and
+the written review).
+
+### Layout source of truth (added 2026-09-03)
+
+`src/wafer_cell_bringup/scripts/cell_layout.py` holds every pose; the SDF
+mirrors it and `check_extents.py` asserts agreement. `solve_home_poses.py`
+re-solves the rest poses after a layout change. Both are 🟢 regenerable in the
+sense that they are code, but the numbers inside `cell_layout.py` carry the
+photo-derived layout and are not reproducible without redoing the analysis.
 
 ## 🟠 RE-DOWNLOADABLE — exact sources
 

@@ -23,15 +23,17 @@ from builtin_interfaces.msg import Duration
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from cell_layout import HOME as _H, M1PRO_JOINTS, PRO600_JOINTS, BELT_A
+
+# One source of truth: scripts/cell_layout.py (same values the generator
+# writes into cell.urdf as initial_value, so "home" and "spawn" agree).
 HOME = {
-    '/m1pro_arm_controller/joint_trajectory': (
-        ['m1pro_z_lift', 'm1pro_shoulder', 'm1pro_elbow', 'm1pro_wrist'],
-        [0.120, -0.4000, 2.1400, -0.6358]),
-    '/pro600_arm_controller/joint_trajectory': (
-        [f'pro600_joint{i}' for i in range(1, 7)],
-        [0.2161, -0.4382, 2.1570, -0.1480, -1.5708, 0.0209]),
-    '/belt_controller/joint_trajectory': (
-        ['belt_travel'], [-0.25]),          # Point A
+    '/m1pro_arm_controller/joint_trajectory':  (M1PRO_JOINTS,  [_H[j] for j in M1PRO_JOINTS]),
+    '/pro600_arm_controller/joint_trajectory': (PRO600_JOINTS, [_H[j] for j in PRO600_JOINTS]),
+    '/belt_controller/joint_trajectory':       (['belt_travel'], [BELT_A]),   # Point A
 }
 
 

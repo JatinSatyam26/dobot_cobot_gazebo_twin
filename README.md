@@ -21,10 +21,13 @@ Project brief, scope contract and hardware inventory live in
 | 1.5 | Cell world: board, conveyor, 2 towers, belt holder, wafer | ✅ verified |
 | 1.6 | Both arms + belt in ONE world, 11 joints under one controller manager | ✅ verified |
 
-> ⛔ **The cell LAYOUT is confirmed wrong** (tower facing, conveyor position,
-> base yaw, arm rest poses) and is deliberately left unfixed. See
-> [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) §14 before changing any pose, and
-> [`HANDOVER.md`](HANDOVER.md) for the asset inventory. The table above tracks
+> 🟡 **The cell LAYOUT is an interim, photo-derived estimate (±20 mm)** applied
+> 2026-09-03 on the owner's instruction. Nest opening directions and the
+> conveyor's end/centreline come from the rectified overhead photo; both base
+> yaws and both rest poses are still unmeasured. Read `CLAUDE.md` and
+> [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) §14 before changing any pose;
+> every pose lives in `src/wafer_cell_bringup/scripts/cell_layout.py`.
+> [`HANDOVER.md`](HANDOVER.md) has the asset inventory. The table above tracks
 > *mechanism* — that it builds, spawns and moves — not layout fidelity.
 
 **Phase 1 is complete.** Verified end to end on 2026-09-01: both controllers

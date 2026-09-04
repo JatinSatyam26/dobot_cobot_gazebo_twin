@@ -29,52 +29,32 @@
       collision is a primitive box. Metrology: belt_width_and_length,
       belt_top_height.
 
-  LAYOUT — read off a plan-view photograph the owner sent IN CHAT on
-  2026-09-03. THAT IMAGE IS NOT IN THIS REPO: there is no reference_photos_6
-  directory, and an earlier version of this header wrongly cited one. The
-  layout below therefore has NO artifact backing it. See PROJECT_CONTEXT.md
-  section 14 - the owner has since confirmed this layout is WRONG.
-      conveyor y = +0.130.  NOTE: the plan-view PHOTO read as "hard against
-      the far edge" (+0.170); the reference RENDER the owner supplied on
-      2026-09-03 clearly shows bench behind the belt, so it is now +0.130.
-      Both are eyeballed - 40 mm apart. Metrology: belt_centreline_y.
-      M1 Pro  far-LEFT corner   base (-0.560, +0.150)
-      Pro 600 RIGHT edge        base (+0.620, +0.180)
-      Both were moved FORWARD on 2026-09-03: at y +0.220 / +0.200 the M1 Pro's
-      own base casting hung 30 mm off the rear edge and its plate 45 mm, and
-      the Pro 600 plate had only 4.8 mm of margin. Caught by an AABB audit of
-      every visual against the bench rectangle - an earlier check tested
-      footprint CENTRES only, which all passed while the parts overhung.
-      Re-run it with scripts/check_extents.py after moving anything.
-      yellow tower  near-left   (-0.500, -0.120)
-      blue tower    near-right  (+0.550, -0.120)
-      BOTH towers carry the SAME pose, so both open the same way. Verified
-      from the STL, not by eye: the material centroid sits 22 mm to -Y of the
-      bbox centre, i.e. the C opens toward +Y - toward the arm that serves it.
-      Confirmed again in the PLAN VIEW capture (docs/cell_plan.png).
-
-      SHELVES ARE MEASURED off the mesh, not assumed. Upward-facing horizontal
-      faces cluster at STL y = 0 / 50 / 72 / 94 / 95 mm; the three at 50/72/94
-      each carry exactly 1760 mm2 of area (identical -> they are the nests),
-      while 95 mm carries 1003 mm2 (the rim, not a shelf). With the model at
-      z = 0.005 the nests are at world z = 0.0550 / 0.0770 / 0.0990.
-      The wafer is spawned on the TOP nest, 0.0990 + half its 1.5 mm.
-
-  ADDED 2026-09-03 from the owner's reference render:
-      - black mounting plates under both arms (8 mm, OUTLINE + THICKNESS
-        ASSUMED); both robots now stand at z = 0.008, not 0
-      - M1 Pro blue fork (exact customer STL; MOUNTING assumed)
-      - Pro 600 vacuum cup (primitives, not a scan; STEM LENGTH assumed)
-      - both home poses re-solved by FK so the fork lies flat pointing -X and
-        the cup points STRAIGHT DOWN; see generate_cell_urdf.py
-      - light butcher-block top on dark legs, matching the render
-      Reach checked: M1 Pro 314/345 mm to belt-A/yellow (400 mm reach);
-      Pro 600 371/328 mm to belt-C/blue (600 mm reach). All on the bench.
-
-  ⚠️  The SIDE and CORNER each unit occupies now come from the photograph, but
-      the exact offsets and especially the BASE YAW angles are still unmeasured.
-      Yaw is the highest-leverage number in the cell: 1 deg = ~7 mm at the
-      M1 Pro's reach. Metrology: m1pro_base_yaw / pro600_base_yaw.
+  LAYOUT — INTERIM, 2026-09-03 (photo-derived, +/-20 mm). Every number in
+  this file mirrors scripts/cell_layout.py; check_extents.py asserts they
+  agree. Source: the owner's overhead photograph
+  docs/reference_photos_2/20260902_114748.heic rectified to a 1 px = 1 mm plan
+  (homography on the board corners, parallax corrected). Method and the
+  sim-vs-photo table: docs/research_2026-09-03/RESEARCH_REVIEW.md section 4.
+      conveyor centreline y = +0.135 (rails read at +0.07..+0.20). The mesh is
+      a 215 mm-wide lookalike of a ~137 mm frame; it is centred on the real
+      centreline. It is now yawed 180 deg: the REAL stepper motor sits at the
+      -X end on the REAR side (see the rectified plan), the mesh had it at +X
+      front. Metrology: belt_centreline_y, conveyor_yaw.
+      M1 Pro  base (-0.600, +0.188): black base flush with the rear edge in the
+              photo; the 230 mm-deep Dobot base casting then sits 0.8 mm inside
+              the edge. Yaw 0 is UNMEASURED and unchanged.
+      Pro 600 base (+0.600, +0.200). Yaw pi UNMEASURED and unchanged.
+      yellow nest (-0.353, -0.162), open chord toward -X (toward the M1 Pro;
+              the fork enters along +X). VERIFIED direction, ESTIMATED position.
+      blue nest   (+0.430, -0.153), open chord toward +X (toward the Pro 600).
+      Both nests are 150-170 mm closer to the bench centre than the previous
+      guess, and sit IN FRONT of the belt ends rather than beside them.
+      Model origin of each nest = the wafer-seat arc centre (the three shelf
+      rings fit circles centred within 3 mm of the STL origin).
+  ⚠️  BASE YAW angles are still unmeasured. Yaw is the highest-leverage number
+      in the cell: 1 deg = ~7 mm at the M1 Pro's reach. Metrology:
+      m1pro_base_yaw / pro600_base_yaw. Rest poses are FK-solved, not from the
+      pendant: m1pro_home / pro600_home.
   ===========================================================================
 -->
 <sdf version="1.10">
@@ -320,24 +300,24 @@
 
     <!-- ============ robot mounting plates ============
          Both arms are bolted to black plates, not straight to the board (see
-         the reference render and reference_photos). Plate OUTLINE and
-         THICKNESS are ASSUMED - 8 mm is a guess, and it sets the base height
-         of both robots. Metrology: m1pro_plate, pro600_plate. -->
+         reference_photos). Plate OUTLINE is read off the rectified plan
+         (+/-20 mm); THICKNESS is ASSUMED - 8 mm is a guess, and it sets the
+         base height of both robots. Metrology: m1pro_plate, pro600_plate. -->
     <model name="m1pro_plate">
       <static>true</static>
-      <pose>-0.5525 0.150 0.004 0 0 0</pose>
+      <pose>-0.600 0.188 0.004 0 0 0</pose>
       <link name="link">
         <visual name="v">
-          <geometry><box><size>0.260 0.260 0.008</size></box></geometry>
+          <geometry><box><size>0.180 0.232 0.008</size></box></geometry>
           <material><ambient>0.05 0.05 0.06 1</ambient><diffuse>0.12 0.12 0.14 1</diffuse>
                     <specular>0.3 0.3 0.3 1</specular></material>
         </visual>
-        <collision name="c"><geometry><box><size>0.260 0.260 0.008</size></box></geometry></collision>
+        <collision name="c"><geometry><box><size>0.180 0.232 0.008</size></box></geometry></collision>
       </link>
     </model>
     <model name="pro600_plate">
       <static>true</static>
-      <pose>0.620 0.180 0.004 0 0 0</pose>
+      <pose>0.600 0.200 0.004 0 0 0</pose>
       <link name="link">
         <visual name="v">
           <geometry><box><size>0.200 0.200 0.008</size></box></geometry>
@@ -349,12 +329,14 @@
     </model>
 
     <!-- ============ conveyor DT-AC-CB070-02E ============
-         Mesh VISUAL (metres, Y-up -> rpy 90deg about X). Collision is a
-         primitive: the mesh is third-party, unverified, and mesh collision at
-         11.6k triangles is far too slow for real-time physics. -->
+         Mesh VISUAL (metres, Y-up -> roll 90deg; yaw 180deg puts the motor
+         block at the -X REAR corner where the photographs have it). Collision
+         is a primitive: the mesh is third-party, unverified, and mesh
+         collision at 11.6k triangles is far too slow for real-time physics.
+         Mesh bbox is centred on the real belt centreline y = +0.135. -->
     <model name="conveyor_frame">
       <static>true</static>
-      <pose>-0.28407 0.11118 0.02665 1.5708 0 0</pose>
+      <pose>0.28407 0.154 0.02665 1.5708 0 3.14159</pose>
       <link name="link">
         <visual name="v">
           <geometry>
@@ -367,7 +349,7 @@
     </model>
     <model name="conveyor_collision">
       <static>true</static>
-      <pose>0 0.130 0.03132 0 0 0</pose>
+      <pose>0 0.135 0.03132 0 0 0</pose>
       <link name="link">
         <collision name="c">
           <geometry><box><size>0.698 0.150 0.06265</size></box></geometry>
@@ -376,11 +358,14 @@
     </model>
 
     <!-- ============ yellow wafer tower — M1 Pro end ============
-         yaw +90deg puts the part's open chord at +Y, facing the M1 Pro.
-         POSE ESTIMATED. Metrology: nest_poses -->
+         STL is Y-up with its OPEN chord on +X; roll 90deg stands it up, yaw
+         180deg turns the opening toward world -X, i.e. toward the M1 Pro, so
+         the fork enters along +X. Direction VERIFIED from the photographs,
+         position ESTIMATED (+/-20 mm). Numbers mirror cell_layout.py.
+         Metrology: nest_poses -->
     <model name="tower_yellow">
       <static>true</static>
-      <pose>-0.5 -0.12 0.005 1.5708 0 1.5708</pose>
+      <pose>-0.353 -0.162 0.005 1.5708 0 3.14159</pose>
       <link name="link">
         <visual name="v">
           <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
@@ -394,10 +379,12 @@
       </link>
     </model>
 
-    <!-- ============ blue wafer tower — Pro 600 end (SAME PART) ============ -->
+    <!-- ============ blue wafer tower — Pro 600 end (SAME PART) ============
+         yaw 0 opens it toward world +X, toward the Pro 600. Mirrors
+         cell_layout.py. -->
     <model name="tower_blue">
       <static>true</static>
-      <pose>0.55 -0.12 0.005 1.5708 0 1.5708</pose>
+      <pose>0.430 -0.153 0.005 1.5708 0 0</pose>
       <link name="link">
         <visual name="v">
           <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
@@ -412,8 +399,9 @@
     </model>
 
     <!-- ===================================================================
-         BELT WAYPOINTS (world X, belt centreline y = +0.17)
-         A x=-0.25 load     B x=0.00 dwell 5-10 s     C x=+0.25 unload
+         BELT WAYPOINTS (belt_travel joint = world X, centreline y = +0.135)
+         A x=-0.14 load     B x=+0.03 dwell (none seen in the 09-03 video)
+         C x=+0.20 unload.  Values in cell_layout.py (BELT_A/B/C).
          Belt surface z = 0.06265;  holder wafer seat z = 0.10765
          =================================================================== -->
     <!-- ===================================================================

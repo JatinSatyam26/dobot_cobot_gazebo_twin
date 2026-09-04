@@ -27,12 +27,8 @@ from ament_index_python.packages import get_package_share_directory
 BENCH = (-0.7620, 0.7620, -0.3048, 0.3048)   # x0 x1 y0 y1, top surface z = 0
 RESTING_Z = 0.05                              # below this, "resting on the bench"
 
-HOME = {'m1pro_z_lift': 0.120, 'm1pro_shoulder': -0.4000,
-        'm1pro_elbow': 2.1400, 'm1pro_wrist': -0.6358,
-        'pro600_joint1': 0.2161, 'pro600_joint2': -0.4382,
-        'pro600_joint3': 2.1570, 'pro600_joint4': -0.1480,
-        'pro600_joint5': -1.5708, 'pro600_joint6': 0.0209,
-        'belt_travel': -0.25}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from cell_layout import HOME, NEST_YELLOW, NEST_YELLOW_RPY, NEST_BLUE, NEST_BLUE_RPY, BELT_XYZ
 
 SKIP = {'floor', 'floor_grid', 'workbench', 'inspection_cam', 'plan_cam'}
 
@@ -107,8 +103,22 @@ def main():
     from cell_fk import Chain                      # noqa: E402
 
     bad = 0
-    print('=== static world models ===')
     world = ET.parse(share / 'worlds' / 'wafer_cell.sdf').getroot().find('world')
+    # The SDF is static XML and cannot import cell_layout.py, so make sure
+    # nobody edited one without the other.
+    sdf_pose = {m.get('name'): [float(v) for v in m.findtext('pose').split()]
+                for m in world.findall('model') if m.findtext('pose')}
+    expect = {'tower_yellow': (*NEST_YELLOW, *NEST_YELLOW_RPY),
+              'tower_blue':   (*NEST_BLUE,   *NEST_BLUE_RPY),
+              'conveyor_collision': (0.0, BELT_XYZ[1], None, 0, 0, 0)}
+    for name, exp in expect.items():
+        got = sdf_pose[name]
+        for i, (e, g) in enumerate(zip(exp, got)):
+            if e is not None and abs(e - g) > 1e-4:
+                sys.exit(f'LAYOUT MISMATCH: wafer_cell.sdf {name} pose[{i}]={g} '
+                         f'but cell_layout.py says {e}. Fix one of them.')
+    print('=== SDF poses agree with cell_layout.py ===')
+    print('=== static world models ===')
     for m in world.findall('model'):
         if m.get('name') in SKIP:
             continue

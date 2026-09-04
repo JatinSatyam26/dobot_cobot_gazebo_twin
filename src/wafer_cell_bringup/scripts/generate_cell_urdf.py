@@ -24,59 +24,19 @@ and rebuild. Output: urdf/cell.urdf (generated — do not hand-edit).
 """
 import subprocess, sys, xml.etree.ElementTree as ET
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ament_index_python.packages import get_package_share_directory
 
-# name -> (package, xacro, prefix, xyz, rpy)   POSES ESTIMATED, see metrology spec
-ROBOTS = [
-    ('m1pro',  'dobot_m1pro_description',    'dobot_m1pro.urdf.xacro',    'm1pro_',
-     (-0.56, 0.15, 0.008), (0, 0, 0.0)),
-    ('pro600', 'mycobot_pro600_description', 'mycobot_pro600.urdf.xacro', 'pro600_',
-     (0.62, 0.18, 0.008), (0, 0, 3.14159)),
-    ('belt',   'wafer_cell_bringup',         'conveyor.urdf.xacro',       'belt_',
-     # belt surface height comes from the conveyor MESH (36.0 mm above its
-     # own origin, frame sat on the bench) -> 0.06265, not the old 0.050 guess
-     (0.0, 0.13, 0.06265), (0, 0, 0)),
-]
+# Every pose and the home pose come from ONE place. Edit cell_layout.py,
+# never the numbers here. The layout is INTERIM (photo-derived, +/-20 mm) -
+# read the provenance block at the top of cell_layout.py.
+from cell_layout import ROBOTS, JOINT_LIMITS, HOME
 
-# joint -> (kind, lower, upper, initial). Initial values must sit strictly
-# INSIDE the range: a joint initialised at a limit latches and ignores commands.
-# HOME POSES ARE SOLVED, NOT TYPED. Both were produced by running FK over
-# this very cell.urdf (scratch solver, Nelder-Mead) against a task-space
-# target, then checked for limit margin and bench clearance:
-#
-#   M1 Pro   fork blade flat, along world -X, parked over the yellow tower
-#            ready to pick: blade x -0.596..-0.406, y -0.073..-0.015,
-#            z 0.125..0.153 - i.e. HOVERING 25 mm above the tower's 0.100 rim.
-#            Worst limit margin 0.216 rad.
-#            Found by GRID SEARCH, not an optimiser: the target is slightly
-#            unreachable with an exact -X fork, so a least-squares residual
-#            never falls to zero and any residual threshold rejects every
-#            valid pose. The grid scores real constraints instead.
-#
-#            The blade is 58.2 mm WIDE, and the corridor between the belt's
-#            front edge (+0.0227) and the tower's back edge (-0.0800) is only
-#            102.7 mm, so no y offers more than 22 mm of side clearance - a
-#            centreline-only clearance check reported 35.8 mm and was wrong.
-#            Parking above the tower rim rather than beside it sidesteps it.
-#   Pro 600  vacuum cup tip at (0.400, 0.020, 0.300) pointing STRAIGHT DOWN
-#            (flange z-axis = 0 0 -1), residual 3.5e-21
-#
-# Every value sits >= 0.05 rad inside its limit on purpose: a joint whose
-# initial_value lands ON a limit latches and then silently ignores every
-# command for the rest of the run. That bug cost this project a whole session.
-JOINTS = {
-    'm1pro_z_lift':   (0.0, 0.25, 0.120),
-    'm1pro_shoulder': (-1.483530, 1.483530, -0.4000),
-    'm1pro_elbow':    (-2.356194, 2.356194, 2.1400),
-    'm1pro_wrist':    (-6.283185, 6.283185, -0.6358),
-    'pro600_joint1':  (-3.1400, 3.14159, 0.2161),
-    'pro600_joint2':  (-4.7123, 1.5708, -0.4382),
-    'pro600_joint3':  (-2.6179, 2.6179, 2.1570),
-    'pro600_joint4':  (-4.5378, 1.3962, -0.1480),
-    'pro600_joint5':  (-2.9321, 2.9321, -1.5708),
-    'pro600_joint6':  (-3.0368, 3.0368, 0.0209),
-    'belt_travel':    (-0.30, 0.30, -0.25),
-}
+# joint -> (lower, upper, initial). Initial values sit strictly INSIDE the
+# range: a joint initialised at a limit latches and ignores every command.
+JOINTS = {name: (lo, hi, HOME[name]) for name, (lo, hi) in JOINT_LIMITS.items()}
+for _n, (_lo, _hi, _q) in JOINTS.items():
+    assert _lo + 0.02 <= _q <= _hi - 0.02, f'{_n}: home {_q} too close to limit [{_lo}, {_hi}]'
 
 
 def expand(pkg, xacro_file, prefix):
