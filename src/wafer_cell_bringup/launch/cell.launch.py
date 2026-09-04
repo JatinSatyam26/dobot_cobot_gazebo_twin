@@ -21,6 +21,7 @@ urdf/cell.urdf is GENERATED. After editing a robot xacro or a cell pose:
 """
 
 from launch import LaunchDescription
+from launch.conditions import IfCondition
 from launch.actions import (
     AppendEnvironmentVariable, DeclareLaunchArgument,
     IncludeLaunchDescription, RegisterEventHandler, TimerAction,
@@ -82,6 +83,8 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-name', 'wafer_cell',
                    '-x', '0', '-y', '0', '-z', '0'])
 
+    go_home = Node(package='wafer_cell_bringup', executable='go_home.py', output='screen')
+
     spawn_wafer = Node(
         package='ros_gz_sim', executable='create', output='screen',
         arguments=['-file', PathJoinSubstitution([bringup, 'models', 'wafer.sdf']),
@@ -90,6 +93,12 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('gui', default_value='true'),
+        DeclareLaunchArgument('cameras', default_value='true',
+                              description='bridge the six camera sensors (they render only while bridged; '
+                                          'false for a lighter GUI demo)'),
+        DeclareLaunchArgument('demo', default_value='false',
+                              description='run cell_sequencer.py automatically once the arms are home'),
+        DeclareLaunchArgument('demo_cycles', default_value='1'),
         DeclareLaunchArgument('verbose', default_value='3',
                               description='gz sim -v level; 4 shows plugin debug (DetachableJoint etc.)'),
         DeclareLaunchArgument('world', default_value=PathJoinSubstitution(
@@ -140,13 +149,21 @@ def generate_launch_description():
         # latches the sagged pose on activation and holds it forever.
         RegisterEventHandler(OnProcessExit(
             target_action=spawn_cell,
-            on_exit=[TimerAction(period=7.0, actions=[
-                Node(package='wafer_cell_bringup', executable='go_home.py',
-                     output='screen')])])),
+            on_exit=[TimerAction(period=7.0, actions=[go_home])])),
+
+        # demo:=true - one command shows the whole cycle: the sequencer starts
+        # 8 s after go_home has commanded the rest poses.
+        RegisterEventHandler(OnProcessExit(
+            target_action=go_home,
+            on_exit=[TimerAction(period=8.0, actions=[
+                Node(package='wafer_cell_bringup', executable='cell_sequencer.py',
+                     output='screen', condition=IfCondition(LaunchConfiguration('demo')),
+                     parameters=[{'cycles': ParameterValue(LaunchConfiguration('demo_cycles'),
+                                                           value_type=int)}])])])),
 
         # inspection camera -> ROS, so the build can be checked headlessly
         Node(package='ros_gz_bridge', executable='parameter_bridge',
-             name='cam_bridge', output='screen',
+             name='cam_bridge', output='screen', condition=IfCondition(LaunchConfiguration('cameras')),
              arguments=['/cell_cam@sensor_msgs/msg/Image[gz.msgs.Image',
                         '/plan_cam@sensor_msgs/msg/Image[gz.msgs.Image',
                         '/detail_blue_cam@sensor_msgs/msg/Image[gz.msgs.Image',
