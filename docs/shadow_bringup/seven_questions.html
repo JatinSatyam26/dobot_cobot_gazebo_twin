@@ -1,0 +1,150 @@
+<!-- Copyright (c) 2026 Jatin Satyam. SPDX-License-Identifier: Apache-2.0 -->
+<meta charset="utf-8">
+<title>Seven questions about the cell</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Sans 3", "Liberation Sans", "DejaVu Sans", sans-serif;
+    color: #16161A;
+    background: #fff;
+    font-size: 10.4pt;
+    line-height: 1.42;
+    padding: 12mm 17mm 9mm;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  header { border-bottom: 1.6pt solid #16161A; padding-bottom: 5mm; margin-bottom: 4.5mm; }
+  .eyebrow {
+    font-family: Archivo, "Liberation Sans", sans-serif;
+    font-size: 7.6pt; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+    color: #A8154A; margin: 0 0 2.5mm;
+  }
+  h1 {
+    font-family: Archivo, "Liberation Sans", sans-serif;
+    font-size: 19pt; font-weight: 700; letter-spacing: -.015em; line-height: 1.1;
+    margin: 0 0 3mm;
+  }
+  .intro { margin: 0; color: #3E3E48; font-size: 9.7pt; max-width: 150mm; }
+  .intro strong { color: #16161A; font-weight: 600; }
+
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { display: grid; grid-template-columns: 9mm 1fr; column-gap: 3.5mm; margin-bottom: 3.3mm; }
+
+  .n {
+    font-family: Archivo, "Liberation Sans", sans-serif;
+    font-size: 9pt; font-weight: 700; color: #fff; background: #16161A;
+    width: 6.4mm; height: 6.4mm; border-radius: 1mm;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: .6mm;
+  }
+  li.key .n { background: #A8154A; }
+
+  .q { font-size: 11pt; font-weight: 600; margin: 0 0 1mm; line-height: 1.34; }
+  .why { font-size: 8.9pt; color: #5A5A66; margin: 0 0 2mm; }
+  .why b { color: #A8154A; font-weight: 600; }
+
+  .answer {
+    border: .5pt solid #C9C9D2; border-left: 2pt solid #C9C9D2;
+    border-radius: 0 1mm 1mm 0; height: 9.4mm;
+    background: repeating-linear-gradient(
+      to bottom, transparent 0, transparent 5.4mm,
+      #E6E6EC 5.4mm, #E6E6EC 5.5mm
+    );
+  }
+  li.key .answer { border-left-color: #A8154A; }
+
+  .legend {
+    display: flex; align-items: center; gap: 2.5mm;
+    font-size: 8.6pt; color: #5A5A66; margin: 0 0 3.6mm;
+  }
+  .dot { width: 3mm; height: 3mm; border-radius: .8mm; background: #A8154A; flex: none; }
+
+  footer {
+    border-top: .5pt solid #C9C9D2; padding-top: 2.4mm; margin-top: 0;
+    font-size: 8.4pt; color: #6C6C78; display: flex; justify-content: space-between; gap: 8mm;
+  }
+</style>
+
+<header>
+  <p class="eyebrow">Wafer cell · digital shadow</p>
+  <h1>Seven questions about the cell</h1>
+  <p class="intro">I'm building a simulation that mirrors the real cell on screen while it runs. It <strong>only reads</strong> — it never sends a command to the PLC or to either robot. These seven answers tell me where to read from and what the readings mean. Short answers are fine; "I don't know" is a useful answer too.</p>
+</header>
+
+<p class="legend"><span class="dot"></span> These three change how I build it, so they're the ones I'd like first.</p>
+
+<ol>
+
+  <li>
+    <div class="n">1</div>
+    <div>
+      <p class="q">Is there a network switch at the bench that the PLC and both robots plug into? Or is each thing wired on its own?</p>
+      <p class="why">My laptop has to sit on the same network as them to read anything at all.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+  <li>
+    <div class="n">2</div>
+    <div>
+      <p class="q">When you program the PLC, do you plug in an Ethernet cable or a USB cable?</p>
+      <p class="why">If it's always USB, the PLC's network side may never have been switched on. That's not a problem — it just becomes a small setup job, and it's better to know now than on the day.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+  <li class="key">
+    <div class="n">3</div>
+    <div>
+      <p class="q">What turns the vacuum on — the PLC, or the Pro 600 robot's own outputs?</p>
+      <p class="why"><b>Changes how I build it.</b> My code assumes the PLC controls it. If the robot does, I've been planning to read the wrong device.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+  <li class="key">
+    <div class="n">4</div>
+    <div>
+      <p class="q">Do the PLC and the two robots talk to each other over the network, or are they joined by plain wires — one sends a "go" signal and the other reacts?</p>
+      <p class="why"><b>Changes how I build it.</b> It decides whether the PLC knows what the robots are doing, or whether I have to read all three separately and line them up myself.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+  <li>
+    <div class="n">5</div>
+    <div>
+      <p class="q">Who starts a cycle — somebody pressing a button, the PLC on its own, or a person hitting play on a robot pendant?</p>
+      <p class="why">Tells me what signal to watch for as "a new cycle has begun", so the simulation starts at the same moment the machine does.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+  <li class="key">
+    <div class="n">6</div>
+    <div>
+      <p class="q">Are there any sensors on the cell at all — something that detects the holder arriving, or that a wafer is present?</p>
+      <p class="why"><b>Changes how I build it.</b> Right now I assume there are none and work out where the holder is by counting seconds from when the belt starts. A real sensor would be far more accurate, and I'd rather read it than guess.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+  <li>
+    <div class="n">7</div>
+    <div>
+      <p class="q">Does the belt ever run backwards, or does the holder always travel one way and get carried back by hand?</p>
+      <p class="why">In my simulation the belt returns the holder by itself. If the real one doesn't, the two stop matching after the first cycle.</p>
+      <div class="answer"></div>
+    </div>
+  </li>
+
+</ol>
+
+<footer>
+  <span>Read-only: nothing on this sheet changes how the machine runs.</span>
+  <span>Wafer cell digital shadow</span>
+</footer>
