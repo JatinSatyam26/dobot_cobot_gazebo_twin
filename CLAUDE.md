@@ -304,14 +304,26 @@ the render and the parallax-corrected link positions. Still ⛔ metrology.
 
 `src/wafer_cell_shadow/`: `m1pro_bridge.py` (Dobot port 30004, 1440-byte
 `RealTimeData`), `pro600_bridge.py` (pymycobot `ElephantRobot`),
-`plc_bridge.py` (pycomm3 `LogixDriver`), `shadow_driver.py` (drives the JTCs
-and the grasp topics from `/shadow/*`), `launch/shadow.launch.py`
-(`source:=fake|real`, `record:=true`, `bridges:=false` for bag replay). Real-mode
-client libraries live in `~/venvs/wafer_shadow` (system-site-packages venv);
-the bridges add it to `sys.path` only in real mode. Everything network-side is
-⛔ until the bench LAN, tag names and joint conventions are known; see the
-package README. The cycle table both the sequencer and the fake devices use is
+`plc_bridge.py` (**Modbus TCP, read-only**, since 2026-09-10), `shadow_driver.py`
+(time-replay driver), `task_shadow.py` (Level 1 driver), `fake_plc.py`
+(Modbus server stand-in for the Micro850), `launch/shadow.launch.py`
+(`source:=fake|real`, `record:=true`, `bridges:=false` for bag replay,
+`level1:=true fake_plc:=true` for the Level 1 stack offline). Real-mode client
+libraries live in `~/venvs/wafer_shadow` (system-site-packages venv, pymodbus
+pinned 3.6.9 like the bench); the bridges add it to `sys.path` only in real
+mode. The cycle table both the sequencer and the fake devices use is
 `scripts/cell_plan.py` in the bringup package.
+
+**The bench is known (2026-09-10, from the PLC programmer's files, see
+`docs/shadow_bringup/`):** 192.168.10.x, no gateway; PLC .10 is a Modbus TCP
+server (holding 0/1 Pro 600 cmd/status, 10/11 M1 Pro cmd/status, coils 0/1
+vacuum on/blow; status 0 idle 1 busy 2 done 99 fault); Pro 600 .20:5001; M1 Pro
+.40 on LAN2, ports 29999/30003, single controlling session. The PLC runs a
+six-state sequencer and the two bridge scripts answer it; `Step`, `Run_Cmd` and
+`Move_Done` are internal, so the belt phase reads as all-zero registers and
+`plc_bridge.py` infers it from order. Level 1 = follow the PLC alone; Level 2
+(joint feedback) waits on a bench test of whether a second read-only session
+disturbs the bridges. Verified offline against `fake_plc.py` on 2026-09-10.
 
 ## Working style the owner has asked for
 

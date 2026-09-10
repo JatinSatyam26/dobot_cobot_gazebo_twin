@@ -22,15 +22,19 @@ pro600_bridge:
 plc_bridge:
   ros__parameters:
     source: fake
-    ip: 192.168.1.20        # Micro850                               UNKNOWN
+    # The Micro850 is a Modbus TCP server; this node is a READ-ONLY client of it.
+    # Addresses are protocol addresses (the CCW mapping table shows 400001 = 0).
+    ip: 192.168.10.10       # bench value (IIoT Workcell.docx); fake_plc.py: 127.0.0.1 port 5020
+    port: 502
+    unit: 1
     rate_hz: 20.0
-    # Tag names in the CCW project. UNKNOWN - placeholders. The bridge reads
-    # them with pycomm3 and maps them onto the cell state names below.
-    tag_belt_run: BeltRun
-    tag_vacuum_on: VacuumOn
-    tag_step: CycleStep     # integer step index if the program has one, else ""
-    tag_belt_dir: ""        # stepper DIR output if exposed; "" = the belt never reverses   UNKNOWN (metrology belt_travel_direction)
-    belt_speed: 0.07        # m/s used to dead-reckon belt position    ESTIMATED (video)
+    reg_p6_cmd: 0           # 400001 Cmd_Word
+    reg_p6_status: 1        # 400002 Status_Word
+    reg_m1_cmd: 10          # 400011 Cmd_Word_2
+    reg_m1_status: 11       # 400012 Status_Word_2
+    coil_vac_on: 0          # 000001 Vac_On
+    coil_vac_blow: 1        # 000002 Vac_Blow
+    belt_speed: 0.07        # m/s used to dead-reckon belt position    ESTIMATED (video); bench index is 170 @ 20, units uncalibrated
 shadow_driver:
   ros__parameters:
     rate_hz: 10.0           # trajectory horizon = 1/rate
