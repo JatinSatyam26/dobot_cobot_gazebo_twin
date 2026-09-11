@@ -165,8 +165,8 @@ both captures), and committed. Status now:
 | Tower opening | yellow opens −X (toward M1 Pro), blue opens +X (toward Pro 600) | ✅ direction from photo |
 | Nest / conveyor / base positions | M1 side: taught vectors (±2 mm relative to the J1 axis, given the fork's 147 mm seat offset 🟡); Pro 600 side: taught distances fitted to the photo; belt band centre `BELT_SURFACE_Y` = 0.161 | ✅ relative / 🟡 absolute |
 | Conveyor mesh | yawed 180°: motor at the −X rear corner as in the photos | 🟡 |
-| Base yaw | M1 Pro −90°: the taught insert runs along base +Y and the owner says the tower opens −X, so the two agree; Pro 600 URDF yaw never measured (its controller frame is at −81° by the fit, the URDF-to-controller offset is unknown) | 🟡 `m1pro_base_yaw` / ⛔ `pro600_base_yaw` |
-| Rest poses | M1: his HOME, 86.6 mm straight above the approach point (IK of the taught point); Pro 600: his HOME, 96.6 mm above the pick at the point his frame gives (depends on the fitted yaw) | ✅ shape / 🟡 |
+| Base yaw | M1 Pro −90°: the taught insert runs along base +Y and the owner says the tower opens −X, so the two agree; Pro 600 −92.5°: fitted so that his taught poses, through the verified joint mapping, land on C, the blue nest and his HOME within 4 mm | 🟡 `m1pro_base_yaw` / 🟡 `pro600_base_yaw` |
+| Rest poses | M1: his HOME, 86.6 mm straight above the approach point (IK of the taught point; equals his joint readings through the mapping to 0.1°); Pro 600: his HOME joint angles through the mapping, no IK | ✅ / 🟡 |
 | Heights | both robots' taught z say the carrier's wafer is ~5 mm LOWER relative to the towers than the meshes put it (M1 5.8, Pro 600 5.0 mm) — not applied, which mesh is wrong is unknown | ⛔ |
 
 **Every pose lives in ONE file: `src/wafer_cell_bringup/scripts/cell_layout.py`.**
@@ -387,6 +387,53 @@ The Pro 600 is NOT read directly (single-client socket): Alonso's bridge broadca
 `pro600 a1..a6 <label>` over UDP port 5005 from his PC at 192.168.10.5, ~19 Hz.
 The TA's definition of real-to-sim (2026-09-11) is joint telemetry of the two arms
 only, everything else a static prop, Isaac Sim next; the Level 1 PLC stack is parked.
+
+## Telemetry mode and the joint mappings (added 2026-09-11)
+
+```bash
+source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 launch wafer_cell_bringup cell.launch.py gui:=true cameras:=false telemetry:=true
+```
+
+```bash
+source /opt/ros/jazzy/setup.bash && source install/setup.bash && tools/replay_telemetry.py --m1 First_test_withonly_M1Pro_sequence_onmyterminal/m1_feedback_20260911_144727.md --pro600 First_test_withonly_Pro600_sequence_onmyterminal/First_test_withonly_Pro600_sequence_onmyterminal.md
+```
+
+`telemetry:=true` spawns `position_controllers/JointGroupPositionController`s
+(`m1pro_position_controller`, `pro600_position_controller`) instead of the two arm
+trajectory controllers; `go_home` then only releases the wafer's start-up welds
+(`--release-only`) and the arms hold their URDF initial values, which ARE the taught
+HOME through the mapping below. The belt keeps its controller and stays put; the
+cell is a set of props. Commands are `Float64MultiArray` on
+`/<robot>_position_controller/commands`; the contract for any consumer (Isaac Sim
+next) is `sensor_msgs/JointState` with the URDF joint names in radians/metres on
+`/telemetry/<robot>/joint_states`, which `tools/replay_telemetry.py` publishes too.
+It parks the wafer at the bench corner first (no grasp is simulated) and prints the
+tracking error at the end. Verified headless 2026-09-11 on the M1 recording: the arm
+holds HOME, follows the 17 Hz stream and returns to HOME; worst error 3.3° on the
+shoulder during the fastest swing (measurement latency of a reset-driven joint).
+
+**M1 Pro mapping (✅ verified on the recording against every taught waypoint, 0.1°):**
+`shoulder = J1`, `elbow = −J2 + 1.961°` (the URDF's elbow zero offset),
+`wrist = J4 − 17.54°`, `z_lift = J3 + 24.4 mm`. The sim therefore already uses the
+real robot's elbow configuration. J3 + 30.3 mm fits at the carrier instead: the
+model's carrier sits ~6 mm too high relative to the towers (measurement sheet D13,
+D23, D37 decide which mesh is wrong). The real robot swings out at the set-down
+height itself; the sim's 4 mm blade drop before the swing is an artefact of the
+joint-based grasp, not a taught move.
+
+**Pro 600 mapping (🟡 fitted, not yet checked live):** `URDF joint = his angle`, except
+`joint2 = his + 90°` and `joint4 = his + 90°` (joint 6's offset is invisible on a round
+cup). Found by a search over signs and quarter-turn offsets scored on his four
+confirmed pose pairs (his DROP row is stale: the recording settles 2–4° away) with
+the cup direction in the score: positions alone are ambiguous because the cup is
+2 cm long. Result: cup tip within 7 mm at all four poses, cup straight down at
+every pose, and his controller frame is the vendor URDF's base frame (0.2°, 2 cm).
+His Cartesian table is the CUP TIP with a tool offset; the real tool point sits
+31 mm above the model's cup tip at every pose, so the real cup assembly is ~3 cm
+longer than the model (measurement sheet D61). Consequence: `PRO600_YAW` is now
+−92.5° (was an unmeasured π), the yaw at which his mapped poses land on station C,
+the blue nest and his HOME within 4 mm in the plane, and the Pro 600's rest pose
+is his HOME angles through the mapping, not an IK solution.
 
 ## Working style the owner has asked for
 

@@ -60,7 +60,8 @@ M1PRO_XYZ  = (-0.609, 0.204, 0.0)       # TAUGHT (2026-09-10): J1 axis = carrier
 # two-point measurement (metrology m1pro_base_yaw).
 M1PRO_YAW  = -math.pi / 2
 PRO600_XYZ = (0.600, 0.124, 0.008)      # solved from his distances (468 mm to C, 403 mm to the blue nest) with the blue nest pinned, see TAUGHT_LAYOUT
-PRO600_YAW = math.pi                    # UNKNOWN - never measured
+PRO600_YAW = -1.6144                    # -92.5 deg, FITTED 2026-09-11: his taught poses through the verified joint mapping land on
+                                        # C, the blue nest and his HOME within 4 mm in the plane (tools/replay_telemetry.py docstring)
 # belt surface height from the conveyor MESH (36.0 mm above its origin)
 BELT_XYZ   = (0.02, 0.191, 0.06265)     # x: the conveyor is shifted 20 mm so the carrier keeps its 09-04 place on the belt (owner, 2026-09-10)      # conveyor MESH anchor: its bounding-box centre y from the rectified plan
 # The mesh's box includes the motor housing on the rear side, so its centre is NOT the
@@ -128,6 +129,8 @@ JOINT_LIMITS = {
 # layout, NOT read off a pendant (that is metrology item m1pro_home /
 # pro600_home). M1 Pro: fork flat, pointing +X, hovering above the yellow
 # nest. Pro 600: cup pointing straight down above belt point C.
+# Pro 600 rest pose: HIS taught HOME joint angles through the verified mapping (joint 2 and 4 +90 deg),
+# so the arm starts where the real one rests and the telemetry needs no jump. Solve nothing for it.
 # M1 Pro rest pose: from the TAUGHT shape (2026-09-10) - the fork seat 86.6 mm straight above
 # the approach point in front of the yellow nest (HOME -> P1 is a pure descent), blade +X.
 # Solved by solve_home_poses.solve(); regenerate the URDF after touching it.
@@ -136,12 +139,12 @@ HOME = {
     'm1pro_shoulder': -0.5238,
     'm1pro_elbow':    -1.2782,
     'm1pro_wrist':    0.7821,       # == -4.2502 rad, same pose
-    'pro600_joint1':  0.1039,
-    'pro600_joint2':  -0.1246,
-    'pro600_joint3':  2.3530,
-    'pro600_joint4':  -0.6575,
-    'pro600_joint5':  -1.5708,
-    'pro600_joint6':  -0.5395,
+    'pro600_joint1':  -1.4187,
+    'pro600_joint2':  -0.2167,
+    'pro600_joint3':  2.2732,
+    'pro600_joint4':  -0.4909,
+    'pro600_joint5':  -1.5662,
+    'pro600_joint6':  -0.0368,
     'belt_travel':    BELT_A,
 }
 

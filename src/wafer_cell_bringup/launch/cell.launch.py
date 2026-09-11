@@ -21,7 +21,7 @@ urdf/cell.urdf is GENERATED. After editing a robot xacro or a cell pose:
 """
 
 from launch import LaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.actions import (
     AppendEnvironmentVariable, DeclareLaunchArgument, ExecuteProcess, OpaqueFunction, SetLaunchConfiguration, Shutdown,
     IncludeLaunchDescription, RegisterEventHandler, TimerAction,
@@ -60,9 +60,9 @@ CM = ['--controller-manager', '/controller_manager',
       '--switch-timeout', '60']
 
 
-def spawner(name):
+def spawner(name, condition=None):
     return Node(package='controller_manager', executable='spawner',
-                output='screen', arguments=[name] + CM)
+                output='screen', arguments=[name] + CM, condition=condition)
 
 
 def world_with_step(context):
@@ -102,7 +102,11 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-name', 'wafer_cell',
                    '-x', '0', '-y', '0', '-z', '0'])
 
-    go_home = Node(package='wafer_cell_bringup', executable='go_home.py', output='screen')
+    telemetry = LaunchConfiguration('telemetry')
+    # in telemetry mode go_home only releases the wafer's start-up welds; the arms hold
+    # their spawn pose (the URDF initial values = HOME) until the joint stream arrives
+    go_home = Node(package='wafer_cell_bringup', executable='go_home.py', output='screen',
+                   arguments=[PythonExpression(["'--release-only' if '", telemetry, "' == 'true' else '--full'"])])
 
     spawn_wafer = Node(
         package='ros_gz_sim', executable='create', output='screen',
@@ -121,6 +125,9 @@ def generate_launch_description():
         DeclareLaunchArgument('demo', default_value='false',
                               description='run cell_sequencer.py automatically once the arms are home'),
         DeclareLaunchArgument('demo_cycles', default_value='1'),
+        DeclareLaunchArgument('telemetry', default_value='false',
+                              description='true: the arms follow /<robot>_position_controller/commands (joint telemetry) '
+                                          'instead of running the cycle; everything else is a static prop'),
         DeclareLaunchArgument('verbose', default_value='3',
                               description='gz sim -v level; 4 shows plugin debug (DetachableJoint etc.)'),
         DeclareLaunchArgument('world', default_value=PathJoinSubstitution(
@@ -177,8 +184,13 @@ def generate_launch_description():
         RegisterEventHandler(OnProcessExit(
             target_action=spawn_cell,
             on_exit=[TimerAction(period=2.5, actions=[
-                spawner('m1pro_arm_controller'),
-                spawner('pro600_arm_controller'),
+                # telemetry:=true swaps the arms' trajectory controllers for forward
+                # position controllers that follow a joint stream (tools/replay_telemetry.py,
+                # later the live bridges); the belt keeps its controller and stays put.
+                spawner('m1pro_arm_controller', UnlessCondition(telemetry)),
+                spawner('pro600_arm_controller', UnlessCondition(telemetry)),
+                spawner('m1pro_position_controller', IfCondition(telemetry)),
+                spawner('pro600_position_controller', IfCondition(telemetry)),
                 spawner('belt_controller')])])),
 
         # Drive to home once the controllers exist. Without this the arms sag

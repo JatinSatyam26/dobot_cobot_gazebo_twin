@@ -14,6 +14,11 @@ controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
     belt_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    # telemetry mode (cell.launch.py telemetry:=true): the arms follow a joint stream directly
+    m1pro_position_controller:
+      type: position_controllers/JointGroupPositionController
+    pro600_position_controller:
+      type: position_controllers/JointGroupPositionController
 
 joint_state_broadcaster:
   ros__parameters:
@@ -64,3 +69,11 @@ belt_controller:
       stopped_velocity_tolerance: 0.02
       goal_time: 3.0
       belt_travel: { trajectory: 0.05, goal: 0.0003 }
+
+m1pro_position_controller:
+  ros__parameters:
+    joints: [m1pro_z_lift, m1pro_shoulder, m1pro_elbow, m1pro_wrist]
+
+pro600_position_controller:
+  ros__parameters:
+    joints: [pro600_joint1, pro600_joint2, pro600_joint3, pro600_joint4, pro600_joint5, pro600_joint6]

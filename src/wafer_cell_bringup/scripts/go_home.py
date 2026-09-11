@@ -58,12 +58,13 @@ class GoHome(Node):
 
     def tick(self):
         self.tries += 1
-        waiting = [t for t, p in self.pubs.items()
-                   if p.get_subscription_count() == 0]
+        release_only = '--release-only' in sys.argv
+        waiting = [] if release_only else [t for t, p in self.pubs.items()
+                                             if p.get_subscription_count() == 0]
         if waiting and self.tries < 40:
             self.get_logger().info(f'waiting for controllers: {waiting}')
             return
-        for topic, (joints, pos) in HOME.items():
+        for topic, (joints, pos) in ({} if release_only else HOME).items():
             traj = JointTrajectory()
             traj.joint_names = joints
             pt = JointTrajectoryPoint()
@@ -76,7 +77,7 @@ class GoHome(Node):
             for pub in self.release:
                 pub.publish(Empty())
             time.sleep(0.3)
-        self.get_logger().info('home pose commanded to all three controllers; wafer released from all carriers')
+        self.get_logger().info('wafer released from all carriers' + ('' if release_only else '; home pose commanded to all three controllers'))
         raise SystemExit(0)
 
 

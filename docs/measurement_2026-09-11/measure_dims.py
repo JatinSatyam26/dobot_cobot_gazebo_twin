@@ -38,7 +38,7 @@ Z_TOWER = 0.100; SLOTS = cl.SHELF_Z
 M1 = (-0.7242, -0.4938, 0.1088, 0.2842)                      # M1 Pro's own base plate (vendor model)
 M1_J1 = (cl.M1PRO_XYZ[0], cl.M1PRO_XYZ[1] - 0.120)           # J1 pivot axis
 Z_M1_TOP = 0.6876                                            # column top (mount on the bench top since 2026-09-11)
-P6 = (0.5453, 0.6595, 0.0693, 0.1787)                        # Pro 600 base footprint
+P6 = (0.5453, 0.6547, 0.0693, 0.1851)                        # Pro 600 base footprint
 P6_PLATE = (0.500, 0.700, 0.024, 0.224)
 Z_P6_TOP = 0.157
 WAFER_R, WAFER_T = 0.0635, cl.WAFER_THICKNESS
