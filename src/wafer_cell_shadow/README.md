@@ -54,9 +54,10 @@ Two things to know about the derivation:
 
 `task_shadow.py` gates on the real transitions: it cannot finish a phase
 before the cell does, and if the cell is quicker than the simulated segment
-it logs that it is lagging rather than hiding it. At `IDLE` it returns the
-carriage and puts the wafer back in the pick tower - the bench does both by
-hand, so this is a declared stand-in, logged each time.
+it logs that it is lagging rather than hiding it. At `IDLE` it plays
+`MANUAL_RETURN_A` (the carriage back to the load station) and puts the wafer
+back in the pick tower - the bench does both by hand, so this is a declared
+stand-in, logged each time.
 
 ## Run
 

@@ -55,14 +55,14 @@ LATCHED = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 IDLE, BUSY, DONE, FAULT = 0, 1, 2, 99
 
 # fake-mode helpers (cell_plan step names)
-BELT_STEPS = {'BELT_A_TO_B', 'BELT_B_TO_C', 'BELT_RETURN_A'}
-VACUUM_STEPS = {'CUP_ATTACH', 'P6_LIFT_CLEAR', 'P6_LIFT', 'P6_TO_BLUE', 'P6_NEAR_BLUE', 'P6_PLACE'}
+BELT_STEPS = {'BELT_A_TO_B', 'BELT_B_TO_C'}          # MANUAL_RETURN_A is not a PLC move
+VACUUM_STEPS = {'CUP_ATTACH', 'P6_LIFT', 'P6_TO_BLUE', 'P6_PLACE'}
 
 STEP_OF = {'IDLE': 0, 'M1_JOB': 1, 'M1_DONE': 1, 'M1_ACK': 2, 'BELT_INDEX': 3,
            'P6_JOB': 4, 'P6_DONE': 4, 'P6_ACK': 5, 'FAULT': 99}
 # what the old time-replay driver understands: the first cell_plan step of each phase
-STATE_OF = {'M1_JOB': 'M1_BACK_HIGH', 'M1_DONE': 'M1_HOME', 'M1_ACK': 'M1_HOME',
-            'BELT_INDEX': 'BELT_A_TO_B', 'P6_JOB': 'P6_ABOVE_C', 'P6_DONE': 'P6_HOME',
+STATE_OF = {'M1_JOB': 'M1_DESCEND', 'M1_DONE': 'M1_HOME', 'M1_ACK': 'M1_HOME',
+            'BELT_INDEX': 'BELT_A_TO_B', 'P6_JOB': 'P6_TO_C', 'P6_DONE': 'P6_HOME',
             'P6_ACK': 'P6_HOME', 'IDLE': 'CYCLE_DONE', 'FAULT': 'FAULT'}
 M1_HALF = {'M1_JOB', 'M1_DONE', 'M1_ACK', 'BELT_INDEX'}
 
@@ -211,7 +211,7 @@ class PlcBridge(Node):
         self.belt_pub.publish(Bool(data=step in BELT_STEPS))
         self.vac_pub.publish(Bool(data=step in VACUUM_STEPS))
         self.blow_pub.publish(Bool(data=False))
-        self.rev_pub.publish(Bool(data=step == 'BELT_RETURN_A'))
+        self.rev_pub.publish(Bool(data=False))
         self.raw_pub.publish(String(data=json.dumps({'t': round(st['t'], 2), 'holder': st['holder'], 'step': step})))
         if step != self.last_state:
             self.last_state = step

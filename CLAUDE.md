@@ -96,6 +96,16 @@ source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 run wafer_
 Cuts a collision STL into horizontal bands (surface unchanged) so the mesh
 collider can cull by height; the towers' and the belt holder's collision meshes are made this way.
 
+```bash
+tools/cycle_check.sh /tmp/run1
+```
+
+One headless sequencer cycle with a STREAMED pose log of the wafer and the
+carriage, then a per-step table (wafer pose at the end of each step, peak tilt,
+carriage x, seating offset during the belt moves). This is the check every
+plan or layout change must pass before a commit; a 2 s sample misses a 20°
+tilt that the stream shows. `tools/cycle_check.py` is the streamer/reporter.
+
 ---
 
 ## Traps — all of these cost real time here
@@ -111,6 +121,7 @@ collider can cull by height; the towers' and the belt holder's collision meshes 
 | Orphan processes | "Controller already loaded"; stale `/clock` publishers | Kill leftover `parameter_bridge` PIDs from dead runs |
 | `robot_description` YAML-parsed | Launch mangles the URDF | `ParameterValue(Command([...]), value_type=str)` |
 | ros2 daemon staleness | `topic list` disagrees with `topic hz` | `ros2 daemon stop` |
+| The conveyor's visible mesh is a STATIC WORLD MODEL (`conveyor_frame` in `wafer_cell.sdf`), not part of the URDF | After a belt move the joint, carriage and collider go with `cell_layout.py` while the grey conveyor stays where it was, and `check_extents` said nothing (2026-09-10: it stood 56 mm off for a whole GUI demo) | Its pose is anchor + the STL's origin offset (+0.28407 along, +0.019 across); `check_extents.py` now mirrors it like the towers and the collider. Move the belt only through `BELT_XYZ` and re-run the check |
 | A world plugin silently absent | `[Err] SystemLoader ... library does not contain requested plugin` once at start-up; then `/world/.../dynamic_pose/info` has NO publisher and every pose logger returns empty blocks | A regex on `name="..."` also matches `filename="..."`; that renamed the SceneBroadcaster to its library name on 2026-09-04 and cost two hours of false conclusions. After any world edit, `gz topic -i -t /world/wafer_cell/dynamic_pose/info` must list a publisher |
 | GUI demo at half speed (solved 2026-09-04) | RTF 0.3–0.5 whenever an arm or the wafer was near a nest, headless too | Not the GPU. ODE's mesh tree culls by triangle bounding box, and the towers' 100 mm-tall wall triangles all overlap any query at any height, so every step tested all 1568. The towers and the belt holder now collide with `meshes/wafer_tower_collision.stl` / `belt_holder_collision.stl`, the same surfaces cut into 8 mm bands by `split_collision_mesh.py`: RTF 0.98 overall at 1 ms headless, seating numbers unchanged. Apply the same tool to any tall mesh that a moving part passes. `step:=0.002` remains a demo-only fallback that moves the final place by 2 mm |
 
@@ -122,7 +133,26 @@ for that offset hangs the fork 81 mm below the arm in mid-air.
 
 ---
 
-## 🟡 Layout is INTERIM (photo-derived, ±20 mm) — applied 2026-09-03 late evening
+## 🟡 Layout: M1 side from the TAUGHT poses (2026-09-10), the rest fitted to the photo
+
+On 2026-09-10 the owner instructed that the PLC programmer's taught poses be
+adopted. Their Cartesian values are the M1 Pro's WRIST AXIS in a base frame at
+the J1 axis (his J1 readings trail the point bearings by exactly acos(r/400):
+200 + 200 mm links, no tool offset), so they fix the pick nest and the carrier
+rigidly relative to the J1 axis; the Pro 600 side is fixed by his distances
+alone (base→C 468, base→blue 403, C→blue 477 mm). `cell_layout.py`
+(`TAUGHT_LAYOUT` block) is placed from those vectors with the sim's 147 mm
+fork and base yaw −90°: the belt line moved to y 0.161, the yellow nest to
+(−0.281, −0.230), the M1 column 13 mm. Two owner decisions on top (2026-09-10
+evening): the blue nest stays on the yellow nest's line (design intent from the
+09-04 look, not measured) — with his three Pro 600 distances that fixes the
+unload station at world x 0.133 and the Pro 600 base at (0.600, 0.124); and the
+carrier keeps its 09-04 place ON the belt (`BELT_A = −0.25`, a joint position),
+so the conveyor itself is anchored at x +0.02 to land the seat at the taught
+world x −0.23. Stations are belt JOINT positions; `BELT_A_X` / `BELT_C_X` are the
+world x the plan steers to. The 2026-09-03 photo had the conveyor and the yellow
+tower 55–70 mm too far toward the front (parallax). Do not pull the layout back
+toward the photo. The earlier history:
 
 The owner reviewed the earlier build and confirmed four things wrong: tower
 opening direction, conveyor position, robot base yaw, arm rest poses. On
@@ -133,10 +163,11 @@ both captures), and committed. Status now:
 | Item | State | Tag |
 |---|---|---|
 | Tower opening | yellow opens −X (toward M1 Pro), blue opens +X (toward Pro 600) | ✅ direction from photo |
-| Nest / conveyor / base positions | from the rectified overhead photo, see `docs/research_2026-09-03/`; carriage centred on the belt band (`BELT_SURFACE_Y`) | 🟡 ±20 mm |
+| Nest / conveyor / base positions | M1 side: taught vectors (±2 mm relative to the J1 axis, given the fork's 147 mm seat offset 🟡); Pro 600 side: taught distances fitted to the photo; belt band centre `BELT_SURFACE_Y` = 0.161 | ✅ relative / 🟡 absolute |
 | Conveyor mesh | yawed 180°: motor at the −X rear corner as in the photos | 🟡 |
-| Base yaw (both) | **still the old values, never measured** | ⛔ metrology `m1pro_base_yaw`, `pro600_base_yaw` |
-| Rest poses | FK-solved by `solve_home_poses.py`, not pendant values | ⛔ metrology `m1pro_home`, `pro600_home` |
+| Base yaw | M1 Pro −90°: the taught insert runs along base +Y and the owner says the tower opens −X, so the two agree; Pro 600 URDF yaw never measured (its controller frame is at −81° by the fit, the URDF-to-controller offset is unknown) | 🟡 `m1pro_base_yaw` / ⛔ `pro600_base_yaw` |
+| Rest poses | M1: his HOME, 86.6 mm straight above the approach point (IK of the taught point); Pro 600: his HOME, 96.6 mm above the pick at the point his frame gives (depends on the fitted yaw) | ✅ shape / 🟡 |
+| Heights | both robots' taught z say the carrier's wafer is ~5 mm LOWER relative to the towers than the meshes put it (M1 5.8, Pro 600 5.0 mm) — not applied, which mesh is wrong is unknown | ⛔ |
 
 **Every pose lives in ONE file: `src/wafer_cell_bringup/scripts/cell_layout.py`.**
 The generator, `go_home.py`, `check_extents.py` and `cell.launch.py` import it.
@@ -168,6 +199,15 @@ Pro 600 colour. It does NOT turn the ⛔ / 🟡 items below into measurements:
 base yaws, pendant rest poses and the ±20 mm photo positions are unchanged.
 Treat the approved motion sequence as fixed; change geometry only with a
 measurement or an owner instruction, and re-record the cycle afterwards.
+
+**2026-09-10, owner instruction "fix the two divergences and adopt his taught
+poses":** the cycle now has the taught SHAPE (see the hand-off paragraph below and
+`cell_plan.py`), the layout moved to the taught vectors (previous section), and
+the belt no longer returns inside the cycle — on the bench the carriage is
+carried back by hand, so `MANUAL_RETURN_A` sits AFTER `CYCLE_DONE` as a declared
+stand-in. Verified headless with a streamed pose log: seated at 43.8 mm, 0.0 mm
+offset, 0.00° tilt through swing-out, lift-out and both belt moves; place at
+(0.441, −0.167, 0.0997). Not yet re-recorded or GUI-reviewed by the owner.
 
 ## Grasp and sequencer (added 2026-09-04)
 
@@ -216,15 +256,19 @@ cycle and hold).
 belt, concave 57.5 mm arcs on the posts' inner faces, a ring seat at 43 mm
 and a 2 mm lip of radius ≈64 mm. The STL is modelled plate-up, so the xacro
 rolls it −90° about X and lifts it 45 mm. **The fork enters ACROSS the belt,
-not along it**: during `M1_TO_BELT` the wrist turns the fork 90° so the blade
-points toward the rear (+Y), it comes in from the bench front between the two
-posts 2 mm above the lip, lowers the wafer to 0.3 mm above the seat,
-releases, drops the blade 4 mm and backs out to the front underneath
-(`cell_plan.py`: `FORK_AX_BELT`, `APPROACH_BELT`, `M1_SET_DOWN`,
-`FORK_DETACH`, `M1_DROP_BLADE`, `NEST_ATTACH`, `M1_RETREAT`). The holder
-loads beside the M1 Pro column with its end at the belt's end
-(`BELT_A = −0.25`; the photo had −0.14, and from −0.14 the across-belt entry
-is out of the M1 Pro's reach). Source: the owner's videos `~/Downloads/How
+not along it, on the TAUGHT path (2026-09-10)**: during `M1_TO_BELT` the wrist
+turns the fork 94.16° (his R 107.54 → 201.70) so the blade points toward the
+rear, the fork arrives directly ABOVE the carrier (P4, 34.8 mm up), descends
+vertically until the wafer is 0.3 mm above the seat, releases, drops the blade
+4 mm, then swings out on J1 ALONE (−19.75°, constant height: the tines slide
+out under the wafer toward the front) and lifts 75.5 mm straight up
+(`cell_plan.py`: `FORK_AX_BELT`, `M1_TO_BELT`, `M1_SET_DOWN`, `FORK_DETACH`,
+`M1_DROP_BLADE`, `NEST_ATTACH`, `M1_SWING_OUT`, `M1_LIFT_OUT`; the swing sign is
+found by FK, never assumed). The holder loads with its end flush with the belt's
+end (joint `BELT_A = −0.25` on a conveyor anchored at x +0.02, seat at world
+−0.23; travel limit −0.32). The first taught-path run stalled the
+shoulder mid-swing because in the photo layout the fork's shank swept through
+the yellow tower; the taught layout clears it by 29 mm. Source: the owner's videos `~/Downloads/How
 to move dobot and place wafer on magenta color holder on the belt.mp4`
 (2.4 s, 72 frames) and `WhatsApp Video 2026-09-03 at 4.47.55 PM.mp4`.
 I got this wrong twice on 2026-09-04 (a drop stand-in, then the holder
@@ -241,18 +285,18 @@ above the wafer (a joint needs no contact), and gives the wafer a 63.0 mm
 COLLISION radius under its 63.5 mm visual so the ~7 mm drop into the holder
 lip has 1 mm per side, standing in for the chamfers a real print has.
 
-**Trap: the M1 Pro rest pose parks the fork 26 mm above the yellow nest, and
-the blade tip overhangs the fork seat by 30 mm.** A joint-space move from
-rest straight to a low approach point sweeps the blade down through the
-wafer's rim, and an approach point closer than 93.5 mm (30 mm overhang +
-63.5 mm wafer radius) behind the nest centre lands the descending tip on the
-rim. Both happened on 2026-09-04: the wafer was tipped 20°, flipped, or shoved
-40 mm out of the nest, and every later step inherited the offset (cycles 5–9
-all failed at the Pro 600 place). `cell_plan.py` therefore retreats at carry
-height first (`back_high`), descends 115 mm behind the nest, slides in 4 mm
-under the wafer, then raises the blade 1 mm above the wafer's resting
-underside (`engage`) so the wafer physically rests on the tines before the
-joint is made. Diagnose pick faults with a streamed pose log (wafer z and
+**Trap: the blade tip overhangs the fork seat by 30 mm, so the rest pose and
+the approach point must respect the wafer's rim.** An approach point closer than
+93.5 mm (30 mm overhang + 63.5 mm wafer radius) behind the nest centre lands
+the descending tip on the rim, and a joint-space move from a rest pose above
+the nest sweeps the blade through it. Both happened on 2026-09-04: the wafer
+was tipped 20°, flipped, or shoved 40 mm out of the nest, and every later step
+inherited the offset (cycles 5–9 all failed at the Pro 600 place). Since
+2026-09-10 the taught shape removes the hazard: the rest pose is 86.6 mm
+STRAIGHT ABOVE the approach point, 139 mm behind the nest (`M1_DESCEND` is a
+pure descent), the blade slides in 4 mm under the wafer, then rises 1 mm above
+the wafer's resting underside (`engage`) so the wafer physically rests on the
+tines before the joint is made, and lifts 41.4 mm out of the top slot. Diagnose pick faults with a streamed pose log (wafer z and
 pitch against fork tip x), not with 2 s samples: the 20° tilt is invisible in
 the front camera. `/detail_yellow_cam` is the close-up for the pick.
 
@@ -265,11 +309,15 @@ hung 20 mm below the cup and the place drove it into the blue ledge (cycle
 do; check with the FK table `cell_sequencer.py --dry-run` prints against the
 xacro before trusting a new tool.
 
-**Rule: the last stretch of a cup pick or place is 20 mm, straight down.**
+**Rule: the last stretch of a cup pick or place is short and straight down.**
 A joint-space move of the 6-axis Pro 600 bows sideways mid-path (5 mm over a
 120 mm descent, cycle 10) and the nests leave 1 mm radial clearance, so
-`cell_plan.py` inserts `near_c` / `near_blue` waypoints 20 mm above the wafer
-and descends from there.
+`cell_plan.py` descends from `approach_c` (28 mm up, his APPROACH) and
+`over_blue` (37 mm up, his DROP_OVER) and runs the traverse between those two
+heights, as his nine-move cycle does. His joint angles themselves cannot be
+used: FK of them through the sim's Pro 600 chain points the cup UP and turns
+his vertical descents sideways, so the URDF's joint zero/sign convention
+differs from RoboFlow's; his five joint+Cartesian pairs are the data to solve it.
 
 **Trap: a free drop onto a position-driven fixture is a lottery.** When
 the fork still entered along the belt it could not pass the posts, and the
@@ -285,8 +333,9 @@ the belt the wafer is set down 0.3 mm above the seat and the problem is gone.
 includes the motor housing on the rear side, so a carriage placed at
 `BELT_XYZ` y rode 30 mm toward the rear of the running surface (owner's GUI
 screenshot, 2026-09-04). A cross-section of `dobot_conveyor.stl` at
-mid-length puts the belt band at world y 0.045..0.165, hence
-`BELT_SURFACE_Y = 0.105` and `CARRIAGE_XYZ` in `cell_layout.py`; the plan,
+mid-length puts the belt band 30 mm in front of the anchor and 120 mm wide,
+hence `BELT_SURFACE_Y = BELT_XYZ[1] − 0.030` (0.161 since the taught layout,
+band 0.101..0.221) and `CARRIAGE_XYZ` in `cell_layout.py`; the plan,
 the solver helper and both belt cameras use it, `BELT_XYZ` only anchors the
 mesh. Check any fixture against a section of the mesh it rides on, not its
 bounding box.
@@ -295,10 +344,11 @@ bounding box.
 shows the blue one opening +X; the owner's instruction wins, noted in
 `cell_layout.py`.
 
-**M1 Pro base yaw is −90° by inference, not measurement.** With yaw 0 the fork
-cannot back away along −X from the belt holder (the video shows it doing so);
-with the carriage facing the bench front every waypoint is reachable, matching
-the render and the parallax-corrected link positions. Still ⛔ metrology.
+**M1 Pro base yaw is −90° by inference, not measurement.** The taught insert
+(P1→P2) runs along the robot's +Y to 0.1°, and the owner says the tower opens
+toward −X, so −90° is the only yaw consistent with both; it also makes the
+carrier entry 4° off straight-across, as his R values say. Still 🟡: a two-point
+measurement of the base would settle it.
 
 ## Digital Shadow package (added 2026-09-04)
 
@@ -324,6 +374,19 @@ six-state sequencer and the two bridge scripts answer it; `Step`, `Run_Cmd` and
 `plc_bridge.py` infers it from order. Level 1 = follow the PLC alone; Level 2
 (joint feedback) waits on a bench test of whether a second read-only session
 disturbs the bridges. Verified offline against `fake_plc.py` on 2026-09-10.
+`task_shadow.py` plays `cell_plan` ranges per phase; its IDLE segment is
+`CYCLE_DONE` + `MANUAL_RETURN_A` (the hand return) + the wafer reload.
+
+**Live telemetry exists (2026-09-11, owner's first bench test, logs in
+`First_test_withonly_M1Pro_sequence_onmyterminal/` and `..._Pro600_...`):** the M1 Pro's
+feedback port 30004 at 192.168.10.40 answers a read-only client; at HOME it reports
+J1 −30.004°, J2 75.101°, J3 157.120 mm, J4 62.443°, and J1 + J2 + J4 = 107.54 = the
+taught R, J3 = the taught z, J1 = bearing − acos(r/400): so the M1's joints are
+J1 shoulder CCW from base +X, J2 elbow relative, J3 = z in mm, J4 wrist relative.
+The Pro 600 is NOT read directly (single-client socket): Alonso's bridge broadcasts
+`pro600 a1..a6 <label>` over UDP port 5005 from his PC at 192.168.10.5, ~19 Hz.
+The TA's definition of real-to-sim (2026-09-11) is joint telemetry of the two arms
+only, everything else a static prop, Isaac Sim next; the Level 1 PLC stack is parked.
 
 ## Working style the owner has asked for
 

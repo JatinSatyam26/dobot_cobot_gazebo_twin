@@ -12,10 +12,10 @@ For each phase the PLC reports, this plays the matching stretch of the
 simulation's own cycle table (cell_plan.STEPS) through the joint trajectory
 controllers - the same primitives cell_sequencer.py uses:
 
-    M1_JOB      M1_BACK_HIGH .. M1_HOME       pick from the tower, place in the carrier
+    M1_JOB      M1_DESCEND .. M1_HOME         pick from the tower, place in the carrier
     BELT_INDEX  BELT_A_TO_B  .. BELT_B_TO_C   index to the far station
     P6_JOB      NEST_DETACH  .. P6_HOME       pick off the carrier, place in the far tower
-    IDLE        BELT_RETURN_A, CYCLE_DONE, then the wafer is put back in the pick tower
+    IDLE        CYCLE_DONE, MANUAL_RETURN_A, then the wafer is put back in the pick tower
 
 The last line is a declared stand-in: on the bench the carriage is carried
 back by hand and a fresh wafer is loaded by a person. Neither is on Modbus, so
@@ -43,10 +43,10 @@ from cell_sequencer import Sequencer
 
 LATCHED = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 SEGMENT = {                                # phase -> inclusive range of cell_plan step names
-    'M1_JOB': ('M1_BACK_HIGH', 'M1_HOME'),
+    'M1_JOB': ('M1_DESCEND', 'M1_HOME'),
     'BELT_INDEX': ('BELT_A_TO_B', 'BELT_B_TO_C'),
     'P6_JOB': ('NEST_DETACH', 'P6_HOME'),
-    'IDLE': ('BELT_RETURN_A', 'CYCLE_DONE'),
+    'IDLE': ('CYCLE_DONE', 'MANUAL_RETURN_A'),
 }
 NAMES = [s[0] for s in STEPS]
 
@@ -62,6 +62,7 @@ class TaskShadow(Sequencer):
         self.declare_parameter('reset_wafer', True)       # put the wafer back in the pick tower at IDLE
         self.q = queue.Queue()
         self.cycles = 0
+        self.played = 0                                    # segments played so far
         self.busy = None
         self.create_subscription(String, '/shadow/plc/phase', self.on_phase, LATCHED)
         self.get_logger().info('task shadow up: waiting for /shadow/plc/phase')
@@ -70,7 +71,9 @@ class TaskShadow(Sequencer):
         phase = m.data
         pending = self.q.qsize() + (1 if self.busy else 0)
         if phase in SEGMENT:
-            if phase == 'IDLE' and self.cycles == 0 and self.busy is None and self.q.empty():
+            # 'nothing has run yet' means no segment was ever played - NOT 'idle and not busy',
+            # which is also the state right after a finished cycle (bug found 2026-09-10)
+            if phase == 'IDLE' and self.played == 0 and self.q.empty():
                 self.get_logger().info('cell idle, nothing has run yet')
                 return
             self.q.put(phase)
@@ -86,6 +89,7 @@ class TaskShadow(Sequencer):
     def play(self, phase):
         a, b = SEGMENT[phase]
         self.busy = phase
+        self.played += 1
         self.get_logger().info(f'=== playing {phase}: {a} .. {b}')
         dwell = float(self.get_parameter('dwell_b').value)
         try:

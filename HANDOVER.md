@@ -140,7 +140,7 @@ the belt-axis ends, owner's picture); Pro 600 recoloured; blue nest
 turned to open −X like the yellow one; wafer Ø127 checked against all three
 nests (0.5 mm radial clearance each); wafer seating fixed end to end. The
 seating needed five root causes, all in `CLAUDE.md` traps: the fork's
-approach point clipped the wafer's rim (now 115 mm back, descend, slide in,
+approach point clipped the wafer's rim (now 139 mm back, the taught insert, descend, slide in,
 lift 1 mm), the cup's collision ran 9 mm past its tip, the Pro 600's
 joint-space descents bowed 5 mm (20 mm `near_*` waypoints), a third M1 Pro
 vendor defect (elbow rolled 1°), and the fork's entry direction: along the

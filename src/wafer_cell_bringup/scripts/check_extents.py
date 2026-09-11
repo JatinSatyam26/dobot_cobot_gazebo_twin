@@ -30,7 +30,7 @@ BENCH = (-0.7620, 0.7620, -0.3048, 0.3048)   # x0 x1 y0 y1, top surface z = 0
 RESTING_Z = 0.05                              # below this, "resting on the bench"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from cell_layout import HOME, NEST_YELLOW, NEST_YELLOW_RPY, NEST_BLUE, NEST_BLUE_RPY, BELT_XYZ
+from cell_layout import HOME, NEST_YELLOW, NEST_YELLOW_RPY, NEST_BLUE, NEST_BLUE_RPY, BELT_XYZ, PRO600_XYZ
 
 SKIP = {'floor', 'floor_grid', 'workbench', 'inspection_cam', 'plan_cam'}
 
@@ -112,7 +112,13 @@ def main():
                 for m in world.findall('model') if m.findtext('pose')}
     expect = {'tower_yellow': (*NEST_YELLOW, *NEST_YELLOW_RPY),
               'tower_blue':   (*NEST_BLUE,   *NEST_BLUE_RPY),
-              'conveyor_collision': (0.0, BELT_XYZ[1], None, 0, 0, 0)}
+              'conveyor_collision': (BELT_XYZ[0], BELT_XYZ[1], None, 0, 0, 0),
+              # the visible conveyor mesh: its STL origin sits +0.28407 along and +0.019 across from the
+              # bounding-box centre that BELT_XYZ anchors; it was left behind by a belt move once (2026-09-10)
+              'conveyor_frame': (BELT_XYZ[0] + 0.28407, BELT_XYZ[1] + 0.019, None, None, None, None),
+              # the black mounting plates are static world models too; they must follow the robot mounts
+              # (the M1 Pro has none: its own base plate is the black plate seen in the photos)
+              'pro600_plate': (PRO600_XYZ[0], PRO600_XYZ[1], None, None, None, None)}
     for name, exp in expect.items():
         got = sdf_pose[name]
         for i, (e, g) in enumerate(zip(exp, got)):

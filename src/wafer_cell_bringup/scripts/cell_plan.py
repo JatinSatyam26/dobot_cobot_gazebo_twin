@@ -1,3 +1,4 @@
+import math
 # Copyright (c) 2026 Jatin Satyam
 # SPDX-License-Identifier: Apache-2.0
 """
@@ -17,58 +18,58 @@ Durations are the 2026-09-03 video timings, rounded; the PLC program is the
 authority (metrology robot_cycle_times, point_positions).
 """
 from cell_layout import (HOME, M1PRO_JOINTS, PRO600_JOINTS, NEST_YELLOW, NEST_BLUE, SHELF_Z,
-                         BELT_SURFACE_Y, BELT_A, BELT_B, BELT_C, NEST_SEAT_Z, HOLDER_POST_TOP,
+                         BELT_SURFACE_Y, BELT_A, BELT_B, BELT_C, BELT_A_X, BELT_C_X, NEST_SEAT_Z, HOLDER_POST_TOP,
                          WAFER_THICKNESS, FORK_UNDER, FORK_LIFT, CUP_GAP)
 from solve_home_poses import solve
 
 FORK_AX = {0: (1, 0, 0), 2: (0, 0, 1)}      # blade flat, pointing +X (yellow nest, opens -X)
-FORK_AX_BELT = {0: (0, 1, 0), 2: (0, 0, 1)} # blade flat, pointing +Y: the wrist turns the fork 90 deg on the way
+FORK_TURN = math.radians(201.70 - 107.54)   # taught: R at P5 minus R at P2, the wrist turn from the pick to the carrier (+94.16 deg)
+FORK_AX_BELT = {0: (math.cos(FORK_TURN), math.sin(FORK_TURN), 0), 2: (0, 0, 1)}   # blade 4 deg past straight-across, from the front # blade flat, pointing +Y: the wrist turns the fork 90 deg on the way
                                             # to the belt and it enters the holder ACROSS the belt from the front
-APPROACH_BELT = 0.08   # front approach: the wafer rides above the post tops, only the blade must clear, and it passes between the posts
+M1_HOME_ABOVE = 0.0866  # taught: HOME is 86.6 mm straight above the approach point (HOME -> P1 is a pure descent)
+M1_LIFT_OUT   = 0.0414  # taught: P2 -> P3, the wafer is lifted 41.4 mm straight up out of the tower
+CARRIER_ABOVE = 0.0348  # taught: P4 sits 34.8 mm above P5, the fork enters the carrier VERTICALLY
+SWING_OUT_RAD = math.radians(19.75)   # taught: P5 -> P6 rotates J1 alone, 71.53 -> 51.78 deg, at constant height
+LIFT_OUT      = 0.0755  # taught: P6 -> P7, a pure vertical lift out of the carrier
+P6_PICK_ABOVE = 0.028   # taught: APPROACH -> PICK is a 28 mm vertical descent; the traverse runs at that height
+P6_DROP_ABOVE = 0.037   # taught: DROP_OVER -> DROP is a 37 mm vertical descent
 CUP_AX = {2: (0, 0, -1)}                     # cup pointing straight down
-APPROACH = 0.115   # seat behind the nest centre: the blade tip overhangs the seat 30 mm and the wafer rim is 63.5 mm out, so >93.5 mm or the descent lands the tip on the rim (cycle 9)
+APPROACH = 0.139   # seat behind the nest centre: the TAUGHT insert (P1->P2 traverse, 139 mm); must exceed 93.5 mm (30 mm tip overhang + 63.5 mm wafer radius) so a vertical descent clears the rim
 CLEAR = 0.045                                # lift above a nest rim before travelling
 GRASP_SETTLE = 0.8          # let the JTC reach its (tight) goal band before welding/releasing
 
 STEPS = [
     ('RELEASE_ALL',           'event',  None,                 0.0),
-    ('M1_BACK_HIGH',          'm1pro',  'back_high',          2.5),
-    ('M1_APPROACH_YELLOW',    'm1pro',  'approach',           1.5),
-    ('M1_INSERT_UNDER_WAFER', 'm1pro',  'insert',             2.0),
+    ('M1_DESCEND',            'm1pro',  'approach',           2.0),   # HOME -> P1: 86.6 mm straight down, in front of the opening
+    ('M1_INSERT_UNDER_WAFER', 'm1pro',  'insert',             2.5),   # P1 -> P2: 139 mm in under the wafer through the opening
     ('M1_ENGAGE_WAFER',       'm1pro',  'engage',             0.8),
     ('FORK_ATTACH',           'grasp',  ('fork', True),       GRASP_SETTLE),
-    ('M1_LIFT',               'm1pro',  'lift',               1.0),
-    ('M1_TO_BELT',            'm1pro',  'to_belt',            3.0),
-    ('M1_LOWER_TO_NEST',      'm1pro',  'belt_approach',      1.0),
-    ('M1_INSERT_INTO_NEST',   'm1pro',  'belt_insert',        2.0),   # wafer 2 mm above the lip, blade between the posts
-    # Hand-off as in the owner's videos (2026-09-04): the fork, turned 90 deg
-    # on its wrist during M1_TO_BELT, enters ACROSS the belt from the front
-    # between the two posts (which stand at the belt-axis ends).
-    ('M1_SET_DOWN',           'm1pro',  'belt_set',           1.0),   # lower until the wafer is 0.3 mm above the seat
+    ('M1_LIFT',               'm1pro',  'lift',               1.0),   # P2 -> P3: 41.4 mm straight up out of the top slot
+    ('M1_TO_BELT',            'm1pro',  'above_carrier',      3.0),   # P3 -> P4: swing to directly above the carrier, wrist turned 90 deg
+    ('M1_SET_DOWN',           'm1pro',  'belt_set',           1.5),   # P4 -> P5, first part: 34.8 mm straight down, wafer to 0.3 mm above the seat
     ('FORK_DETACH',           'grasp',  ('fork', False),      GRASP_SETTLE),
-    ('M1_DROP_BLADE',         'm1pro',  'belt_free',          0.8),   # blade 4 mm below the seated wafer
+    ('M1_DROP_BLADE',         'm1pro',  'belt_free',          0.8),   # P5, second part: tines on down to 4 mm below the seated wafer
     ('NEST_ATTACH',           'grasp',  ('nest', True),       GRASP_SETTLE),
-    ('M1_RETREAT',            'm1pro',  'belt_retreat',       1.5),   # back out under the wafer, between the posts
+    ('M1_SWING_OUT',          'm1pro',  'belt_swing',         1.5),   # P5 -> P6: J1 alone, -19.75 deg, constant height; the tines slide out under the wafer
+    ('M1_LIFT_OUT',           'm1pro',  'belt_lift',          1.5),   # P6 -> P7: 75.5 mm straight up
     ('M1_HOME',               'm1pro',  'home',               3.0),
     ('BELT_A_TO_B',           'belt',   (BELT_A, BELT_B),     None),
     ('BELT_DWELL_B',          'dwell',  None,                 None),
     ('BELT_B_TO_C',           'belt',   (BELT_B, BELT_C),     None),
     ('NEST_DETACH',           'grasp',  ('nest', False),      GRASP_SETTLE),
-    ('P6_ABOVE_C',            'pro600', 'above_c',            3.0),
-    ('P6_NEAR_C',             'pro600', 'near_c',             1.5),
-    ('P6_DESCEND',            'pro600', 'pick',               1.0),
+    ('P6_TO_C',               'pro600', 'approach_c',         3.0),   # HOME -> APPROACH: 28 mm above the wafer on the carrier
+    ('P6_DESCEND',            'pro600', 'pick',               1.0),   # APPROACH -> PICK: 28 mm straight down
     ('CUP_ATTACH',            'grasp',  ('cup', True),        GRASP_SETTLE),
-    ('P6_LIFT_CLEAR',         'pro600', 'near_c',             1.0),
-    ('P6_LIFT',               'pro600', 'lift',               1.5),
-    ('P6_TO_BLUE',            'pro600', 'above_blue',         3.0),
-    ('P6_NEAR_BLUE',          'pro600', 'near_blue',          1.5),
-    ('P6_PLACE',              'pro600', 'place',              1.0),
+    ('P6_LIFT',               'pro600', 'approach_c',         1.5),   # PICK -> APPROACH
+    ('P6_TO_BLUE',            'pro600', 'over_blue',          3.0),   # APPROACH -> DROP_OVER: the near-flat traverse, 37 mm above the drop
+    ('P6_PLACE',              'pro600', 'place',              1.0),   # DROP_OVER -> DROP: 37 mm straight down
     ('CUP_DETACH',            'grasp',  ('cup', False),       GRASP_SETTLE),
-    ('P6_UP_CLEAR',           'pro600', 'near_blue',          1.0),
-    ('P6_UP',                 'pro600', 'up',                 1.5),
+    ('P6_UP',                 'pro600', 'over_blue',          1.5),   # DROP -> DROP_OVER
     ('P6_HOME',               'pro600', 'home',               3.0),
-    ('BELT_RETURN_A',         'belt',   (BELT_C, BELT_A),     None),
     ('CYCLE_DONE',            'event',  None,                 0.0),
+    # The bench carries the carriage back BY HAND (it indexes one way only): this
+    # step is the stand-in for that, outside the cycle, so the next cycle can run.
+    ('MANUAL_RETURN_A',       'belt',   (BELT_C, BELT_A),     None),
 ]
 
 
@@ -79,14 +80,13 @@ def build_waypoints(chain, log=None):
     belt_y = BELT_SURFACE_Y            # the carriage rides the belt band, not the mesh box centre
     z_pick = SHELF_Z[2] - FORK_UNDER      # slide in well under the wafer
     z_engage = SHELF_Z[2] + FORK_LIFT     # raise: the tines lift the wafer 1 mm off its shelf, then it is welded
-    z_carry = SHELF_Z[2] + CLEAR
-    # Belt holder hand-off as in the owner's videos: the blade, turned to point +Y,
-    # travels ACROSS the belt from the front between the posts. Carry the wafer in
-    # 2 mm above the lip, lower it to 0.3 mm above the seat, release, drop the
-    # blade 4 mm under the seated wafer and back out to the front.
-    z_hi = HOLDER_POST_TOP + 0.002                # blade top = wafer underside while sliding in over the lip
+    z_carry = z_pick + M1_LIFT_OUT        # taught 41.4 mm lift: clears the 6 mm of wall above the top slot
+    # Belt holder hand-off from the TAUGHT poses (P4..P7): arrive directly above the
+    # carrier, descend vertically (wafer into the lip, tines on down between the
+    # posts), swing out on J1 alone at constant height, lift straight up.
     z_set = NEST_SEAT_Z + 0.0003                  # wafer underside 0.3 mm above the seat at release
     z_free = NEST_SEAT_Z - FORK_UNDER             # blade top 4 mm below the seat (blade bottom 36 mm, plate top 3 mm)
+    z_above = z_set + CARRIER_ABOVE               # P4
     w_top_nest = NEST_SEAT_Z + WAFER_THICKNESS
     w_top_blue = SHELF_Z[2] + WAFER_THICKNESS
 
@@ -98,31 +98,41 @@ def build_waypoints(chain, log=None):
 
     m = {}
     s = [HOME[j] for j in M1PRO_JOINTS]
-    # 'back_high' first: the rest pose parks the fork 26 mm ABOVE this nest, and a straight
-    # joint-space move from there to the low approach point sweeps the blade down through
-    # the wafer's rim (streamed probe 2026-09-04: pitched it 20 deg, later flipped it).
-    for key, tgt, ax in [('back_high', (yx - APPROACH, yy, z_carry), FORK_AX),
-                         ('approach', (yx - APPROACH, yy, z_pick), FORK_AX), ('insert', (yx, yy, z_pick), FORK_AX),
+    # HOME sits 86.6 mm straight above the approach point (taught), so the first move
+    # of the cycle is a pure descent in front of the opening and never crosses the rim.
+    for key, tgt, ax in [('approach', (yx - APPROACH, yy, z_pick), FORK_AX), ('insert', (yx, yy, z_pick), FORK_AX),
                          ('engage', (yx, yy, z_engage), FORK_AX), ('lift', (yx, yy, z_carry), FORK_AX),
-                         ('to_belt', (BELT_A, belt_y - APPROACH_BELT, z_hi + CLEAR), FORK_AX_BELT),
-                         ('belt_approach', (BELT_A, belt_y - APPROACH_BELT, z_hi), FORK_AX_BELT),
-                         ('belt_insert', (BELT_A, belt_y, z_hi), FORK_AX_BELT),
-                         ('belt_set', (BELT_A, belt_y, z_set), FORK_AX_BELT), ('belt_free', (BELT_A, belt_y, z_free), FORK_AX_BELT),
-                         ('belt_retreat', (BELT_A, belt_y - APPROACH_BELT, z_free), FORK_AX_BELT)]:
+                         ('above_carrier', (BELT_A_X, belt_y, z_above), FORK_AX_BELT),
+                         ('belt_set', (BELT_A_X, belt_y, z_set), FORK_AX_BELT),
+                         ('belt_free', (BELT_A_X, belt_y, z_free), FORK_AX_BELT)]:
         s = m[key] = ik(M1PRO_JOINTS, 'm1pro_fork_seat', tgt, ax, s)
+    # P5 -> P6 is J1 ALONE: a joint-space waypoint, not an IK target. The sign is the one
+    # that moves the seat back along the blade (retreat), found by FK, never assumed.
+    q_free = dict(zip(M1PRO_JOINTS, m['belt_free']))
+    M0 = chain.pose('m1pro_fork_seat', q_free)
+    best = None
+    for sgn in (+1.0, -1.0):
+        q = dict(q_free); q['m1pro_shoulder'] += sgn * SWING_OUT_RAD
+        d = chain.pose('m1pro_fork_seat', q)[:3, 3] - M0[:3, 3]
+        along = float(d @ M0[:3, 0])
+        if best is None or along < best[0]:
+            best = (along, q)
+    if best[0] >= 0 and log:
+        log(f'swing-out: neither shoulder sign retreats the blade (best along-blade {best[0]*1e3:.1f} mm)')
+    m['belt_swing'] = [best[1][j] for j in M1PRO_JOINTS]
+    q_lift = dict(best[1]); q_lift['m1pro_z_lift'] += LIFT_OUT      # P6 -> P7, Z only
+    m['belt_lift'] = [q_lift[j] for j in M1PRO_JOINTS]
     m['home'] = [HOME[j] for j in M1PRO_JOINTS]
 
     p = {}
     s = [HOME[j] for j in PRO600_JOINTS]
     cup_gap = CUP_GAP
-    # 'near_*' waypoints 20 mm above the pick and the place: a joint-space move of a 6-axis arm
-    # bows sideways mid-path (5 mm over a 120 mm descent, cycle 10), and the nests leave the
-    # wafer 1 mm radial clearance, so the last stretch must be short enough to be straight.
-    for key, tgt in [('above_c', (BELT_C, belt_y, w_top_nest + 0.12)), ('near_c', (BELT_C, belt_y, w_top_nest + 0.02)),
-                     ('pick', (BELT_C, belt_y, w_top_nest + cup_gap)),
-                     ('lift', (BELT_C, belt_y, w_top_nest + 0.12)), ('above_blue', (bx, by, w_top_blue + 0.12)),
-                     ('near_blue', (bx, by, w_top_blue + 0.02)), ('place', (bx, by, w_top_blue + cup_gap + 0.0005)),
-                     ('up', (bx, by, w_top_blue + 0.12))]:
+    # His nine-move cycle: APPROACH 28 mm above the pick, DROP_OVER 37 mm above the drop,
+    # and the traverse between them at that height (7 mm of lift across a 550 mm swing).
+    for key, tgt in [('approach_c', (BELT_C_X, belt_y, w_top_nest + cup_gap + P6_PICK_ABOVE)),
+                     ('pick', (BELT_C_X, belt_y, w_top_nest + cup_gap)),
+                     ('over_blue', (bx, by, w_top_blue + cup_gap + 0.0005 + P6_DROP_ABOVE)),
+                     ('place', (bx, by, w_top_blue + cup_gap + 0.0005))]:
         s = p[key] = ik(PRO600_JOINTS, 'pro600_cup_tip', tgt, CUP_AX, s)
     p['home'] = [HOME[j] for j in PRO600_JOINTS]
     return m, p

@@ -309,21 +309,9 @@
          reference_photos). Plate OUTLINE is read off the rectified plan
          (+/-20 mm); THICKNESS is ASSUMED - 8 mm is a guess, and it sets the
          base height of both robots. Metrology: m1pro_plate, pro600_plate. -->
-    <model name="m1pro_plate">
-      <static>true</static>
-      <pose>-0.600 0.188 0.004 0 0 0</pose>
-      <link name="link">
-        <visual name="v">
-          <geometry><box><size>0.180 0.232 0.008</size></box></geometry>
-          <material><ambient>0.05 0.05 0.06 1</ambient><diffuse>0.12 0.12 0.14 1</diffuse>
-                    <specular>0.3 0.3 0.3 1</specular></material>
-        </visual>
-        <collision name="c"><geometry><box><size>0.180 0.232 0.008</size></box></geometry></collision>
-      </link>
-    </model>
     <model name="pro600_plate">
       <static>true</static>
-      <pose>0.600 0.200 0.004 0 0 0</pose>
+      <pose>0.600 0.124 0.004 0 0 0</pose>
       <link name="link">
         <visual name="v">
           <geometry><box><size>0.200 0.200 0.008</size></box></geometry>
@@ -342,7 +330,7 @@
          Mesh bbox is centred on the real belt centreline y = +0.135. -->
     <model name="conveyor_frame">
       <static>true</static>
-      <pose>0.28407 0.154 0.02665 1.5708 0 3.14159</pose>
+      <pose>0.30407 0.210 0.02665 1.5708 0 3.14159</pose>
       <link name="link">
         <visual name="v">
           <geometry>
@@ -355,7 +343,7 @@
     </model>
     <model name="conveyor_collision">
       <static>true</static>
-      <pose>0 0.135 0.03132 0 0 0</pose>
+      <pose>0.02 0.191 0.03132 0 0 0</pose>
       <link name="link">
         <collision name="c">
           <geometry><box><size>0.698 0.150 0.06265</size></box></geometry>
@@ -377,7 +365,7 @@
          Metrology: nest_poses -->
     <model name="tower_yellow">
       <static>true</static>
-      <pose>-0.353 -0.162 0.005 1.5708 0 3.14159</pose>
+      <pose>-0.281 -0.230 0.005 1.5708 0 3.14159</pose>
       <link name="link">
         <visual name="v">
           <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
@@ -396,7 +384,7 @@
          the 2026-09-02 photo showed +X). Mirrors cell_layout.py. -->
     <model name="tower_blue">
       <static>true</static>
-      <pose>0.430 -0.153 0.005 1.5708 0 3.14159</pose>
+      <pose>0.407 -0.230 0.005 1.5708 0 3.14159</pose>
       <link name="link">
         <visual name="v">
           <geometry><mesh><uri>package://wafer_cell_bringup/meshes/wafer_tower.stl</uri>
@@ -444,7 +432,7 @@
          holder at point A. capture_view.py <out> /detail_blue_cam -->
     <model name="detail_blue_cam">
       <static>true</static>
-      <pose>0.300 -0.450 0.280 0 0.553 1.157</pose>
+      <pose>0.277 -0.527 0.280 0 0.553 1.157</pose>
       <link name="link">
         <sensor name="detail_blue_cam" type="camera">
           <camera><horizontal_fov>0.55</horizontal_fov>
@@ -456,7 +444,7 @@
     </model>
     <model name="detail_belt_cam">
       <static>true</static>
-      <pose>-0.250 0.330 0.215 0 0.470 -1.5708</pose>
+      <pose>-0.230 0.386 0.215 0 0.470 -1.5708</pose>
       <link name="link">
         <sensor name="detail_belt_cam" type="camera">
           <camera><horizontal_fov>0.55</horizontal_fov>
@@ -469,7 +457,7 @@
 
     <model name="detail_beltc_cam">
       <static>true</static>
-      <pose>0.040 -0.180 0.250 0 0.455 1.060</pose>
+      <pose>-0.027 -0.124 0.250 0 0.600 1.060</pose>
       <link name="link">
         <sensor name="detail_beltc_cam" type="camera">
           <camera><horizontal_fov>0.55</horizontal_fov>
@@ -482,7 +470,7 @@
 
     <model name="detail_yellow_cam">
       <static>true</static>
-      <pose>-0.550 -0.450 0.250 0 0.430 0.971</pose>
+      <pose>-0.478 -0.518 0.250 0 0.430 0.971</pose>
       <link name="link">
         <sensor name="detail_yellow_cam" type="camera">
           <camera><horizontal_fov>0.55</horizontal_fov>

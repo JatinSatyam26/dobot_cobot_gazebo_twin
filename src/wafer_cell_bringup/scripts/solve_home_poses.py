@@ -24,7 +24,7 @@ import numpy as np
 from scipy.optimize import least_squares
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cell_fk import Chain
-from cell_layout import (JOINT_LIMITS, NEST_YELLOW, SHELF_Z, WAFER_THICKNESS, BELT_XYZ, BELT_A, BELT_C,
+from cell_layout import (JOINT_LIMITS, NEST_YELLOW, SHELF_Z, WAFER_THICKNESS, BELT_XYZ, BELT_A, BELT_A_X, BELT_C_X, BELT_C,
                          NEST_SEAT_Z, BELT_SURFACE_Y, M1PRO_JOINTS, PRO600_JOINTS)
 from ament_index_python.packages import get_package_share_directory
 
@@ -93,7 +93,7 @@ def main():
     # first and seed the home from it, so the cycle never has to straighten
     # the arm to flip elbows between the two stations.
     axes = {0: (1, 0, 0), 2: (0, 0, 1)}
-    belt = (BELT_A - 0.09, BELT_SURFACE_Y, NEST_SEAT_Z)
+    belt = (BELT_A_X - 0.09, BELT_SURFACE_Y, NEST_SEAT_Z)
     qb, eb, mb = solve(chain, M1PRO_JOINTS, 'm1pro_fork_seat', belt, axes)
     t = (NEST_YELLOW[0], NEST_YELLOW[1], SHELF_Z[2] + WAFER_THICKNESS + 0.025)
     q, err, m = solve(chain, M1PRO_JOINTS, 'm1pro_fork_seat', t, axes,
@@ -103,7 +103,7 @@ def main():
 
     # Pro 600 home: cup tip 0.30 above the belt at point C, pointing straight
     # down (cup z = world -z).
-    t = (BELT_C, BELT_SURFACE_Y, 0.30)
+    t = (BELT_C_X, BELT_SURFACE_Y, 0.30)
     q, err, m = solve(chain, PRO600_JOINTS, 'pro600_cup_tip', t, {2: (0, 0, -1)})
     out['pro600'] = dict(q=q, target=t, pos_err_mm=round(err * 1e3, 2), min_margin=round(m, 3))
 

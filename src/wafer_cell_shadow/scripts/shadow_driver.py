@@ -98,8 +98,8 @@ class ShadowDriver(Node):
                     self.grasp[f"{carrier}/{'attach' if attach else 'detach'}"].publish(Empty())
                 timer.cancel()
             timer = self.create_timer(max(delay, 0.01), fire)
-        if m.data == 'CYCLE_DONE':
-            self.belt_x = BELT_A                           # the return has ended; cancel dead-reckoning drift
+        if m.data == 'MANUAL_RETURN_A':
+            self.belt_x = BELT_A                           # the carriage was carried back by hand: no motion to integrate
 
     def send(self, arm, names, positions):
         t = JointTrajectory()
