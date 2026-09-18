@@ -108,8 +108,11 @@ def generate_launch_description():
     go_home = Node(package='wafer_cell_bringup', executable='go_home.py', output='screen',
                    arguments=[PythonExpression(["'--release-only' if '", telemetry, "' == 'true' else '--full'"])])
 
+    # no wafer in telemetry mode: nothing grasps it there, so a live arm would only shove it
+    # off the tower (owner, 2026-09-17)
     spawn_wafer = Node(
         package='ros_gz_sim', executable='create', output='screen',
+        condition=UnlessCondition(LaunchConfiguration('telemetry')),
         arguments=['-file', PathJoinSubstitution([bringup, 'models', 'wafer.sdf']),
                    '-name', 'wafer',
                    '-x', WAFER_POSE[0], '-y', WAFER_POSE[1], '-z', WAFER_POSE[2]])

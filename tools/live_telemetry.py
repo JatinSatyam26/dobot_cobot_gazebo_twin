@@ -124,7 +124,7 @@ class Bridge(Node):
 def park_wafer():
     req = 'name: "wafer", position: {x: 0.68, y: -0.26, z: 0.0015}, orientation: {w: 1}'
     r = subprocess.run(['gz', 'service', '-s', '/world/wafer_cell/set_pose', '--reqtype', 'gz.msgs.Pose', '--reptype', 'gz.msgs.Boolean', '--timeout', '1500', '--req', req], capture_output=True, text=True)
-    print(f'wafer parked at the bench corner: {"data: true" in r.stdout}', flush=True)
+    print('wafer parked at the bench corner' if 'data: true' in r.stdout else 'no wafer in this world (telemetry mode spawns none): nothing to park', flush=True)
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--m1-ip', default='192.168.10.40'); ap.add_argument('--m1-port', type=int, default=30004)
