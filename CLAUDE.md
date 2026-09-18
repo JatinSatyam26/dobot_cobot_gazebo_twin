@@ -412,6 +412,24 @@ tracking error at the end. Verified headless 2026-09-11 on the M1 recording: the
 holds HOME, follows the 17 Hz stream and returns to HOME; worst error 3.3° on the
 shoulder during the fastest swing (measurement latency of a reset-driven joint).
 
+**LIVE bridge (added 2026-09-17): `tools/live_telemetry.py`** reads both robots at once,
+read-only, and drives the telemetry mode: the M1 Pro's feedback port 30004 (1440-byte
+frames, QActual at byte 432, integrity check J1+J2+J4 == R, read in a tight loop, never
+sleep on that socket or the arm teleports) and the Pro 600's pose broadcast from
+Alonso's bridge on UDP 5005 (JSON `device`/`angles`/`label`, bind 0.0.0.0). The Pro 600's
+own socket is single-client and is never touched. Prints one status line per second
+and publishes `/telemetry/health`. `tools/fake_robots.py` serves both wire formats from
+the 2026-09-11 recordings for desk tests (`--m1-ip 127.0.0.1` on the bridge). Alonso's
+originals are in `docs/shadow_bringup/from_alonso_2026-09-11/`.
+
+**Bench run-book for the TA's Phase 1 (both arms live, M1 first then Pro 600 = the
+cell's own cycle):** laptop on the switch at 192.168.10.60 per Alonso's setup guide;
+`ping 192.168.10.40 192.168.10.5`; Gazebo `telemetry:=true gui:=true cameras:=false`;
+`tools/live_telemetry.py`; both robots at HOME must show both Gazebo arms at HOME
+(the mapping check; nothing moves before this passes); then his PLC cycle or his step
+scripts run the robots and Gazebo mirrors them. Your laptop writes nothing. Fallback if
+the network fails: `tools/replay_telemetry.py` on the recordings.
+
 **M1 Pro mapping (✅ verified on the recording against every taught waypoint, 0.1°):**
 `shoulder = J1`, `elbow = −J2 + 1.961°` (the URDF's elbow zero offset),
 `wrist = J4 − 17.54°`, `z_lift = J3 + 24.4 mm`. The sim therefore already uses the
