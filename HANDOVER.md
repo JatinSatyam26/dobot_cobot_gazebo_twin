@@ -26,6 +26,8 @@ Total on disk: ~161 MB, of which ~111 MB is reference photography.
 | `PROJECT_CONTEXT.md` | Project brief, Revision B | Contains owner-supplied measurements and the §13 corrections log |
 | `docs/metrology_spec.html` | 61-parameter measurement spec | Defines every number still to be measured |
 | `README_additional info.md` | The owner's own planning notes | Written by the owner, not by an agent |
+| `First_test_withonly_M1Pro_sequence_onmyterminal/`, `First_test_withonly_Pro600_sequence_onmyterminal/` | The 2026-09-11 bench telemetry recordings, 92 KB | Captured off the real robots on the lab LAN. The only offline source of real joint data; both desk stand-ins replay them |
+| `docs/shadow_bringup/from_alonso_2026-09-11/` | The PLC programmer's own scripts and laptop setup guide | Sent by a third party, not reproducible here |
 
 ### Owner measurements recorded only in prose
 
@@ -166,9 +168,32 @@ six-camera recording (`docs/verification_2026-09-04/cycle_recording_09_04_2026.m
 the owner declared the simulation correct at commit 5645a1f. The motion
 sequence is fixed from here; geometry changes need a measurement or an owner
 instruction and a fresh recording.
-**What is NOT done:** the shadow against real hardware (no bench LAN, no tag
-names, no joint conventions yet), any measured yaw or pendant rest pose, the
-PLC sequence details (dwell).
+**Added 2026-09-10 (taught poses):** the cell is placed from the PLC
+programmer's taught poses rather than the photo; the belt no longer returns
+inside the cycle (`MANUAL_RETURN_A` is a declared stand-in for the hand return).
+
+**Added 2026-09-11 (telemetry mode):** `telemetry:=true` loads a second
+generated description, `urdf/cell_telemetry.urdf` — both arms and the belt
+frame, no carriage, no wafer, no grasp welds — driven by forward position
+controllers instead of the trajectory controllers. `tools/replay_telemetry.py`,
+`tools/live_telemetry.py` and `tools/fake_robots.py` came with it. Both joint
+mappings were solved here.
+
+**Phase 1 PROVEN on the bench 2026-09-17 and pushed:** both arms mirrored live
+over the lab LAN, read-only, M1 Pro within 1.9° / 7.6 mm and Pro 600 within
+4.4° over a full cycle, both ending at HOME. The telemetry world spawns no
+carrier and no wafer, since nothing grasps them there.
+
+**What is NOT done:** the measurement sheet in `docs/measurement_2026-09-11/`
+is built but unfilled, so absolute positions remain photo- and taught-derived
+rather than measured; base yaws are still inferred; the ~6 mm carrier-height
+disagreement between the meshes and both robots' taught heights is unresolved;
+the Level 1 PLC stack is parked, verified only against `fake_plc.py`; no rosbag
+of a live cycle exists yet; Isaac Sim is not installed on this machine.
+
+**Next phase — Isaac Sim: `docs/isaac_sim/ISAAC_HANDOVER.md`.** It carries the
+interface contract, both mappings, the prop poses that are NOT in the URDF, the
+acceptance test and the inherited open items.
 
 ## Git
 

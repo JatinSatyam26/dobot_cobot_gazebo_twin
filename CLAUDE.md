@@ -5,6 +5,7 @@ wafer-handling cell. **ROS 2 Jazzy · gz-sim 8.11.0 · Ubuntu 24.04.**
 
 Deep background: `PROJECT_CONTEXT.md`. Asset inventory and what is safe to
 delete: `HANDOVER.md`. Read `PROJECT_CONTEXT.md` §14 before touching layout.
+**Taking this into Isaac Sim? Read `docs/isaac_sim/ISAAC_HANDOVER.md` first.**
 
 ---
 
@@ -458,7 +459,7 @@ D23, D37 decide which mesh is wrong). The real robot swings out at the set-down
 height itself; the sim's 4 mm blade drop before the swing is an artefact of the
 joint-based grasp, not a taught move.
 
-**Pro 600 mapping (🟡 fitted, not yet checked live):** `URDF joint = his angle`, except
+**Pro 600 mapping (✅ fitted from the recordings, then LIVE-VERIFIED 2026-09-17):** `URDF joint = his angle`, except
 `joint2 = his + 90°` and `joint4 = his + 90°` (joint 6's offset is invisible on a round
 cup). Found by a search over signs and quarter-turn offsets scored on his four
 confirmed pose pairs (his DROP row is stale: the recording settles 2–4° away) with
@@ -471,6 +472,39 @@ longer than the model (measurement sheet D61). Consequence: `PRO600_YAW` is now
 −92.5° (was an unmeasured π), the yaw at which his mapped poses land on station C,
 the blue nest and his HOME within 4 mm in the plane, and the Pro 600's rest pose
 is his HOME angles through the mapping, not an IK solution.
+
+## ✅ Phase 1 closed, ➡️ Phase 2 is Isaac Sim (2026-09-17)
+
+The TA's Phase 1 — both arms mirrored live over the LAN — was proven on the bench
+on 2026-09-17 and pushed the same day (through `dfa1b58`). Treat the Gazebo
+telemetry path as finished work: the mappings are verified, the bridge is
+read-only, and the run-book is the owner's.
+
+**The hand-over for the next phase is `docs/isaac_sim/ISAAC_HANDOVER.md`.** It is
+the file to read before importing anything into Isaac. The three things it exists
+to stop you re-deriving:
+
+- **The interface is simulator-agnostic and already done.** `tools/live_telemetry.py`
+  is a plain rclpy node that needs no simulator; it publishes
+  `sensor_msgs/JointState` on `/telemetry/m1pro/joint_states` and
+  `/telemetry/pro600/joint_states` at 50 Hz, URDF names, radians and metres,
+  `position` only. ✅ Verified 2026-09-17 with no simulator running at all.
+  Isaac subscribes to those. Do NOT fork the bridge, and do not touch the
+  `Float64MultiArray` command topics, which are Gazebo's alone.
+- **Both joint mappings are solved and live-verified**, and they live in
+  `tools/replay_telemetry.py` (`m1_map`, `p6_map`, `PRO600_MAP`). Import them.
+- **The props are not in the URDF.** `cell_telemetry.urdf` carries only the two
+  arms and the belt frame; the towers, the conveyor and the bench are static
+  models in `worlds/wafer_cell.sdf` and must be rebuilt on the Isaac side.
+
+You can develop the whole Isaac side with no lab: `tools/fake_robots.py` replays
+the 2026-09-11 recordings in the robots' own wire formats, so the real bridge runs
+against it unmodified. The cheapest correctness check is to run Gazebo and Isaac
+at once off the single bridge — identical inputs, so any divergence is Isaac-side.
+
+⛔ Isaac Sim is not installed on this machine and nothing about its version or its
+ROS 2 bridge has been tested here. The GPU is an 8 GB RTX 4060 Laptop, which is at
+the low end for it. Assert neither; check both.
 
 ## Working style the owner has asked for
 
