@@ -399,7 +399,10 @@ source /opt/ros/jazzy/setup.bash && source install/setup.bash && ros2 launch waf
 source /opt/ros/jazzy/setup.bash && source install/setup.bash && tools/replay_telemetry.py --m1 First_test_withonly_M1Pro_sequence_onmyterminal/m1_feedback_20260911_144727.md --pro600 First_test_withonly_Pro600_sequence_onmyterminal/First_test_withonly_Pro600_sequence_onmyterminal.md
 ```
 
-`telemetry:=true` spawns `position_controllers/JointGroupPositionController`s
+`telemetry:=true` loads `urdf/cell_telemetry.urdf` (generated alongside `cell.urdf` by the
+same generator: the cell WITHOUT the belt carriage, its joint, its controller and the
+nest weld, since the carrier is no part of a joint-telemetry picture; owner's request
+2026-09-17) and spawns `position_controllers/JointGroupPositionController`s
 (`m1pro_position_controller`, `pro600_position_controller`) instead of the two arm
 trajectory controllers; `go_home` then only releases the wafer's start-up welds
 (`--release-only`) and the arms hold their URDF initial values, which ARE the taught
@@ -434,6 +437,9 @@ own socket is single-client and is never touched. Prints one status line per sec
 and publishes `/telemetry/health`. `tools/fake_robots.py` serves both wire formats from
 the 2026-09-11 recordings for desk tests (`--m1-ip 127.0.0.1` on the bridge). Alonso's
 originals are in `docs/shadow_bringup/from_alonso_2026-09-11/`.
+
+**Owner's run-book: `docs/shadow_bringup/REAL_TO_SIM_RUNBOOK.md`** (three terminals:
+`tools/bench_check.sh`, the launch, `tools/live_telemetry.py`; `tools/stop_sim.sh` to end).
 
 **Bench run-book for the TA's Phase 1 (both arms live, M1 first then Pro 600 = the
 cell's own cycle):** laptop on the switch at 192.168.10.60 per Alonso's setup guide;

@@ -94,7 +94,7 @@ def generate_launch_description():
     # cat, not xacro: cell.urdf is generated and already expanded.
     # ParameterValue(..., str) is mandatory or launch YAML-parses the URDF.
     robot_description = ParameterValue(
-        Command(['cat ', PathJoinSubstitution([bringup, 'urdf', 'cell.urdf'])]),
+        Command(['cat ', PathJoinSubstitution([bringup, 'urdf', PythonExpression(["'cell_telemetry.urdf' if '", LaunchConfiguration('telemetry'), "' == 'true' else 'cell.urdf'"])])]),
         value_type=str)
 
     spawn_cell = Node(
@@ -191,7 +191,7 @@ def generate_launch_description():
                 spawner('pro600_arm_controller', UnlessCondition(telemetry)),
                 spawner('m1pro_position_controller', IfCondition(telemetry)),
                 spawner('pro600_position_controller', IfCondition(telemetry)),
-                spawner('belt_controller')])])),
+                spawner('belt_controller', UnlessCondition(telemetry))])])),   # no belt joint in the telemetry variant
 
         # Drive to home once the controllers exist. Without this the arms sag
         # during the spawn->controller window and joint_trajectory_controller

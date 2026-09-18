@@ -65,6 +65,10 @@
        (180 mm, posts at its ends) stays along the belt (world X) and file Z
        (70 mm) goes across it; +0.045 puts the plate on the belt.
        Collision is the mesh: the wafer must land inside real posts and lip. -->
+  <!-- carriage:=false leaves only the belt base (telemetry mode: the arms follow live joint
+       telemetry and the carrier is not part of that picture) -->
+  <xacro:arg name="carriage" default="true"/>
+  <xacro:if value="$(arg carriage)">
   <link name="${prefix}carriage">
     <visual>
       <origin xyz="0 0 0.045" rpy="-1.5708 0 0"/>
@@ -89,6 +93,7 @@
     <limit lower="${lo}" upper="${hi}" effort="200.0" velocity="0.5"/>
     <dynamics damping="5.0" friction="1.0"/>
   </joint>
+  </xacro:if>
 
   <xacro:arg name="use_gz_control" default="true"/>
   <xacro:if value="$(arg use_gz_control)">
