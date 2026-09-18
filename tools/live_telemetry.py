@@ -76,6 +76,26 @@ def udp_thread(src, port, stop):
             src.bad += 1; continue
         src.connected = True; src.label = p.get('label', ''); src.push(p6_map(a))
 
+def pro600_direct_thread(src, ip, port, stop, hz=10.0):
+    """FALLBACK ONLY: polls the Pro 600 itself over its single-client socket (pymycobot ElephantRobot).
+    Never run this while Alonso's Bridge.py is connected - it would take the robot's only client slot."""
+    import sys as _sys
+    from pathlib import Path as _P
+    venv = _P.home() / 'venvs' / 'wafer_shadow' / 'lib' / f'python{_sys.version_info.major}.{_sys.version_info.minor}' / 'site-packages'
+    if venv.exists() and str(venv) not in _sys.path: _sys.path.insert(0, str(venv))
+    from pymycobot import ElephantRobot
+    while not stop.is_set():
+        try:
+            arm = ElephantRobot(ip, port); arm.start_client(); src.connected = True
+            print(f'[pro600] DIRECT read from {ip}:{port} (fallback; his bridge must be OFF)', flush=True)
+            while not stop.is_set():
+                a = arm.get_angles()
+                if isinstance(a, (list, tuple)) and len(a) == 6: src.push(p6_map([float(v) for v in a]))
+                else: src.bad += 1
+                stop.wait(1.0 / hz)
+        except Exception as e:                                   # noqa: BLE001
+            src.connected = False; print(f'[pro600] direct: {e}; retry in 3 s', flush=True); stop.wait(3.0)
+
 class Bridge(Node):
     def __init__(self, a, sources):
         super().__init__('live_telemetry'); self.sources = sources
@@ -95,7 +115,9 @@ class Bridge(Node):
         self.health.publish(String(data=json.dumps(rep)))
         parts = []
         for r, h in rep.items():
-            state = 'LIVE' if h['connected'] and h['age_ms'] is not None and h['age_ms'] < 2500 else ('no data' if h['frames'] == 0 else 'STALE')   # his bridge pauses ~2 s while a move settles
+            # Alonso's Pro 600 bridge broadcasts only while it runs a job and pauses ~2 s while a move settles,
+            # so an old last packet means IDLE, not a fault; the M1 stream never stops while the robot is on
+            state = 'LIVE' if h['connected'] and h['age_ms'] is not None and h['age_ms'] < 2500 else ('no data' if h['frames'] == 0 else f"IDLE (last {h['age_ms']/1000:.0f} s ago)")
             parts.append(f"{r}: {state} {h['rate_hz']:5.1f} Hz age {h['age_ms'] if h['age_ms'] is not None else '-'} ms frames {h['frames']} bad {h['bad']}")
         print(' | '.join(parts), flush=True)
 
@@ -107,10 +129,14 @@ def park_wafer():
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--m1-ip', default='192.168.10.40'); ap.add_argument('--m1-port', type=int, default=30004)
     ap.add_argument('--udp-port', type=int, default=5005); ap.add_argument('--no-m1', action='store_true'); ap.add_argument('--no-pro600', action='store_true'); ap.add_argument('--no-park', action='store_true')
+    ap.add_argument('--pro600-direct', metavar='IP', help='FALLBACK: poll the Pro 600 itself at IP:5001 instead of the UDP broadcast (only when his bridge is off)')
     a, _ = ap.parse_known_args()
     sources = {}; stop = threading.Event(); threads = []
     if not a.no_m1: sources['m1pro'] = Source('m1pro'); threads.append(threading.Thread(target=m1_thread, args=(sources['m1pro'], a.m1_ip, a.m1_port, stop), daemon=True))
-    if not a.no_pro600: sources['pro600'] = Source('pro600'); threads.append(threading.Thread(target=udp_thread, args=(sources['pro600'], a.udp_port, stop), daemon=True))
+    if not a.no_pro600:
+        sources['pro600'] = Source('pro600')
+        if a.pro600_direct: threads.append(threading.Thread(target=pro600_direct_thread, args=(sources['pro600'], a.pro600_direct, 5001, stop), daemon=True))
+        else: threads.append(threading.Thread(target=udp_thread, args=(sources['pro600'], a.udp_port, stop), daemon=True))
     rclpy.init(); n = Bridge(a, sources)
     if not a.no_park: park_wafer()
     for t in threads: t.start()

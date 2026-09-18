@@ -122,6 +122,7 @@ tilt that the stream shows. `tools/cycle_check.py` is the streamer/reporter.
 | `robot_description` YAML-parsed | Launch mangles the URDF | `ParameterValue(Command([...]), value_type=str)` |
 | ros2 daemon staleness | `topic list` disagrees with `topic hz` | `ros2 daemon stop` |
 | The conveyor's visible mesh is a STATIC WORLD MODEL (`conveyor_frame` in `wafer_cell.sdf`), not part of the URDF | After a belt move the joint, carriage and collider go with `cell_layout.py` while the grey conveyor stays where it was, and `check_extents` said nothing (2026-09-10: it stood 56 mm off for a whole GUI demo) | Its pose is anchor + the STL's origin offset (+0.28407 along, +0.019 across); `check_extents.py` now mirrors it like the towers and the collider. Move the belt only through `BELT_XYZ` and re-run the check |
+| UDP broadcast from the bench never arrives while the M1's TCP stream works fine (2026-09-17) | `pro600: no data` for minutes although Alonso's bridge is sending and a raw listener sees nothing | `ufw` is active on this laptop and drops inbound UDP; the outbound TCP feedback is unaffected. `sudo ufw allow from 192.168.10.0/24 to any port 5005 proto udp` (the owner runs it). Check `systemctl is-active ufw` before blaming the network |
 | A world plugin silently absent | `[Err] SystemLoader ... library does not contain requested plugin` once at start-up; then `/world/.../dynamic_pose/info` has NO publisher and every pose logger returns empty blocks | A regex on `name="..."` also matches `filename="..."`; that renamed the SceneBroadcaster to its library name on 2026-09-04 and cost two hours of false conclusions. After any world edit, `gz topic -i -t /world/wafer_cell/dynamic_pose/info` must list a publisher |
 | GUI demo at half speed (solved 2026-09-04) | RTF 0.3–0.5 whenever an arm or the wafer was near a nest, headless too | Not the GPU. ODE's mesh tree culls by triangle bounding box, and the towers' 100 mm-tall wall triangles all overlap any query at any height, so every step tested all 1568. The towers and the belt holder now collide with `meshes/wafer_tower_collision.stl` / `belt_holder_collision.stl`, the same surfaces cut into 8 mm bands by `split_collision_mesh.py`: RTF 0.98 overall at 1 ms headless, seating numbers unchanged. Apply the same tool to any tall mesh that a moving part passes. `step:=0.002` remains a demo-only fallback that moves the final place by 2 mm |
 
@@ -411,6 +412,18 @@ It parks the wafer at the bench corner first (no grasp is simulated) and prints 
 tracking error at the end. Verified headless 2026-09-11 on the M1 recording: the arm
 holds HOME, follows the 17 Hz stream and returns to HOME; worst error 3.3° on the
 shoulder during the fastest swing (measurement latency of a reset-driven joint).
+
+**✅ BENCH-PROVEN 2026-09-17 (the TA's Phase 1):** laptop at .60 on the switch, Gazebo
+`telemetry:=true`, `tools/live_telemetry.py`; the M1 Pro at HOME matched the sim's HOME to
+0.1° / 0.0 mm live; the cell's cycle then ran twice and Gazebo mirrored both arms: M1
+(lift 95–181.5 mm, shoulder −30°…71.5°, elbow −73°…−13°, wrist 35°…96°) within 1.9° /
+7.6 mm, Pro 600 (joint 1 −111°…−41°, joint 6 −32°…41°) within 4.4°, both ending at HOME.
+The Pro 600 mapping is therefore ✅ live. Facts learnt: Alonso's Pro 600 bridge broadcasts
+ONLY while it runs a job (idle = silence, the bridge shows IDLE, not a fault); its JSON
+carries an extra `t` field; his sequence now has laser-clearance labels (`clear laser 2`);
+the M1 feedback port accepts a read-only client beside his control session at 123 Hz with
+zero torn frames. Fallback `--pro600-direct <ip>` polls the robot itself and must only run
+with his bridge OFF (single-client socket).
 
 **LIVE bridge (added 2026-09-17): `tools/live_telemetry.py`** reads both robots at once,
 read-only, and drives the telemetry mode: the M1 Pro's feedback port 30004 (1440-byte
