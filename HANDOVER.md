@@ -25,7 +25,7 @@ Total on disk: ~161 MB, of which ~111 MB is reference photography.
 | `src/wafer_cell_bringup/meshes/m1pro_fork.stl` | M1 Pro passive fork | Customer print file. Blade 3 mm thick, 58.2 wide, 189.5 long; 25 mm boss |
 | `PROJECT_CONTEXT.md` | Project brief, Revision B | Contains owner-supplied measurements and the §13 corrections log |
 | `docs/metrology_spec.html` | 61-parameter measurement spec | Defines every number still to be measured |
-| `README_additional info.md` | The owner's own planning notes | Written by the owner, not by an agent |
+| `README_additional info.md` | The owner's own planning notes | Owner's prose, plus one dated 2026-09-19 terminology note added by an agent |
 | `First_test_withonly_M1Pro_sequence_onmyterminal/`, `First_test_withonly_Pro600_sequence_onmyterminal/` | The 2026-09-11 bench telemetry recordings, 92 KB | Captured off the real robots on the lab LAN. The only offline source of real joint data; both desk stand-ins replay them |
 | `docs/shadow_bringup/from_alonso_2026-09-11/` | The PLC programmer's own scripts and laptop setup guide | Sent by a third party, not reproducible here |
 

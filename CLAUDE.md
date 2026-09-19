@@ -1,7 +1,9 @@
 # CLAUDE.md — dobot_cobot_gazebo_twin
 
-Gazebo Harmonic / ROS 2 Jazzy digital twin of a two-robot semiconductor
-wafer-handling cell. **ROS 2 Jazzy · gz-sim 8.11.0 · Ubuntu 24.04.**
+Gazebo Harmonic / ROS 2 Jazzy **digital model** of a two-robot semiconductor
+wafer-handling cell, plus a one-way **real-to-sim digital shadow** of the two
+arms' joints (telemetry mode + `tools/live_telemetry.py`), bench-proven
+2026-09-17. Not a bidirectional twin — there is no sim-to-real path. **ROS 2 Jazzy · gz-sim 8.11.0 · Ubuntu 24.04.**
 
 Deep background: `PROJECT_CONTEXT.md`. Asset inventory and what is safe to
 delete: `HANDOVER.md`. Read `PROJECT_CONTEXT.md` §14 before touching layout.
@@ -374,8 +376,10 @@ vacuum on/blow; status 0 idle 1 busy 2 done 99 fault); Pro 600 .20:5001; M1 Pro
 six-state sequencer and the two bridge scripts answer it; `Step`, `Run_Cmd` and
 `Move_Done` are internal, so the belt phase reads as all-zero registers and
 `plc_bridge.py` infers it from order. Level 1 = follow the PLC alone; Level 2
-(joint feedback) waits on a bench test of whether a second read-only session
-disturbs the bridges. Verified offline against `fake_plc.py` on 2026-09-10.
+(joint feedback) — answered on the bench 2026-09-17: the M1's feedback port
+accepts a second read-only client at 123 Hz without disturbing the session
+already commanding it. The PLC leg itself is still verified only offline
+against `fake_plc.py` (2026-09-10) and has never run against the real PLC.
 `task_shadow.py` plays `cell_plan` ranges per phase; its IDLE segment is
 `CYCLE_DONE` + `MANUAL_RETURN_A` (the hand return) + the wafer reload.
 

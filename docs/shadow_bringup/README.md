@@ -1,8 +1,17 @@
 # Digital Shadow bring-up — what to ask the bench team
 
-Handouts for the conversation with the PLC programmer. The shadow package
-(`src/wafer_cell_shadow/`) runs against fake devices today; everything
-network-side is ⛔ until the answers below come back. Written 2026-09-09.
+Handouts for the conversation with the PLC programmer. Written 2026-09-09.
+
+> **Historical — superseded (note added 2026-09-19).** The answers came back
+> 2026-09-10/09-11: the PLC route became Modbus TCP read-only, and the Pro 600
+> arrives as a UDP JSON broadcast rather than a direct socket. Both arms were
+> then mirrored live on the bench 2026-09-17. The PLC leg is still verified
+> only against `fake_plc.py`. See `PROJECT_CONTEXT.md` §10 for the routes as
+> built.
+
+At the time of writing, the shadow package (`src/wafer_cell_shadow/`) ran
+against fake devices and everything network-side was ⛔ pending the answers
+below.
 
 | File | What it is |
 |---|---|

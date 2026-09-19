@@ -3,6 +3,15 @@
 
 This README captures everything decided/discussed in this planning session, for reference while running the actual Claude Code build.
 
+> **Historical document — terminology superseded (note added 2026-09-19).**
+> These are the pre-build planning notes, kept as written. "Digital twin" was
+> the working term at the time. What was actually built is a **digital model**
+> of the cell plus a one-way **real-to-sim digital shadow** of it, bench-proven
+> 2026-09-17: real joint state drives the simulation, and nothing is ever sent
+> back to the robots. There is no bidirectional twin and no sim-to-real path.
+> See `PROJECT_CONTEXT.md` §10 for the distinction, and `README.md` for what
+> the project actually does today.
+
 ---
 
 ## 1. What we're building

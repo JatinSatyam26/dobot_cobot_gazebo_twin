@@ -39,9 +39,22 @@ Project brief, scope contract and hardware inventory live in
 > [`HANDOVER.md`](HANDOVER.md) has the asset inventory. The table above tracks
 > *mechanism* — that it builds, spawns and moves — not layout fidelity.
 
-**Phase 1 is complete.** Verified end to end on 2026-09-01: both controllers
+**Two different milestones are both called "Phase 1" in this repo — keep them
+apart.** The status table above tracks the *model/mechanism* phase. The M1 Pro
+bring-up inside it was verified end to end on 2026-09-01 — both controllers
 reach `active`, and `m1pro_wiggle.py` drives every joint to its commanded
-waypoint and back home with no tolerance violations.
+waypoint and back home with no tolerance violations; the later rows (the
+combined cell, 11 joints under one controller manager) were verified
+2026-09-03.
+
+The *real-to-sim* Phase 1, defined by the TA on 2026-09-11, is a separate and
+later milestone: both physical arms mirrored live in Gazebo over the lab LAN,
+read-only. It was proven on the bench on **2026-09-17** — M1 Pro tracking
+within 1.9° / 7.6 mm and the Pro 600 within 4.4° over a full cycle, both
+ending at HOME, with the M1 Pro's HOME agreeing to 0.1° / 0.0 mm before
+motion. Those
+figures were noted at the bench that day; no rosbag of the live cycle exists.
+See `docs/isaac_sim/ISAAC_HANDOVER.md`. Isaac Sim is Phase 2.
 
 ```
 t= 9s  j1=+0.715  j2=-0.805  j3=-0.000  j4=+0.000
@@ -202,7 +215,7 @@ Confirmed independently by Dobot's CAD assembly and by the linear rail visible
 on the column in `docs/reference_photos/20260826_191040.jpg`.
 
 Dobot's axis labels do **not** match chain order — map through this table when
-mirroring PLC or real-robot commands in Phase 4:
+mirroring PLC or real-robot joint readings:
 
 | chain position | model joint | Dobot label |
 |---|---|---|
@@ -238,7 +251,7 @@ real ~41 kg arm. That is harmless for position-controlled pick-and-place and
 
 The TCP frame sits at the J4 output face, which sweeps **67 mm to 277 mm above
 the robot's base plate**. With the base on the bench at z = 0.75 m, that is the
-usable pick envelope — the wafer nest height in Phase 3 has to land inside it.
+usable pick envelope — the wafer nest height has to land inside it.
 
 The earlier primitive and hand-built models were deleted before they were
 ever committed: they are not in the tree and not in git history, so they are

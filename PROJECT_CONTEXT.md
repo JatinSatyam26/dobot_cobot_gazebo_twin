@@ -333,8 +333,9 @@ measurement priority list.
 
 ### ❌ OUT OF SCOPE
 - Real vacuum or friction physics
-- True PLC integration (see §10)
-- Isaac Sim — Phase 6, not this deadline
+- Writing to or commanding the PLC — the Modbus link is read-only (see §10)
+- Isaac Sim — Phase 2, after the Gazebo real-to-sim phase; out of scope for the
+  original deadline (see `docs/isaac_sim/ISAAC_HANDOVER.md`)
 - MoveIt planning — scripted joint trajectories are enough
 - Photorealistic materials
 
@@ -369,21 +370,30 @@ repeatability", never "100%".** It is both honest and much more defensible.
 
 | | Data flow | Status |
 |---|---|---|
-| **Digital Model** | none | **← what we are building** |
-| **Digital Shadow** | real → sim, one way | Stretch goal, gated |
-| **Digital Twin** | bidirectional | Out of scope |
+| **Digital Model** | none | ✅ Built — full cycle runs in sim (2026-09-04) |
+| **Digital Shadow** | real → sim, one way | ✅ ACHIEVED for the two arms' joints — bench-proven 2026-09-17. Everything else in the cell is a static prop, and the PLC leg is not yet live |
+| **Digital Twin** | bidirectional | Out of scope — no sim-to-real path exists |
+
+The Shadow was a stretch goal in Revision A and is no longer gated: both arms
+were mirrored live from the real cell on 2026-09-17. **This is the furthest
+the project goes.** Nothing this project authored writes to a robot or to the
+real PLC. (The third-party scripts kept under `Alonso shared files/` are the
+bench's own tooling and DO command the hardware; they are not part of this
+pipeline.)
 
 **Be precise about which one you built.** Calling a Digital Model a "twin"
 invites exactly the question you cannot answer.
 
 **A live link needs three sources, not one** — the PLC does *not* know the arms'
-joint angles; that never crosses it:
+joint angles; that never crosses it. The routes below are what was actually
+built, and supersede the ones Revision A planned. Only the two arm legs have
+been run against real hardware:
 
-| Source | Route | Gives |
-|---|---|---|
-| Micro850 | EtherNet/IP via `pycomm3` (Micro800 support) | Sequence state, belt run/stop |
-| M1 Pro | Dobot TCP/IP remote-control protocol | Joint angles |
-| Pro 600 | `pymycobot` over TCP | Joint angles |
+| Source | Route | Proven | Gives |
+|---|---|---|---|
+| Micro850 | **Modbus TCP, read-only** (`wafer_cell_shadow/scripts/plc_bridge.py`), 4 holding registers + 2 coils. Revision A planned EtherNet/IP via `pycomm3` | 🟡 Written; verified offline against `fake_plc.py` 2026-09-10. **Parked — never run against the real PLC** | Sequence state. Belt run/stop is INFERRED from event order: `Run_Cmd`/`Move_Done` are internal to the PLC and never reach Modbus |
+| M1 Pro | **Feedback port 30004**, 1440-byte RealTimeData frames, read alongside the session already commanding the robot. NOT the remote-control protocol — nothing is commanded | ✅ Bench 2026-09-17 | Joint angles |
+| Pro 600 | **UDP 5005 JSON broadcast from the PLC programmer's bridge** by default — his session holds the robot's single-client socket. A `--pro600-direct` fallback in `tools/live_telemetry.py` polls the robot itself over that socket with `pymycobot` (port 5001) when his bridge is not running; `wafer_cell_shadow/scripts/pro600_bridge.py` uses the same library in real mode. Both are reads only | ✅ Bench 2026-09-17 | Joint angles |
 
 **Architectural decision:** the sequencer's inputs are ROS 2 topics/services, so
 a PLC bridge can feed them exactly as the stub does. "Connect to the PLC" then
@@ -422,7 +432,7 @@ pkill -9 -x gz-sim-server
 | Belt speed error → position error | No sensor to correct it. Calculate from stepper parameters, verify by stopwatch. |
 | Two arms in one world | ✅ De-risked — named controller managers verified on both. |
 | Zero of 61 measurements taken | Model runs on placeholders until they land. |
-| Shadow depends on hardware being cycle-ready | Gated stretch goal; the Model demos regardless. |
+| Shadow depends on hardware being cycle-ready | ✅ Retired 2026-09-17: both arms mirrored live on the bench (see §10). The PLC leg remains gated on bench time. |
 
 ---
 

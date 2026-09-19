@@ -4,6 +4,11 @@ Three bridges, one per real device, each with a **fake source** so the whole
 chain runs on this laptop with no hardware, plus two drivers that make the
 Gazebo cell follow whatever the bridges publish, and a recorder.
 
+> **Status, 2026-09-19.** The two arm legs went live on the bench 2026-09-17
+> (see `docs/isaac_sim/ISAAC_HANDOVER.md`). The PLC leg is still verified only
+> against `fake_plc.py` and has never run against the real Micro850. Rows below
+> that predate 2026-09-17 are dated individually.
+
 ```
 real M1 Pro  ──30004 feedback──────► m1pro_bridge  ─┐
 real Pro 600 ──pymycobot socket────► pro600_bridge ─┼─► /shadow/*  ─► shadow_driver (time replay, Level 2)
@@ -88,7 +93,7 @@ you check that the sim follows the recording.
 | Modbus TCP register map, addresses, status codes | ✅ from the PLC programmer's notes and scripts (`docs/shadow_bringup/`); fake and reader tested against each other 2026-09-10 |
 | Fake devices reproduce the sim cycle end to end | ✅ tested 2026-09-04 |
 | Bench addresses: PLC 192.168.10.10:502, Pro 600 .20:5001, M1 Pro .40 (LAN2) | ✅ from the bench notes; not yet exercised from this machine |
-| Joint signs and zeros for both arms; whether the M1 Pro reports Z in mm | ⛔ UNKNOWN — one single-joint jog per axis settles each |
+| Joint signs and zeros for both arms; whether the M1 Pro reports Z in mm | ✅ SOLVED 2026-09-11, live-verified 2026-09-17. Both mappings live in `tools/replay_telemetry.py`; the M1 Pro's is verified to 0.1° against every taught waypoint, and it reports Z in mm. See CLAUDE.md, "Telemetry mode and the joint mappings" |
 | Belt position | dead-reckoned from `belt_run` × `belt_speed`; the bench indexes a fixed 170 units at velocity 20 one way only and the carriage comes back by hand, so `belt_reverse` is always False and the return is a stand-in |
 | Grasp timing | the sim arm trails the real one by ~one trajectory horizon; the driver applies grasp events after `event_delay` (0.35 s) so the sim fork has arrived |
 | Cell phase without a `Step` register | derived from the four command/status registers; only the belt phase is inferred (see Level 1) |
