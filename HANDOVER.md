@@ -21,7 +21,7 @@ Total on disk: ~161 MB, of which ~111 MB is reference photography.
 | `docs/reference_photos/` … `_5/` | 54 photos of the real cell, 111 MB | Photographs of the owner's physical bench. Sole source for the layout, the PLC label, the end effectors, the nest colours |
 | `src/wafer_cell_bringup/meshes/wafer_tower.stl` | 3D-printed nest, 107.5 × 135 × 100 mm | Customer print file. Shelf ledges measured from it at z = 0.055 / 0.077 / 0.099 |
 | `src/wafer_cell_bringup/meshes/belt_holder.stl` | The belt holder ("Wafer Holder Conveyer.stl"): 180 × 70 plate with two 45 mm posts, arc cuts r 57.5, seat at 43 mm, lip r ≈ 64. Rides the belt plate-down | Customer print file |
-| `docs/cycle_video/`, `docs/reference_render_gemini_2026-09-03.png` | 28 s cycle video (phone + isolated), AI concept render | Copied from ~/Downloads on 2026-09-04 |
+| `docs/cycle_video/`, `docs/reference_render_gemini_2026-09-03.png` | 28 s phone cycle video, AI concept render | Copied from ~/Downloads on 2026-09-04. The background-removed cut was deleted 2026-09-19 as redundant; the phone original is kept as reference material only |
 | `src/wafer_cell_bringup/meshes/m1pro_fork.stl` | M1 Pro passive fork | Customer print file. Blade 3 mm thick, 58.2 wide, 189.5 long; 25 mm boss |
 | `PROJECT_CONTEXT.md` | Project brief, Revision B | Contains owner-supplied measurements and the §13 corrections log |
 | `docs/metrology_spec.html` | 61-parameter measurement spec | Defines every number still to be measured |
@@ -50,7 +50,8 @@ render were sent in chat and never saved. Both exist, plus a cycle video:
   (AI-generated concept image, not a measurement — copy it into `docs/` if you
   want it under git)
 * 28 s cycle video: `~/Downloads/WhatsApp Video 2026-09-03 at 4.47.55 PM.mp4`
-  and `setup_isolated_28s.mp4` (background removed)
+  (the background-removed `setup_isolated_28s.mp4` cut was tracked as
+  `docs/cycle_video/cycle_2026-09-03_isolated.mp4` and deleted 2026-09-19)
 * conveyor SketchUp `~/Downloads/Dobot+Conveyer.skp`. (`~/Downloads/Conveyor_Wafer_Holder.3MF`
   is a Ø124 C-nest that is NOT the belt part; briefly used in error on 2026-09-04)
 
