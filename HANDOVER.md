@@ -71,7 +71,7 @@ photo-derived layout and are not reproducible without redoing the analysis.
 | Path | Upstream | Licence |
 |---|---|---|
 | `src/dobot_m1pro_description/meshes/*.STL` + joint origins | `github.com/Dobot-Arm/M1Pro-ROS`, `m1pro_description` | MIT © 2022 Dobot |
-| `src/mycobot_pro600_description/meshes/*.dae` + joint origins | `github.com/elephantrobotics/mycobot_ros2`, branch **`fix/mycobot_pro_600_joint_limits`** | BSD-3-Clause |
+| `src/mycobot_pro600_description/meshes/*.dae` + joint origins | `github.com/elephantrobotics/mycobot_ros2`, branch **`fix/mycobot_pro_600_joint_limits`** | BSD (variant unconfirmed upstream) |
 | `src/wafer_cell_bringup/meshes/dobot_conveyor.stl` | 3D Warehouse (SketchUp), `DT-AC-CB070-02E` lookalike | third-party, unverified |
 
 **Re-download with care.** All three carry local modifications that are

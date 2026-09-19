@@ -1,6 +1,15 @@
 # dobot_cobot_gazebo_twin
 
-Gazebo Harmonic digital twin of a two-robot semiconductor wafer-handling cell.
+Gazebo Harmonic **digital model** and one-way **real-to-sim digital shadow**
+of a two-robot semiconductor wafer-handling cell. Real joint state drives the
+simulation: the shadow pipeline reads the M1 Pro's feedback port, a UDP pose
+broadcast, the PLC's Modbus holding registers and optionally the Pro 600's own
+socket — all read-only — and never sends a command to a robot or the PLC. There is no
+sim-to-real path — so this is a shadow, not a bidirectional twin. (The repo
+name predates the distinction. Note that the third-party control scripts kept
+for reference under `Alonso shared files/` are the bench's own tooling and DO
+command the hardware; they are not part of this pipeline.)
+
 Project brief, scope contract and hardware inventory live in
 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).
 
@@ -48,16 +57,28 @@ t=27s  j1=-0.000  j2=+0.000  j3=-0.000  j4=+0.000   <- home
 
 ```
 src/
-├── dobot_m1pro_description/     M1 Pro placeholder model + controller config
+├── dobot_m1pro_description/     M1 Pro model (Dobot CAD) + controller config
 │   ├── urdf/dobot_m1pro.urdf.xacro
-│   ├── urdf/inertial_macros.xacro
 │   ├── config/m1pro_controllers.yaml
 │   └── rviz/m1pro.rviz
-├── mycobot_pro600_description/  (scaffold only)
-└── wafer_cell_bringup/          worlds, launch, sequencer
-    ├── worlds/wafer_cell.sdf
-    ├── launch/m1pro_gazebo.launch.py
-    └── scripts/m1pro_wiggle.py
+├── mycobot_pro600_description/  Pro 600 model (Elephant Robotics) + config
+│   ├── urdf/mycobot_pro600.urdf.xacro
+│   ├── urdf/inertial_macros.xacro
+│   └── config/pro600_controllers.yaml
+├── wafer_cell_bringup/          worlds, launch, layout, sequencer
+│   ├── worlds/wafer_cell.sdf
+│   ├── launch/cell.launch.py
+│   ├── scripts/cell_layout.py   single source of every pose
+│   ├── scripts/cell_sequencer.py
+│   └── scripts/generate_cell_urdf.py
+└── wafer_cell_shadow/           read-only digital shadow
+    ├── scripts/plc_bridge.py    Modbus TCP reader
+    ├── scripts/m1pro_bridge.py, pro600_bridge.py
+    ├── scripts/shadow_driver.py, task_shadow.py
+    └── scripts/fake_plc.py      protocol-accurate PLC stand-in
+
+tools/                           live_telemetry.py, replay_telemetry.py,
+                                 fake_robots.py, cycle_check.py
 ```
 
 ## Build & run
@@ -153,11 +174,15 @@ A plain apt batch skew — unrelated to Jazzy-vs-Humble middleware or gz-sim8/9.
 
 ## The M1 Pro model
 
-`urdf/dobot_m1pro.urdf.xacro` uses **real Dobot CAD geometry** — STL meshes
-triangulated from Dobot's published `M1-Volume_V6-180427.stp`. See
+`urdf/dobot_m1pro.urdf.xacro` uses **real Dobot CAD geometry** — the meshes
+and joint origins from Dobot's own `m1pro_description` export. See
 [`src/dobot_m1pro_description/ATTRIBUTION.md`](src/dobot_m1pro_description/ATTRIBUTION.md)
-for provenance and an **unresolved GPLv2 question** that matters only if this
-project is ever distributed.
+for provenance and the defects repaired on import. The meshes and joint origins
+are Dobot's own export from `Dobot-Arm/M1Pro-ROS` (`m1pro_description`), MIT,
+© 2022 Dobot — licence text in [`LICENSES/MIT-Dobot.txt`](LICENSES/MIT-Dobot.txt).
+An earlier hand-built model derived from a GPLv2 source was replaced by that
+official model and is no longer in this repository, so no GPLv2-derived
+material remains.
 
 ![model check](docs/m1pro_model_check.png)
 
@@ -203,33 +228,29 @@ runtime without complaint. Only *initialisation* at a limit latches it.
 
 ## ⚠️ Model fidelity warning
 
-Every dimension in `dobot_m1pro.urdf.xacro` is a placeholder sized from
-best-known catalogue figures (400 mm reach, 250 mm Z stroke, ±85°/±135° joint
-limits). The **kinematic structure is correct**; the **numbers are not
-authoritative**. Do not quote reach or workspace figures from this model until
-spec-sheet values replace them.
+Link geometry, joint origins, axes and limits all come from Dobot's own CAD
+export and are trustworthy.
 
-**This section now applies only to masses and inertias.** Link geometry, joint
-origins, axes and limits all come from Dobot's CAD and are trustworthy.
-
-The meshes carry no mass data, so link masses are apportioned to sum to the
-M1 Pro's ~41 kg published weight, and inertias are solid-box approximations of
-each link's bounding box. That is fine for position-controlled pick-and-place
-but **not** valid for dynamics, payload or torque studies.
+**Masses and inertias are not.** They are Dobot's SolidWorks values, but the
+export omits motors and castings, so the links total roughly 2.7 kg against a
+real ~41 kg arm. That is harmless for position-controlled pick-and-place and
+**not** valid for dynamics, payload or torque studies.
 
 The TCP frame sits at the J4 output face, which sweeps **67 mm to 277 mm above
 the robot's base plate**. With the base on the bench at z = 0.75 m, that is the
 usable pick envelope — the wafer nest height in Phase 3 has to land inside it.
 
-The previous primitive model is kept at
-`urdf/dobot_m1pro_placeholder.urdf.xacro.bak` as a fallback, since this
-workspace is not under version control yet.
+The earlier primitive and hand-built models were deleted before they were
+ever committed: they are not in the tree and not in git history, so they are
+not recoverable from this repository. Licence-wise that is the good outcome —
+it is also the proof that no GPLv2-derived blob is published here.
 
 ## Copyright and licence
 
 Copyright (c) 2026 Jatin Satyam. Licensed under the Apache License,
 Version 2.0: see `LICENSE`. Third-party material and its licences (Dobot M1
-Pro description, MIT; myCobot Pro 600 description, BSD-3-Clause) are listed
+Pro description, MIT; myCobot Pro 600 description, BSD with the variant
+unconfirmed upstream) are listed
 in `NOTICE` and in the two `ATTRIBUTION.md` files. Source files carry
 `SPDX-License-Identifier: Apache-2.0` headers; the two vendor-derived robot
 descriptions carry a modifications notice that keeps the upstream terms.

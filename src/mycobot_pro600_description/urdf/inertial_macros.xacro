@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!-- Modifications Copyright (c) 2026 Jatin Satyam, SPDX-License-Identifier: Apache-2.0.
-     Derived from Elephant Robotics' mycobot_ros2 (BSD-3-Clause); see ATTRIBUTION.md. -->
+     Derived from Elephant Robotics' mycobot_ros2 (upstream declares "BSD", variant
+     unconfirmed - see LICENSES/BSD-ElephantRobotics.md); see ATTRIBUTION.md. -->
 <!-- Solid-body inertia macros. Originally written for the M1 Pro placeholder;
      that model is gone (the official Dobot URDF ships real inertia tensors),
      so these now live with their only remaining user, the Pro 600. -->

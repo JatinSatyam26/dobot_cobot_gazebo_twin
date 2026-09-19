@@ -35,14 +35,16 @@ for dynamics or payload work.
 
 ## Superseded: the hand-built model (and its GPLv2 problem)
 
-`urdf/dobot_m1pro_handbuilt.urdf.xacro.bak` is kept only as a fallback. It used
+`urdf/dobot_m1pro_handbuilt.urdf.xacro.bak` is NOT in this repository and not
+in its history — it was deleted before it was ever committed, and is not
+recoverable from here. It used
 STL meshes from **`smhaller/dobot-m1`** (Simon Haller, Universität Innsbruck),
 which declares **GPLv2** in its `package.xml`. Those meshes were themselves
 conversions of Dobot's public CAD (`M1-Volume_V6-180427.stp`), and the URDF
 around them was written from scratch here.
 
 **That whole licensing question is now moot** — the official MIT source replaces
-it. If the `.bak` file is ever deleted, no GPLv2-derived material remains in
+it. With that file gone, no GPLv2-derived material remains in
 this package.
 
 ### What the hand-built version got right and wrong

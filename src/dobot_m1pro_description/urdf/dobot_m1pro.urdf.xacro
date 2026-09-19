@@ -11,9 +11,10 @@
   Links, joint origins, meshes and INERTIA TENSORS are Dobot's own, exported
   from their SolidWorks model. See ATTRIBUTION.md.
 
-  This REPLACES an earlier hand-built model (kept as
-  dobot_m1pro_handbuilt.urdf.xacro.bak). The hand-built one used meshes from a
-  third-party GPLv2 repo and guessed offsets. It got the STRUCTURE right - the
+  This REPLACES an earlier hand-built model that used meshes from a
+  third-party GPLv2 repo and guessed offsets. That model was deleted before it
+  was ever committed: it is not in this repository and not in its history, so
+  no GPLv2-derived material is published here. It got the STRUCTURE right - the
   official file confirms prismatic-first - but several numbers wrong:
   Z stroke was 0.21 m not 0.25, the arm was laid along +Y not +X, and the
   shoulder was at the carriage origin instead of 123 mm forward in X.

@@ -8,9 +8,9 @@ are derived from **Elephant Robotics' own** `mycobot_ros2` repository:
 > path `mycobot_description/urdf/mycobot_pro_600/`
 
 **Licence: BSD**, declared in that repository's `mycobot_description/package.xml`.
-(No top-level `LICENSE` file is present in the repo.) BSD is permissive — unlike
-the GPLv2 question hanging over the Dobot M1 Pro meshes, this one needs no
-resolution before distribution, only attribution.
+(No top-level `LICENSE` file is present in the repo.) Upstream publishes no
+licence text and does not name the variant, so the exact terms are unconfirmed
+— see `LICENSES/BSD-ElephantRobotics.md` before redistributing.
 
 ## Corrections applied on import
 
